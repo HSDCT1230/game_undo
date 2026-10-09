@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>暗度 · 声音试听</title>
+  <!-- 不用 Google Fonts，避免国内网络卡住整页 -->
+  <style>
+    body {
+      margin: 0;
+      padding: 28px 32px 60px;
+      background: #17181d;
+      color: #e8dcc6;
+      font-family: "LXGW WenKai", "KaiTi", "楷体", serif;
+      font-size: 15px;
+      line-height: 1.6;
+    }
+    header { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 8px; }
+    h1 { margin: 0; font-size: 22px; color: #f1e3c4; }
+    h2 { margin: 34px 0 6px; font-size: 17px; color: #f1e3c4; border-bottom: 1px solid #3a3a44; padding-bottom: 4px; }
+    p.note { margin: 4px 0 12px; color: #a59d8f; font-size: 13px; }
+    a { color: #9fc2ea; }
+    button {
+      font: inherit;
+      color: #e8dcc6;
+      background: #262833;
+      border: 1px solid #4a4c5a;
+      border-radius: 4px;
+      padding: 5px 12px;
+      cursor: pointer;
+    }
+    button:hover { background: #30333f; }
+    button.on { background: #6d4b23; border-color: #b8864a; color: #fff; }
+    button:disabled { opacity: .4; cursor: default; }
+    #sfx-toggle { margin-left: auto; }
+    table { border-collapse: collapse; width: 100%; max-width: 1100px; }
+    td, th { text-align: left; padding: 7px 10px; border-bottom: 1px solid #2c2d36; vertical-align: top; }
+    th { color: #a59d8f; font-weight: normal; font-size: 13px; }
+    td.when, td.src { color: #a59d8f; font-size: 13px; }
+    td.acts { white-space: nowrap; }
+    .stat { font-size: 12px; color: #a59d8f; margin-left: 6px; }
+    .stat.miss { color: #d98c6a; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 8px; max-width: 1100px; }
+    .grid button { text-align: left; }
+    .grid small { display: block; color: #a59d8f; font-size: 12px; }
+    .tag { font-size: 12px; padding: 1px 7px; border-radius: 3px; vertical-align: 2px; font-weight: normal; }
+    .tag.bg { background: #2f3b52; color: #b9cdf0; }
+    .tag.fx { background: #4a3a26; color: #f0d2a8; }
+    .tag::after { font-size: 11px; margin-left: 6px; opacity: .8; }
+    .tag.bg::after { content: "受右上角按钮控制"; }
+    .tag.fx::after { content: "一直按原音量响"; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>暗度 · 声音试听</h1>
+    <button type="button" id="stop-all" class="sfx-quiet">全部停</button>
+    <button type="button" id="sfx-toggle">背景音　大</button>
+  </header>
+  <p class="note">音量和游戏里一样。右上角「背景音」切大／小／关，游戏里会跟着记住。环境声同一时间只放一条，点同一个按钮再点一次就停。</p>
+
+  <h2>环境声　<span class="tag bg">背景音</span></h2>
+  <p class="note">全是 assets/sfx/ 里的真实录音或音乐，游戏里放的就是它们；缺文件的地点就不放环境声。后座白天、后座夜里、诊室是音乐：白天那首和诊室几首头尾淡入淡出，循环时从头再来；夜里那首（Night Interior Background）更轻、更暗，首尾无缝循环。其余都是首尾无缝循环的环境声。</p>
+  <table>
+    <thead><tr><th>地点</th><th>什么时候响</th><th>试听</th><th>素材来源</th></tr></thead>
+    <tbody id="amb-rows"></tbody>
+  </table>
+
+  <h2>界面操作　<span class="tag fx">操作音效</span></h2>
+  <div class="grid" id="ui-grid"></div>
+
+  <h2>候选：滴水声　<span class="tag fx">操作音效</span></h2>
+  <p class="note">给水龙头／夜里滴水用的备选，还没接入游戏。都截成一两下、调到偏轻。挑中告诉我编号。</p>
+  <div class="grid" id="drip-grid"></div>
+
+  <h2>手机、电脑　<span class="tag fx">操作音效</span></h2>
+  <div class="grid" id="dev-grid"></div>
+
+  <h2>字幕底乐、录音底噪　<span class="tag bg">背景音</span></h2>
+  <div class="grid" id="layer-grid"></div>
+
+  <h2>备用音乐　<span class="tag bg">背景音</span></h2>
+  <p class="note">挑剩的音乐，游戏里暂时不用，留着以后配别的场景。文件在 assets/sfx/备用/。诊室那批 -38 LUFS，后座夜里那批 -36（Mysterious Ambient 是原来夜里用的，已剪成无缝循环，-35），后座白天那批 -34。</p>
+  <table>
+    <thead><tr><th>曲名</th><th>当初为哪里挑的</th><th>试听</th></tr></thead>
+    <tbody id="spare-rows"></tbody>
+  </table>
+
+  <script>document.write('<script src="assets/sfx.js?v=' + Date.now() + '"><\/script>');</script>
+  <script>
+    const AMB_ROWS = [
+      ["rong-day", "后座白天（音乐）", "在荣汇街屋里：1～3 关刚入住，日夜都放它；第 5 关起晚上七点前", "https://pixabay.com/music/modern-classical-documentary-mystery-313613/"],
+      ["rong-night", "后座夜里（音乐）", "第 4 关周生来说收回，整关放它；第 5 关起夜里那几关、晚上七点后", "https://pixabay.com/music/ambient-night-interior-background-silent-suspense-underscore-464810/"],
+      ["rong-stair", "楼梯走廊", "楼梯、4 楼平台、后楼梯", "https://pixabay.com/sound-effects/household-stairwell-ambient-noise-33146/"],
+      ["rong-roof", "天台", "天台", "https://pixabay.com/sound-effects/nature-wind-blowing-sfx-01-423673/"],
+      ["rong-street", "深水埗街道", "荣汇街街上", "https://pixabay.com/sound-effects/city-street-sound-456586/"],
+      ["clinic-wait", "澄心候诊", "诊所候诊", "https://pixabay.com/sound-effects/city-121116-bank-interior-ambience-office-doors-footstaps-printer-typing-voices-17642/"],
+      ["clinic-room", "澄心诊室 · 初诊（音乐）", "第 6 关诊室；其他没单独配的关也用它", "https://pixabay.com/sound-effects/musical-low-energy-197725/"],
+      ["clinic-room-8", "澄心诊室 · 第二次（音乐）", "第 8 关诊室：分两堆", "https://pixabay.com/music/modern-classical-thoughtful-piano-calm-376008/"],
+      ["clinic-room-10", "澄心诊室 · 第三次（音乐）", "第 10 关诊室：吵架", "https://pixabay.com/music/classical-string-quartet-quiet-suspicions-emotional-suspenseful-drama-453616/"],
+      ["clinic-room-12", "澄心诊室 · 第四次（音乐）", "第 12 关诊室：鱼牌不见", "https://pixabay.com/music/modern-classical-tense-sad-piano-111679/"],
+      ["clinic-room-14", "澄心诊室 · 拿笔记（音乐）", "第 14 关诊室：笔记不见", "https://pixabay.com/music/mystery-echoes-of-mystery-dark-ambient-underscore-360780/"],
+      ["mei", "表姐家", "美娟家", [
+        "https://pixabay.com/sound-effects/household-sounds-at-home-65500/",
+        "https://pixabay.com/sound-effects/household-sdta0033-kitchen-cutting-carrot-01-199900/",
+        "https://pixabay.com/sound-effects/film-special-effects-tool-box-sounds-2-101168/",
+        "https://pixabay.com/sound-effects/film-special-effects-keys-and-door-latch-250304/",
+      ]],
+    ];
+
+    const UI = [
+      ["tap", "普通按钮", "所有没有专门声音的按钮"],
+      ["next", "对白往下一句", "点对白框、听下句、下一条"],
+      ["pick", "选对白选项", "当面、电话、短讯里选一句"],
+      ["open", "翻开日记簿", "录音：Page Turn"],
+      ["shut", "合上日记簿", "录音：Book closing"],
+      ["file", "记下来", "录音：铅笔写字（已压低）"],
+      ["paper", "纸放回去", "录音：Closing a Book；回到目录、收起地图"],
+      ["unfold", "摊开地图", "录音：Letter Opening"],
+      ["tick", "清单打勾", "新做完一件要做的事"],
+      ["steps", "走过去", "关内去另一个地方"],
+      ["photo", "点开大图", "录音：Paper Page Flip and Document Rustle"],
+      ["tip", "屏幕提示", "底下浮出一句话"],
+      ["ready", "「往下」亮起", "每关第一次亮"],
+    ];
+
+    const DEV = [
+      ["answer", "接听", ""],
+      ["smsIn", "短讯收到", ""],
+      ["smsOut", "短讯发出", ""],
+      ["chatIn", "倾偈：表姐来消息", ""],
+      ["chatOut", "倾偈：自己发出", ""],
+      ["browser", "打开廿八屋", "每次从场景里点开网页"],
+      ["key", "打字一下", "廿八屋里打字，每个字一下"],
+      ["send", "廿八屋送出、顶帖", ""],
+      ["recOn", "录音键：开", ""],
+      ["recOff", "录音键：关", ""],
+      ["vm", "语音留言开始", ""],
+    ];
+
+    let ambPlaying = null;
+
+    function stopAmb() {
+      if (!ambPlaying) return;
+      const p = ambPlaying;
+      ambPlaying = null;
+      p.audio.pause();
+      p.btn.classList.remove("on");
+    }
+
+    function ambVol() {
+      return AMB_VOL * BG_VOL[bgLevel];
+    }
+
+    function playAmb(btn, src) {
+      const same = ambPlaying && ambPlaying.btn === btn;
+      stopAmb();
+      if (same) return;
+      const a = new Audio(src);
+      a.loop = true;
+      a.volume = ambVol();
+      a.play();
+      ambPlaying = { btn, audio: a };
+      btn.classList.add("on");
+    }
+
+    function mk(tag, attrs, kids) {
+      const n = document.createElement(tag);
+      Object.entries(attrs || {}).forEach(([k, v]) => {
+        if (k === "on") n.addEventListener("click", v);
+        else if (k === "text") n.textContent = v;
+        else n.setAttribute(k, v);
+      });
+      (kids || []).forEach((c) => n.append(c));
+      return n;
+    }
+
+    const rows = document.getElementById("amb-rows");
+    AMB_ROWS.forEach(([key, name, when, src]) => {
+      const fileBtn = mk("button", { type: "button", class: "sfx-quiet", text: "▶ 播放", disabled: "" });
+      const stat = mk("span", { class: "stat", text: "查找中…" });
+      fileBtn.addEventListener("click", () => playAmb(fileBtn, ambSrc(key)));
+      const probe = new Audio();
+      probe.preload = "metadata";
+      probe.addEventListener("loadedmetadata", () => {
+        fileBtn.removeAttribute("disabled");
+        stat.textContent = Math.round(probe.duration) + " 秒，循环";
+      });
+      probe.addEventListener("error", () => {
+        stat.textContent = "缺文件：assets/sfx/" + AMB_FILES[key] + ".mp3";
+        stat.classList.add("miss");
+      });
+      probe.src = ambSrc(key);
+      const links = (Array.isArray(src) ? src : src ? [src] : []).map((u, i, all) =>
+        mk("a", { href: u, target: "_blank", rel: "noopener", text: all.length > 1 ? "第" + (i + 1) + "段" : "Pixabay" }));
+      const srcCell = mk("td", { class: "src" });
+      if (!links.length) srcCell.textContent = "还没有";
+      links.forEach((l, i) => { if (i) srcCell.append("　"); srcCell.append(l); });
+      if (links.length > 1) srcCell.append(mk("div", { text: "四段各自调到同一响度，再依次接起来" }));
+      rows.append(mk("tr", {}, [
+        mk("td", { text: name }),
+        mk("td", { class: "when", text: when }),
+        mk("td", { class: "acts" }, [fileBtn, stat]),
+        srcCell,
+      ]));
+    });
+
+    const SPARE = [
+      ["Mysterious Ambient for Detective Stories", "后座夜里（原来用的）", "https://pixabay.com/music/search/mysterious%20ambient%20for%20detective%20stories/"],
+      ["Solitude", "后座夜里", "https://pixabay.com/music/ambient-solitude-dark-ambient-music-354468/"],
+      ["Nobody There", "后座夜里", "https://pixabay.com/music/ambient-nobody-there-134535/"],
+      ["Late Night Reflection", "后座夜里", "https://pixabay.com/music/solo-piano-late-night-reflection-451194/"],
+      ["Night Podcast Background - Quiet Tension Atmosphere", "后座夜里", "https://pixabay.com/music/lofi-night-podcast-background-quiet-tension-atmosphere-464778/"],
+      ["Empty Room Piano Echoes", "后座夜里，只有 30 秒", "https://pixabay.com/music/modern-classical-empty-room-piano-echoes-518049/"],
+      ["Still Desk Slow Clock", "诊室第二次", "https://pixabay.com/music/ambient-still-desk-slow-clock-472236/"],
+      ["A Calm Soundtrack for Thoughtful Narration", "诊室第二次", "https://pixabay.com/music/modern-classical-a-calm-soundtrack-for-thoughtful-narration-364021/"],
+      ["Subtle Motion", "诊室第二次", "https://pixabay.com/music/orchestral-subtle-motion-463434/"],
+      ["Drama Slow Burn Confession", "诊室第三次", "https://pixabay.com/music/small-drama-drama-slow-burn-confession-578478/"],
+      ["Reflective Serious Piano (Rain On The Station)", "诊室第三次", "https://pixabay.com/music/modern-classical-reflective-serious-piano-rain-on-the-station-114588/"],
+      ["Secret Motive (Dark Suspense Piano)", "诊室第四次", "https://pixabay.com/music/solo-piano-secret-motive-dark-suspense-piano-465794/"],
+      ["Mysterious Music Box Melody - Enigmatic Ambient Tune", "诊室第四次", "https://pixabay.com/music/mystery-mysterious-music-box-melody-enigmatic-ambient-tune-360847/"],
+      ["Moon Cipher (Mystic Thriller Cinematic Piano)", "诊室第四次", "https://pixabay.com/music/ambient-moon-cipher-mystic-thriller-cinematic-piano-465791/"],
+      ["Cold Trail (Suspense Piano Cinematic)", "诊室拿笔记", "https://pixabay.com/music/ambient-cold-trail-suspense-piano-cinematic-465793/"],
+      ["Cold Orbit (Dark Mystery Atmosphere)", "诊室拿笔记", "https://pixabay.com/music/ambient-cold-orbit-dark-mystery-atmosphere-465797/"],
+      ["Cinematic True Crime Underscore Noir Tension", "诊室拿笔记，起伏大", "https://pixabay.com/music/suspense-cinematic-true-crime-underscore-noir-tension-508518/"],
+      ["Hollow Reverb Eerie Melancholic Drone Grainy Textures Dark Ambient", "诊室拿笔记，起伏大", "https://pixabay.com/music/ambient-hollow-reverb-eerie-melancholic-drone-grainy-textures-dark-ambient-454742/"],
+      ["Hidden Hypothesis Tension Suspense Piano", "后座白天", "https://pixabay.com/music/solo-piano-hidden-hypothesis-tension-suspense-piano-465801/"],
+      ["Thoughtful Ambient Underscore", "后座白天", "https://pixabay.com/music/search/thoughtful%20ambient%20underscore/"],
+      ["Dinner in Fog", "后座白天", "https://pixabay.com/music/search/dinner%20in%20fog/"],
+    ];
+    const spareRows = document.getElementById("spare-rows");
+    SPARE.forEach(([title, from, page]) => {
+      const src = "assets/sfx/备用/音乐-" + title + ".mp3";
+      const len = mk("span", { class: "stat" });
+      const b = mk("button", { type: "button", class: "sfx-quiet", text: "▶ 播放" });
+      b.addEventListener("click", () => playAmb(b, src));
+      const probe = new Audio();
+      probe.preload = "metadata";
+      probe.addEventListener("loadedmetadata", () => { len.textContent = Math.round(probe.duration) + " 秒"; });
+      probe.addEventListener("error", () => { len.textContent = "缺文件"; len.classList.add("miss"); });
+      probe.src = src;
+      spareRows.append(mk("tr", {}, [
+        mk("td", {}, [mk("a", { href: page, target: "_blank", rel: "noopener", text: title })]),
+        mk("td", { class: "when", text: from }),
+        mk("td", { class: "acts" }, [b, len]),
+      ]));
+    });
+
+    function grid(id, list) {
+      const box = document.getElementById(id);
+      list.forEach(([key, name, sub]) => {
+        box.append(mk("button", { type: "button", class: "sfx-quiet", on: () => { sfxUnlock(); sfx(key); } }, [
+          name,
+          sub ? mk("small", { text: sub }) : "",
+        ]));
+      });
+    }
+    grid("ui-grid", UI);
+    grid("dev-grid", DEV);
+
+    const DRIP = [
+      ["1", "短滴一下", "Pixabay：Water Drip"],
+      ["2", "单滴清脆", "Pixabay：Water Drop 3"],
+      ["3", "水龙头连滴", "Pixabay：Dripping Faucet"],
+      ["4", "浴室漏水", "Pixabay：Dripping Tapwater"],
+      ["5", "水珠啵一声", "Pixabay：Water Droplet 1"],
+      ["6", "水龙头慢滴", "Pixabay：Dripping Faucet 2"],
+      ["7", "远处漏水", "Pixabay：Leaky Faucet Distant"],
+      ["8", "自然水滴", "Pixabay：Water Drop"],
+    ];
+    const dripGrid = document.getElementById("drip-grid");
+    DRIP.forEach(([id, title, sub]) => {
+      const src = "assets/sfx/候选/滴水-" + id + ".mp3?v=" + Date.now();
+      const len = mk("span", { class: "stat" });
+      const b = mk("button", { type: "button", class: "sfx-quiet" }, [
+        "滴水 " + id + "　" + title, len, mk("small", { text: sub }),
+      ]);
+      b.addEventListener("click", () => { const a = new Audio(src); a.play(); });
+      const probe = new Audio();
+      probe.preload = "metadata";
+      probe.addEventListener("loadedmetadata", () => { len.textContent = probe.duration.toFixed(1) + " 秒"; });
+      probe.addEventListener("error", () => { len.textContent = "缺文件"; len.classList.add("miss"); });
+      probe.src = src;
+      dripGrid.append(b);
+    });
+
+    const dev = document.getElementById("dev-grid");
+    const ringBtn = mk("button", { type: "button", class: "sfx-quiet" }, ["来电铃", mk("small", { text: "点一下开始响，再点停" })]);
+    ringBtn.addEventListener("click", () => {
+      sfxUnlock();
+      if (ringBtn.classList.toggle("on")) ringStart();
+      else ringStop();
+    });
+    dev.prepend(ringBtn);
+    dev.append(
+      mk("button", { type: "button", class: "sfx-quiet", on: () => { sfxUnlock(); sfxDial("999"); } }, ["拨 999", mk("small", { text: "按键音，再响两下回铃" })]),
+      mk("button", { type: "button", class: "sfx-quiet", on: () => { sfxUnlock(); sfxDial("23456789"); } }, ["拨一个八位号码", mk("small", { text: "打给阿乐、表姐时" })])
+    );
+
+    const layer = document.getElementById("layer-grid");
+    const toggle = (label, sub, on, off) => {
+      const b = mk("button", { type: "button", class: "sfx-quiet" }, [label, mk("small", { text: sub })]);
+      b.addEventListener("click", () => {
+        sfxUnlock();
+        if (b.classList.toggle("on")) on();
+        else off();
+      });
+      layer.append(b);
+      return b;
+    };
+    const padDay = toggle("字幕底乐", "关卡开场、等待、过关字幕", () => { padStop(0.3); padEnd.classList.remove("on"); setTimeout(() => padStart(110), 350); }, () => padStop());
+    const padEnd = toggle("结局字幕底乐", "第一章结尾，更低一点", () => { padStop(0.3); padDay.classList.remove("on"); setTimeout(() => padStart(82.4), 350); }, () => padStop());
+    toggle("录音开着的磁带底噪", "夜里开了录音时一直叠着", () => hissOn(true), () => hissOn(false));
+
+    document.getElementById("stop-all").addEventListener("click", () => {
+      stopAmb();
+      ringStop();
+      padStop(0.3);
+      hissOn(false);
+      document.querySelectorAll("button.on").forEach((b) => b.classList.remove("on"));
+    });
+
+    document.getElementById("sfx-toggle").addEventListener("click", () => setTimeout(() => {
+      if (ambPlaying && ambPlaying.audio) ambPlaying.audio.volume = ambVol();
+    }));
+  </script>
+</body>
+</html>

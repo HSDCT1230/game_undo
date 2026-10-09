@@ -4,10 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>暗度 undo</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=LXGW+WenKai&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="assets/style.css?v=20260925za" />
+  <!-- 不用 Google Fonts：国内常连不上，会卡住页面解析，后面的 sfx.js 等脚本根本加载不了 -->
+  <link rel="stylesheet" href="assets/style.css?v=20261009-2330w" />
 </head>
 <body>
   <div id="app">
@@ -17,12 +15,13 @@
       <span id="clock">2014年7月31日 周四 23:14</span>
       <span id="hud-place"></span>
     </span>
+    <button type="button" id="sfx-toggle">背景音　大</button>
     </div>
     <main id="stage"></main>
     <nav id="playbar" aria-label="游戏导航" hidden>
       <div class="playbar-now" aria-hidden="true"></div>
       <div class="playbar-mid">
-        <button type="button" id="playbar-house">廿八屋</button>
+        <button type="button" id="playbar-house">浏览器</button>
         <button type="button" id="playbar-notes">日记簿</button>
         <button type="button" id="playbar-map">地图</button>
       </div>
@@ -62,14 +61,7 @@
             <div class="diary-meta">
               <span class="diary-kind">日记簿</span>
             </div>
-            <div id="week-box" hidden>
-              <h3 class="diary-sec">这周</h3>
-              <p id="week-line" class="diary-note"></p>
-            </div>
-            <h3 class="diary-sec">证物</h3>
-            <ul id="evidence-list"></ul>
-            <h3 class="diary-sec">笔记</h3>
-            <ul id="notes-list"></ul>
+            <div id="diary-flow"></div>
           </div>
           <div id="notes-leaf" class="diary-sheet-inner" hidden></div>
           <div id="notes-actions" class="diary-actions"></div>
@@ -77,6 +69,17 @@
       </div>
     </div>
   </div>
-  <script src="assets/game.js?v=20260925za"></script>
+  <script src="assets/pics.js?v=20261009-2330w"></script>
+  <script src="assets/sfx.js?v=20261009-2330w"></script>
+  <script src="assets/core.js?v=20261009-2330w"></script>
+  <script src="assets/ui.js?v=20261009-2330w"></script>
+  <script src="assets/diary.js?v=20261009-2330w"></script>
+  <script src="assets/web.js?v=20261009-2330w"></script>
+  <script src="assets/talk.js?v=20261009-2330w"></script>
+  <script src="assets/hub.js?v=20261009-2330w"></script>
+  <script src="assets/story.js?v=20261009-2330w"></script>
+  <script src="assets/levels.js?v=20261009-2330w"></script>
+  <script src="assets/map.js?v=20261009-2330w"></script>
+  <script src="assets/main.js?v=20261009-2330w"></script>
 </body>
 </html>
