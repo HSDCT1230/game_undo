@@ -3,48 +3,46 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>暗度 undo</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=LXGW+WenKai&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="assets/style.css?v=20260925za" />
+  <title>undo</title>
+  <link rel="stylesheet" href="assets/style.css?v=20261011-hallfix1" />
 </head>
 <body>
   <div id="app">
     <div id="os-bar">
-    <span id="os-title">暗度</span>
+    <span id="os-title"></span>
     <span id="hud">
-      <span id="clock">2014年7月31日 周四 23:14</span>
+      <span id="clock"></span>
       <span id="hud-place"></span>
     </span>
+    <button type="button" id="sfx-toggle"></button>
     </div>
     <main id="stage"></main>
-    <nav id="playbar" aria-label="游戏导航" hidden>
+    <nav id="playbar" aria-label="nav" hidden>
       <div class="playbar-now" aria-hidden="true"></div>
       <div class="playbar-mid">
-        <button type="button" id="playbar-house">廿八屋</button>
-        <button type="button" id="playbar-notes">日记簿</button>
-        <button type="button" id="playbar-map">地图</button>
+        <button type="button" id="playbar-house"></button>
+        <button type="button" id="playbar-notes"></button>
+        <button type="button" id="playbar-map"></button>
       </div>
       <div class="playbar-go">
         <button type="button" id="playbar-advance" hidden>
-          <span class="go-mark">往下</span>
+          <span class="go-mark"></span>
           <span class="go-copy">
             <span class="go-when"></span>
             <span class="go-where"></span>
           </span>
-          <span class="go-arrow" aria-hidden="true">→</span>
+          <span class="go-arrow" aria-hidden="true"></span>
         </button>
       </div>
     </nav>
-    <button type="button" id="map-toggle" hidden tabindex="-1" aria-hidden="true">地图</button>
-    <button type="button" id="notes-toggle" hidden tabindex="-1" aria-hidden="true">日记簿</button>
+    <button type="button" id="map-toggle" hidden tabindex="-1" aria-hidden="true"></button>
+    <button type="button" id="notes-toggle" hidden tabindex="-1" aria-hidden="true"></button>
     <div id="map-layer" hidden>
-      <div id="map-sheet" role="dialog" aria-label="地图">
+      <div id="map-sheet" role="dialog" aria-label="map">
         <header>
-          <h2>地图</h2>
+          <h2 id="map-title"></h2>
           <p id="map-here"></p>
-          <button type="button" id="map-close">合上</button>
+          <button type="button" id="map-close"></button>
         </header>
         <div id="map-tabs"></div>
         <p id="map-span" hidden></p>
@@ -55,21 +53,14 @@
       </div>
     </div>
     <div id="notes-layer" hidden>
-      <div id="notes-book" class="diary-sheet" role="dialog" aria-label="日记簿">
+      <div id="notes-book" class="diary-sheet" role="dialog" aria-label="notes">
         <div class="diary-wire" aria-hidden="true"></div>
         <div class="diary-page">
           <div id="notes-index" class="diary-sheet-inner">
             <div class="diary-meta">
-              <span class="diary-kind">日记簿</span>
+              <span class="diary-kind" id="notes-kind"></span>
             </div>
-            <div id="week-box" hidden>
-              <h3 class="diary-sec">这周</h3>
-              <p id="week-line" class="diary-note"></p>
-            </div>
-            <h3 class="diary-sec">证物</h3>
-            <ul id="evidence-list"></ul>
-            <h3 class="diary-sec">笔记</h3>
-            <ul id="notes-list"></ul>
+            <div id="diary-flow"></div>
           </div>
           <div id="notes-leaf" class="diary-sheet-inner" hidden></div>
           <div id="notes-actions" class="diary-actions"></div>
@@ -77,6 +68,17 @@
       </div>
     </div>
   </div>
-  <script src="assets/game.js?v=20260925za"></script>
+  <script src="assets/pics.js?v=20261011-hallfix1"></script>
+  <script src="assets/sfx.js?v=20261011-keycap7b"></script>
+  <script src="assets/core.js?v=20261011-hallfix1"></script>
+  <script src="assets/ui.js?v=20261011-hallfix1"></script>
+  <script src="assets/diary.js?v=20261011-hallfix1"></script>
+  <script src="assets/web.js?v=20261011-hallfix1"></script>
+  <script src="assets/talk.js?v=20261011-hallfix1"></script>
+  <script src="assets/hub.js?v=20261011-hallfix1"></script>
+  <script src="assets/story.js?v=20261011-hallfix1"></script>
+  <script src="assets/levels.js?v=20261011-hallfix1"></script>
+  <script src="assets/map.js?v=20261011-hallfix1"></script>
+  <script src="assets/main.js?v=20261011-hallfix1"></script>
 </body>
 </html>

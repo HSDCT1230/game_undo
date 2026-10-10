@@ -1,0 +1,5 @@
+# Keep HTML shell ASCII-safe; Chinese chrome lives in JS (core.js fillShellChrome).
+*.html text eol=lf working-tree-encoding=UTF-8
+*.js text eol=lf working-tree-encoding=UTF-8
+*.css text eol=lf working-tree-encoding=UTF-8
+*.md text eol=lf working-tree-encoding=UTF-8

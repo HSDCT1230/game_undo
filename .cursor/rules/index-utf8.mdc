@@ -1,0 +1,12 @@
+---
+description: Never write Chinese into index.html via editor tools; keep shell UTF-8 safe
+alwaysApply: true
+---
+
+# index.html encoding
+
+游戏/index.html must stay **ASCII-only** (no Chinese). All chrome labels are filled by illShellChrome() in 游戏/assets/core.js.
+
+- Do **not** use Write / StrReplace / ApplyPatch to put Chinese into index.html — those paths have repeatedly turned Chinese into ??.
+- To change shell wording (暗度、浏览器、日记簿、地图、往下、合上、环境音…), edit illShellChrome in core.js (UTF-8 JS is fine).
+- If index.html must be rewritten, use PowerShell [System.IO.File]::WriteAllText(..., UTF8Encoding $false) with ASCII-only content, then bump ?v=.
