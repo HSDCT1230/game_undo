@@ -32,6 +32,13 @@ function fillShellChrome() {
   set("#map-close", "合上");
   set("#notes-book", "日记簿", "aria-label");
   set("#notes-kind", "日记簿");
+  if (!$("#rotate-hint")) {
+    const hint = document.createElement("div");
+    hint.id = "rotate-hint";
+    hint.setAttribute("aria-live", "polite");
+    hint.innerHTML = '<div class="rotate-phone" aria-hidden="true"></div><p>把手机竖过来玩</p>';
+    document.body.appendChild(hint);
+  }
 }
 fillShellChrome();
 
@@ -353,6 +360,10 @@ function el(tag, attrs = {}, kids = []) {
   return n;
 }
 
+// 本机开发（localhost / file:// / ?dev）才露出「待补图」路径；线上和局域网手机只见灰底
+const DEV_PICS = /^(localhost|127\.0\.0\.1|\[::1\])?$/.test(location.hostname) || /[?&]dev\b/.test(location.search);
+document.documentElement.classList.toggle("dev-pics", DEV_PICS);
+
 function imgSlot(id, className, alt) {
   const wrap = el("div", {
     class: "img-slot missing " + (className || ""),
@@ -367,9 +378,18 @@ function imgSlot(id, className, alt) {
     image.hidden = false;
     wrap.classList.remove("missing");
   };
+  let retried = false;
   image.addEventListener("load", reveal);
   image.addEventListener("error", () => {
     if (image.naturalWidth) return;
+    // 手机网抖会误报失败：已知缺图不重试，其余隔一下再拉一次
+    if (!retried && !PIC_MISSING[id]) {
+      retried = true;
+      setTimeout(() => {
+        if (wrap.isConnected) image.src = picSrc(id) + "&r=1";
+      }, 1200);
+      return;
+    }
     PIC_MISSING[id] = true;
     wrap.classList.add("missing", "broken");
     image.hidden = true;

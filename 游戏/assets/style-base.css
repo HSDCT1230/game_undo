@@ -321,8 +321,14 @@ body {
 }
 .img-slot.missing .img-mark { display: flex; }
 .img-slot:not(.missing) .img-mark { display: none; }
-/* 手机网慢：图还在下载时只铺暗底，真加载失败（.broken）才露出「待补图」字样 */
-.img-slot.missing:not(.broken) .img-mark { color: transparent; background: #15130f; }
+/* 图没到（下载中／失败）一律纯灰底、不露字；只有本机开发（html.dev-pics）失败时才露出「待补图」路径 */
+:root { --pic-wait: #3a3a3a; }
+.img-slot.missing { background: var(--pic-wait); }
+.img-slot.missing:not(.broken) .img-mark,
+html:not(.dev-pics) .img-slot.missing .img-mark { color: transparent; background: var(--pic-wait); }
+/* 下载中别让浏览器把 alt（图名）画出来 */
+.img-slot img,
+.map-photo { color: transparent; }
 .img-slot.thumb { width: 100%; height: auto; aspect-ratio: 16 / 9; min-height: 0; }
 .img-slot.photo-lg { width: 100%; height: auto; aspect-ratio: 16 / 9; min-height: 0; }
 .avatar-slot { width: 72px; height: 72px; min-height: 0; aspect-ratio: 1; border-radius: 2px; }

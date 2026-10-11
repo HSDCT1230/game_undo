@@ -739,9 +739,100 @@ function drawCaption(c, L) {
   desk.append(el("div", { class: "caption-text" }, kids));
   stage.append(desk);
   renderPlaybar();
+  const app = document.getElementById("app");
+  if (app) app.classList.remove("opening-dark");
+  if (openingGlow && c.type === "start" && c.n === 1) {
+    openingGlow = false;
+    openingScreen(desk);
+  }
+}
+
+/* ---------- 新游戏开场：耳机提示 → 黑底三句心声 → 屏幕微光、钟打出来 → 「要做」→ 从光里切进浏览器 ----------
+   不打标题、不写第几关（标题留到第一章结尾）。心声只写她此刻知道的事。 */
+const OPENING_SAY = ["五月，分了手。", "短租、沙发、日租。", "今晚之后，要有地方住。"];
+const OPENING_SAY_MS = 2200;
+let openingGlow = false;
+let openingTimers = [];
+
+function openingLater(fn, ms) {
+  openingTimers.push(setTimeout(fn, ms));
+}
+
+function openingClear() {
+  openingTimers.forEach(clearTimeout);
+  openingTimers = [];
+}
+
+function playOpening() {
+  openingClear();
+  S.mode = "card";
+  S.card = null;
+  clearStage();
+  const app = document.getElementById("app");
+  if (app) app.classList.add("opening-dark");
+  const text = el("div", { class: "caption-text" });
+  const desk = el("div", { class: "desk caption-card opening-pre" }, [text]);
+  stage.append(desk);
+  renderPlaybar();
+
+  let done = false;
+  const toScreen = () => {
+    if (done) return;
+    done = true;
+    openingClear();
+    openingGlow = true;
+    enterLevel(1);
+  };
+  const says = () => {
+    roomTone(true);
+    text.replaceChildren();
+    // 同一次点击里加的监听不会被这次点击触发
+    desk.addEventListener("click", toScreen);
+    let i = 0;
+    const next = () => {
+      if (i >= OPENING_SAY.length) return toScreen();
+      text.replaceChildren(el("p", { class: "caption-line opening-say" }, [OPENING_SAY[i]]));
+      if (i === 1) sfx("drip");
+      i += 1;
+      openingLater(next, OPENING_SAY_MS);
+    };
+    openingLater(next, 500);
+  };
+  // 已经点过（重来）声音早解锁了，不再问
+  if (sfxReady) return says();
+  text.append(el("p", { class: "opening-gate" }, ["戴上耳机，点一下"]));
+  desk.addEventListener("click", says, { once: true });
+}
+
+function openingScreen(desk) {
+  desk.classList.add("opening");
+  desk.prepend(el("div", { class: "opening-glow", "aria-hidden": "true" }));
+  const full = S.time || "";
+  const settle = () => {
+    openingClear();
+    if (desk.isConnected) clockEl.textContent = S.time || "";
+  };
+  desk.addEventListener("click", (e) => {
+    if (e.target.closest("button")) return;
+    settle();
+    desk.classList.add("now");
+  });
+  if (typeMotionOff()) return;
+  const chars = Array.from(full);
+  let n = 0;
+  clockEl.textContent = "";
+  const tick = () => {
+    if (!desk.isConnected) return;
+    n += 1;
+    clockEl.textContent = chars.slice(0, n).join("");
+    if (String(chars[n - 1] || "").trim()) sfx("key");
+    if (n < chars.length) openingLater(tick, 55);
+  };
+  openingLater(tick, 700);
 }
 
 function startLevelNow() {
+  roomTone(false);
   const n = S.card && S.card.n;
   S.card = null;
   if (!LEVELS[n] || typeof LEVELS[n].start !== "function") return;
@@ -965,7 +1056,7 @@ function newGame() {
   S = initial();
   renderNotes();
   setTime(S.time);
-  enterLevel(1);
+  playOpening();
 }
 
 // 开局存档 C：问句 + 底栏「继续　选关　重来」；选关展开 1…max
@@ -1091,5 +1182,5 @@ function bootGame() {
     draw();
     return;
   }
-  enterLevel(1);
+  playOpening();
 }

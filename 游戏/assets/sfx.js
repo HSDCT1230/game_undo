@@ -432,6 +432,38 @@ function hissOn(on) {
   hissNode = { src, g };
 }
 
+/* 新游戏开场：深夜房间的冷气底噪。跟环境音开关走；进浏览器时淡出 */
+let roomNode = null;
+
+function roomTone(on) {
+  if (!on) {
+    if (roomNode && sfxCtx) {
+      const r = roomNode;
+      roomNode = null;
+      const t = sfxCtx.currentTime;
+      r.g.gain.setValueAtTime(r.g.gain.value, t);
+      r.g.gain.linearRampToValueAtTime(0, t + 1.5);
+      r.src.stop(t + 1.6);
+    }
+    return;
+  }
+  if (roomNode || !bgOn() || !sfxAudio()) return;
+  const c = sfxCtx;
+  const src = c.createBufferSource();
+  src.buffer = sfxNoiseBuf;
+  src.loop = true;
+  const f = c.createBiquadFilter();
+  f.type = "lowpass";
+  f.frequency.value = 380;
+  f.Q.value = 0.3;
+  const g = c.createGain();
+  g.gain.setValueAtTime(0, c.currentTime);
+  g.gain.linearRampToValueAtTime(0.05 * BG_VOL[bgLevel], c.currentTime + 2);
+  src.connect(f).connect(g).connect(sfxOut);
+  src.start();
+  roomNode = { src, g };
+}
+
 /* 环境声：按地点循环。只用 assets/sfx/ 里的选用文件，不用 备用/ 里挑剩的 */
 const AMB_FILES = {
   "rong-day": "环境-后座白天",           // Documentary Mystery（1～3 关全天；之后七点前）

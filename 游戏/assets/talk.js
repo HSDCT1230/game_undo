@@ -111,9 +111,87 @@ function nextBtn(b, label) {
     type: "button",
     onclick: (e) => {
       e.stopPropagation();
+      if (finishTyping()) return;
       advanceBeat(b);
     },
   }, [label || "继续"]);
+}
+
+// drawTalk 每次整块重画（切语言也会），只按说话人变没变决定播不播
+function turnIn(key) {
+  const t = S.talk;
+  if (!t || t.turnKey === key) return "";
+  t.turnKey = key;
+  return " turn-in";
+}
+
+/* 快速打字机：整句先占位（未打出的字透明），换行不跳；打字中点一下只补全、不翻页 */
+const TYPE_MS = 22;
+const TYPE_MS_ZH = 12;
+const TYPE_PAUSE = /[，。！？、；：…—,.!?]/;
+let typer = null;
+let typeQueue = [];
+
+function typeLater(node, ms) {
+  if (node) typeQueue.push({ node, ms: ms || TYPE_MS });
+}
+
+function typeMotionOff() {
+  return typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+function finishTyping() {
+  if (!typer) return false;
+  typer.finish();
+  return true;
+}
+
+function startTyping() {
+  const queue = typeQueue;
+  typeQueue = [];
+  if (typer) typer.finish();
+  const t = S.talk;
+  // 同一句重画（切语言等）直接给全文
+  if (!queue.length || !t || t.typedAt === t.i || typeMotionOff()) {
+    if (t) t.typedAt = t.i;
+    return;
+  }
+  t.typedAt = t.i;
+  const parts = queue.map(({ node, ms }) => {
+    const chars = Array.from(node.textContent);
+    const shown = el("span", {}, []);
+    const rest = el("span", { class: "type-rest", "aria-hidden": "true" }, [chars.join("")]);
+    node.textContent = "";
+    node.append(shown, rest);
+    return { chars, shown, rest, ms };
+  });
+  let p = 0;
+  let n = 0;
+  let timer = 0;
+  const finish = () => {
+    clearTimeout(timer);
+    parts.forEach((x) => {
+      x.shown.textContent = x.chars.join("");
+      x.rest.remove();
+    });
+    if (typer && typer.finish === finish) typer = null;
+  };
+  const tick = () => {
+    const x = parts[p];
+    if (!x || !x.shown.isConnected) return finish();
+    n += 1;
+    x.shown.textContent = x.chars.slice(0, n).join("");
+    x.rest.textContent = x.chars.slice(n).join("");
+    const ch = x.chars[n - 1];
+    if (n >= x.chars.length) {
+      p += 1;
+      n = 0;
+      if (p >= parts.length) return finish();
+    }
+    timer = setTimeout(tick, TYPE_PAUSE.test(ch) ? x.ms * 4 : x.ms);
+  };
+  typer = { finish };
+  timer = setTimeout(tick, parts[0].ms);
 }
 
 function whoClass(name) {
@@ -146,10 +224,10 @@ function speakerOf(b) {
 function talkBody(text, zh, className) {
   const box = el("div", { class: "talk-body" });
   const mode = typeof langMode === "string" ? langMode : "both";
-  const zhMain = mode === "zh" && zh ? String(zh).trim().replace(/^\((.*)\)$/, "$1") : "";
+  const zhMain = mode === "zh" && zh ? String(zh).trim().replace(/^[（(](.*)[）)]$/, "$1") : "";
   box.append(el("div", { class: "talk-text" + (className ? " " + className : "") }, [zhMain || text || ""]));
   if (zh && mode === "both") {
-    const shown = /^\(.*\)$/.test(String(zh).trim()) ? String(zh).trim() : "(" + zh + ")";
+    const shown = /^[（(].*[）)]$/.test(String(zh).trim()) ? String(zh).trim() : "(" + zh + ")";
     box.append(el("div", { class: "talk-zh" }, [shown]));
   }
   return box;
@@ -259,11 +337,19 @@ function drawTalk() {
     return;
   }
   clearStage();
+  typeQueue = [];
   if (t.kind === "phone") stage.append(drawPhone(b));
   else if (t.kind === "sms") stage.append(drawSms(b));
   else if (t.kind === "msg") stage.append(drawMsg(b));
   else stage.append(drawFace(b));
+  startTyping();
   renderPlaybar();
+}
+
+function typeBody(box) {
+  typeLater(box.querySelector(".talk-text"));
+  typeLater(box.querySelector(".talk-zh"), TYPE_MS_ZH);
+  return box;
 }
 
 function phoneEnterClass() {
@@ -342,10 +428,11 @@ function drawFace(b) {
     const gaze = b.gaze === "you" ? " gaze-you" : b.gaze === "him" ? " gaze-him" : "";
     const cls = (stageDir ? "stage-dir" : tone) + (awen ? " awen-line" : "") + gaze;
     // 旁白不加普通话行；角色话读 b.zh
+    // 旁白走 narr-in 淡入，不打字
     if (stageDir || choosing) {
       body.append(el("div", { class: "talk-text " + cls }, [prompt]));
     } else {
-      body.append(talkBody(prompt, b.zh, cls));
+      body.append(typeBody(talkBody(prompt, b.zh, cls)));
     }
   }
   if (choosing) {
@@ -357,6 +444,7 @@ function drawFace(b) {
         class: "act-btn" + (b.ask ? " ask-btn" : ""),
         onclick: (e) => {
           e.stopPropagation();
+          if (finishTyping()) return;
           sfx("next");
           advanceBeat(b);
         },
@@ -366,6 +454,7 @@ function drawFace(b) {
     body.append(el("div", { class: "face-cont", "aria-hidden": "true" }, ["▾"]));
     box.addEventListener("click", (e) => {
       if (e.target.closest("button")) return;
+      if (finishTyping()) return;
       sfx("next");
       advanceBeat(b);
     });
@@ -397,9 +486,10 @@ function drawPhone(b) {
   const tone = whoClass(b.choices ? "章慧琪" : (b.who || speaker));
   const phoneLine = b.choices
     ? el("div", { class: "talk-text " + tone }, [b.prompt || "……"])
-    : (narr
+    : narr
       ? el("div", { class: "talk-text stage-dir" }, [b.text || ""])
-      : talkBody(b.text || "", b.zh, tone));
+      : typeBody(talkBody(b.text || "", b.zh, tone));
+  if (narr) typeLater(phoneLine);
   const script = el("div", { class: "phone-script" }, [
     el("div", { class: "phone-line-who " + tone }, [b.choices ? "你说" : (b.who || (t.eavesdrop ? "隔门" : "听筒"))]),
     phoneLine,
@@ -427,14 +517,24 @@ function drawSms(b) {
   const t = S.talk;
   const until = t.i + (b.choices ? 0 : 1);
   const log = t.beats.slice(0, until).filter((x) => x.text);
-  if (log.length > (t.smsShown || 0)) sfx(log[log.length - 1].who === "章慧琪" ? "smsOut" : "smsIn");
+  const grew = log.length > (t.smsShown || 0);
+  if (grew) sfx(log[log.length - 1].who === "章慧琪" ? "smsOut" : "smsIn");
   t.smsShown = log.length;
   const thread = el("div", { class: "sms-thread" });
-  log.forEach((x) => {
+  log.forEach((x, n) => {
     const mine = x.who === "章慧琪";
     const tone = whoClass(mine ? "章慧琪" : (x.who || t.contact || ""));
-    thread.append(el("div", { class: "sms-row " + (mine ? "me" : "them") }, [
-      el("div", { class: "sms-bubble " + tone }, [x.text]),
+    const pop = grew && n === log.length - 1 ? turnIn(mine ? "me" : "them") : "";
+    const bubble = el("div", { class: "sms-bubble " + tone });
+    const mode = typeof langMode === "string" ? langMode : "both";
+    const zhMain = mode === "zh" && x.zh ? String(x.zh).trim().replace(/^\((.*)\)$/, "$1") : "";
+    bubble.append(el("div", { class: "talk-text" }, [zhMain || x.text || ""]));
+    if (x.zh && mode === "both") {
+      const shown = /^\(.*\)$/.test(String(x.zh).trim()) ? String(x.zh).trim() : "(" + x.zh + ")";
+      bubble.append(el("div", { class: "talk-zh" }, [shown]));
+    }
+    thread.append(el("div", { class: "sms-row " + (mine ? "me" : "them") + pop }, [
+      bubble,
       el("div", { class: "sms-time" }, [clockHm()]),
     ]));
   });
@@ -474,6 +574,7 @@ function drawMsg(b) {
     el("div", { class: "talk-text " + whoClass(t.contact) }, [b.choices ? (b.prompt || "……") : b.who ? ("「" + (b.text || "") + "」") : (b.text || "")]),
     b.choices ? choiceBox(b, "msg-choices") : el("div", { class: "talk-actions" }, [nextBtn(b, "听完")]),
   ]));
+  if (!b.choices) typeLater(box.querySelector(".msg-frame .talk-text"));
   return box;
 }
 

@@ -926,8 +926,21 @@ a:hover {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: none; }
 }
+/* 打字机占位：未打出的字只占位不显示 */
+.type-rest { visibility: hidden; }
+/* 短讯换发送方才弹 */
+.sms-row.turn-in {
+  animation: turn-in-sms 0.18s ease-out both;
+  transform-origin: left bottom;
+}
+.sms-row.me.turn-in { transform-origin: right bottom; }
+@keyframes turn-in-sms {
+  from { opacity: 0; transform: translateY(8px) scale(0.97); }
+  to { opacity: 1; transform: none; }
+}
 @media (prefers-reduced-motion: reduce) {
-  .talk.face.narr .talk-text.stage-dir { animation: none; }
+  .talk.face.narr .talk-text.stage-dir,
+  .sms-row.turn-in { animation: none; }
 }
 .talk.face.awen .shade-figure {
   position: absolute;
@@ -1131,6 +1144,7 @@ a:hover {
 .phone-frame {
   width: min(420px, 92vw);
   height: min(680px, calc(100vh - 88px));
+  max-height: 100%;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -1164,7 +1178,8 @@ a:hover {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   padding: 22px 16px 16px;
   text-align: center;
 }
@@ -1217,6 +1232,17 @@ a:hover {
   color: #7dcea0;
   font-variant-numeric: tabular-nums;
   font-size: 13px;
+}
+/* 矮屏（小手机）：头像和间距收小，把高度让给对白和选项 */
+@media (max-height: 640px) {
+  .phone-incoming,
+  .phone-incall { padding: 12px 14px 12px; }
+  .phone-tag { margin-bottom: 6px; }
+  .talk.phone .talk-portrait,
+  .talk.phone .talk-avatar-placeholder { width: 60px; height: 60px; margin-bottom: 6px; }
+  .phone-who { font-size: 18px; }
+  .phone-num { margin-top: 2px; }
+  .phone-timer { margin: 4px 0 8px; }
 }
 .phone-answer {
   margin-top: auto;
@@ -1532,6 +1558,7 @@ button.phone-act.done {
   z-index: 1;
   width: min(420px, 92vw);
   height: min(680px, calc(100vh - 88px));
+  max-height: 100%;
   min-height: 0;
   display: flex;
   flex-direction: column;
@@ -2211,6 +2238,36 @@ button.phone-act.done {
   color: #2d4e70;
   font-size: 13px;
   letter-spacing: 0.04em;
+}
+
+/* 日历框不许比屏幕宽；讯息格跟图片格一样高，整行不被撑开 */
+.desk.scene-desk:has(> .calendar) {
+  justify-content: flex-start;
+  overflow-y: auto;
+}
+.desk.scene-desk > .calendar {
+  flex-shrink: 0;
+  width: min(860px, 100%);
+  max-width: 100%;
+  margin-block: auto;
+}
+.days { align-items: start; }
+.days .day-msg {
+  min-height: 0;
+  overflow: hidden;
+}
+@media (max-width: 720px) {
+  .desk.scene-desk > .calendar {
+    margin: auto;
+    padding: 14px 12px 6px;
+  }
+  .calendar h2 { margin: -14px -12px 10px; }
+  .days { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin: 10px 0; }
+  .days .day-msg { gap: 2px; padding: 6px 7px; }
+  .days .day-msg-k { font-size: 10px; padding: 0 5px; }
+  .days .day-msg strong { font-size: 12px; }
+  .days .day-msg p { font-size: 11px; -webkit-line-clamp: 1; }
+  .days .day-label { padding: 6px 4px 7px; font-size: 12px; }
 }
 
 .room {
@@ -3069,6 +3126,15 @@ button.phone-act.done {
   outline: none;
 }
 .diary-key-kept { text-decoration-color: rgba(74, 62, 46, .3); }
+/* 手机没有 hover：能记的字常亮一层荧光笔底，不然看不出能点 */
+@media (hover: none) {
+  .diary-key-link {
+    padding: 1px 2px;
+    border-radius: 2px;
+    background: rgba(240, 206, 120, .38);
+    text-decoration-color: #3a2f22;
+  }
+}
 
 .diary-img {
   width: 100%;
@@ -4038,15 +4104,17 @@ button.phone-act.done {
     box-shadow: 0 0 0 6px rgba(217, 72, 59, 0), 0 0 0 1px rgba(0, 0, 0, .35);
   }
 }
+/* 按钮本身 overflow:hidden（防长字溢出）；有红点时放开，红点也收进按钮框内，脉冲光圈才不被切 */
 #playbar-house.has-new {
   position: relative;
+  overflow: visible;
   animation: playbar-breathe 2.4s ease-in-out infinite;
 }
 #playbar-house.has-new::after {
   content: "";
   position: absolute;
-  top: 0;
-  right: -8px;
+  top: 1px;
+  right: 0;
   width: 10px;
   height: 10px;
   border-radius: 50%;
@@ -5224,6 +5292,15 @@ img.map-photo {
 }
 .caption-end .caption-go { animation-delay: 8.6s; }
 .caption-end .caption-acts { flex-wrap: wrap; gap: 12px 28px; }
+.caption-end .caption-text:has(.caption-acts) { padding-bottom: 0; }
+.caption-end .caption-acts {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  margin-bottom: 0;
+  padding: 32px 0 18px;
+  background: linear-gradient(rgba(6,6,6,0), rgba(6,6,6,.94) 42%);
+}
 /* 第二章预告：一页一两句，比关卡字幕快 */
 .caption-teaser .caption-line { animation-duration: 1.1s; animation-delay: 0.3s; }
 .caption-teaser .caption-line + .caption-line { margin-top: 6px; animation-delay: 0.9s; }
@@ -5299,6 +5376,58 @@ img.map-photo {
 @keyframes caption-drift {
   from { transform: scale(1.06); }
   to { transform: scale(1); }
+}
+/* 新游戏开场：黑底心声 → 屏幕微光亮起、右上角钟打出来 → 从光里放大切进浏览器 */
+#os-bar { transition: opacity 0.8s ease; }
+#app.opening-dark #os-bar { opacity: 0; pointer-events: none; }
+#app.opening-dark { background: #030405; }
+.opening-pre { cursor: pointer; }
+.opening-gate {
+  margin: 0;
+  font-size: var(--cap-small);
+  color: #a89880;
+  letter-spacing: 0.3em;
+  animation: caption-rise 1.2s ease 0.4s both, caption-breathe 3.2s ease-in-out 1.6s infinite;
+}
+.caption-line.opening-say { animation: opening-say 2.2s ease both; }
+@keyframes opening-say {
+  0% { opacity: 0; transform: translateY(6px); }
+  30%, 72% { opacity: 1; transform: none; }
+  100% { opacity: 0; }
+}
+.opening-glow {
+  position: absolute;
+  left: 50%;
+  bottom: -20%;
+  z-index: 0;
+  width: min(130vw, 1500px);
+  height: 95%;
+  transform: translateX(-50%);
+  background: radial-gradient(ellipse at 50% 100%, rgba(176, 200, 232, 0.32) 0%, rgba(120, 150, 200, 0.12) 40%, transparent 70%);
+  pointer-events: none;
+  animation: opening-glow-on 1.2s linear both;
+}
+@keyframes opening-glow-on {
+  0% { opacity: 0; }
+  10% { opacity: 0.7; }
+  18% { opacity: 0.12; }
+  30% { opacity: 0.85; }
+  40% { opacity: 0.4; }
+  100% { opacity: 1; }
+}
+.caption-card.opening .caption-line { animation-delay: 2s; }
+.caption-card.opening .caption-acts { animation-delay: 3.2s; }
+.caption-card.opening .caption-go { animation-delay: 4.2s; }
+.caption-card.opening.now .caption-line,
+.caption-card.opening.now .caption-acts { animation-delay: 0s; animation-duration: 0.35s; }
+.caption-card.opening.now .opening-glow { animation: none; }
+.caption-card.opening.leaving {
+  transform-origin: 50% 85%;
+  animation: opening-out 0.6s ease-in both;
+}
+@keyframes opening-out {
+  from { opacity: 1; transform: none; filter: none; }
+  to { opacity: 0; transform: scale(1.3); filter: brightness(1.9); }
 }
 @media (prefers-reduced-motion: reduce) {
   .desk.caption-card, .caption-card *, .caption-plate img { animation: none !important; }
@@ -5517,6 +5646,7 @@ img.map-photo {
   .web-link { display: inline-block; padding: 4px 0; }
   .wall-nav-item { min-height: 32px; font-size: 13px; }
   .chat-close { width: 34px; height: 30px; }
+  .window-x { min-width: 34px; min-height: 28px; margin: -6px -4px -6px 4px; font-size: 16px; line-height: 28px; }
   #map-close { min-height: 32px; }
   .slate-ok { width: 34px; height: 34px; }
 
@@ -5524,4 +5654,38 @@ img.map-photo {
   .phone-status, .sms-status, .phone-fakekeys, .sms-time,
   .chat-contact span, .chat-choices::before, .chat-status, .bubble-meta { font-size: 11px; }
   .test-list a { display: inline-block; padding: 6px 0; }
+}
+/* 手机横过来：竖屏布局塞不下（通话框、日历、浏览器都会被裁），提示竖过来 */
+#rotate-hint { display: none; }
+@media (orientation: landscape) and (max-height: 500px) and (pointer: coarse) {
+  #rotate-hint {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    background: #07080b;
+    color: #d8ccb6;
+    font-family: "LXGW WenKai", "KaiTi", "STKaiti", serif;
+    font-size: 17px;
+    letter-spacing: 0.3em;
+  }
+  #rotate-hint p { margin: 0; }
+  .rotate-phone {
+    width: 30px;
+    height: 52px;
+    border: 2px solid #a89880;
+    border-radius: 6px;
+    animation: rotate-phone 2.4s ease-in-out infinite;
+  }
+}
+@keyframes rotate-phone {
+  0%, 25% { transform: rotate(-90deg); }
+  55%, 100% { transform: rotate(0deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rotate-phone { animation: none; }
 }
