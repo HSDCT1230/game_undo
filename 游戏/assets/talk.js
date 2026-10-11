@@ -145,8 +145,10 @@ function speakerOf(b) {
 /** 粤语主句 + 可选下行括号普通话（只给角色话用；旁白／选项不走这里） */
 function talkBody(text, zh, className) {
   const box = el("div", { class: "talk-body" });
-  box.append(el("div", { class: "talk-text" + (className ? " " + className : "") }, [text || ""]));
-  if (zh) {
+  const mode = typeof langMode === "string" ? langMode : "both";
+  const zhMain = mode === "zh" && zh ? String(zh).trim().replace(/^\((.*)\)$/, "$1") : "";
+  box.append(el("div", { class: "talk-text" + (className ? " " + className : "") }, [zhMain || text || ""]));
+  if (zh && mode === "both") {
     const shown = /^\(.*\)$/.test(String(zh).trim()) ? String(zh).trim() : "(" + zh + ")";
     box.append(el("div", { class: "talk-zh" }, [shown]));
   }

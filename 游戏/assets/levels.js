@@ -813,6 +813,17 @@ function clearStore() {
   try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* 无 */ }
 }
 
+// 通关记录单独一个键：清档、重来都不碰它
+const CLEARED_KEY = "undo-ch1-cleared";
+
+function markCleared() {
+  try {
+    const old = JSON.parse(localStorage.getItem(CLEARED_KEY) || "null") || {};
+    const now = new Date().toISOString();
+    localStorage.setItem(CLEARED_KEY, JSON.stringify({ first: old.first || now, last: now, times: (Number(old.times) || 0) + 1 }));
+  } catch (e) { /* 无 */ }
+}
+
 function migrateEvidenceImgs() {
   (S.evidence || []).forEach((e) => {
     if (e.img && !e.img.includes("/")) e.img = (ITEMS[e.id] && ITEMS[e.id].img) || "";

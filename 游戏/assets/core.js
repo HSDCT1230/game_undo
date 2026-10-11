@@ -35,6 +35,62 @@ function fillShellChrome() {
 }
 fillShellChrome();
 
+/* 对白语言、字号：跟环境音开关一样存在本地，不进存档 */
+const LANG_KEY = "undo-lang";
+const LANG_MODES = ["both", "yue", "zh"];
+const LANG_LABEL = { both: "粤＋普", yue: "粤语", zh: "普通话" };
+const SIZE_KEY = "undo-size";
+const SIZE_STEPS = [1, 1.15, 1.3];
+const SIZE_LABEL = ["字　中", "字　大", "字　特大"];
+const SIZE_VARS = { "--say-face": 18, "--say-choice": 16, "--say-phone": 15, "--say-msg": 17, "--say-chat": 12 };
+
+let langMode = "both";
+let sizeStep = 0;
+try {
+  const l = localStorage.getItem(LANG_KEY);
+  if (LANG_MODES.includes(l)) langMode = l;
+  sizeStep = Math.min(SIZE_STEPS.length - 1, Math.max(0, Number(localStorage.getItem(SIZE_KEY)) || 0));
+} catch (e) { /* 无 */ }
+
+function applySize() {
+  const k = SIZE_STEPS[sizeStep];
+  Object.entries(SIZE_VARS).forEach(([v, px]) => document.documentElement.style.setProperty(v, Math.round(px * k) + "px"));
+}
+
+function optButtons() {
+  const bar = $("#os-bar");
+  const sfxBtn = $("#sfx-toggle");
+  if (!bar) return;
+  let lang = $("#lang-toggle");
+  let size = $("#size-toggle");
+  if (!lang) {
+    lang = el("button", { type: "button", id: "lang-toggle", class: "os-opt" });
+    size = el("button", { type: "button", id: "size-toggle", class: "os-opt" });
+    bar.insertBefore(lang, sfxBtn || null);
+    bar.insertBefore(size, sfxBtn || null);
+    lang.addEventListener("click", (e) => {
+      e.stopPropagation();
+      langMode = LANG_MODES[(LANG_MODES.indexOf(langMode) + 1) % LANG_MODES.length];
+      try { localStorage.setItem(LANG_KEY, langMode); } catch (err) { /* 无 */ }
+      optButtons();
+      if (typeof draw === "function" && S && S.mode === "talk") draw();
+    });
+    size.addEventListener("click", (e) => {
+      e.stopPropagation();
+      sizeStep = (sizeStep + 1) % SIZE_STEPS.length;
+      try { localStorage.setItem(SIZE_KEY, String(sizeStep)); } catch (err) { /* 无 */ }
+      applySize();
+      optButtons();
+    });
+  }
+  lang.textContent = LANG_LABEL[langMode];
+  lang.setAttribute("aria-label", "对白：" + LANG_LABEL[langMode] + "，点按切换");
+  size.textContent = SIZE_LABEL[sizeStep];
+  size.setAttribute("aria-label", "对白字号：" + SIZE_LABEL[sizeStep].replace("字　", "") + "，点按切换");
+}
+applySize();
+document.addEventListener("DOMContentLoaded", optButtons);
+
 const initial = () => ({
   time: "2014年7月31日 周四 23:14",
   mode: "web",

@@ -21,6 +21,8 @@
 ## 存档、跳关
 
 - 每进一关在关头自动存一档（浏览器 localStorage，键 `undo-ch1-save`）；关内进度离开页面时也会记下。再打开可选「继续」、已玩过的某一关从关头再玩，或「从头开始」。选较早的关重开，后面的进度会清掉。打完结局清掉存档。
+- 通关另记一个键 `undo-ch1-cleared`（`{ first, last, times }`，`levels.js` 的 `markCleared()`），不跟存档放一起，清档、重来都不碰它。
+- 结局画面有「第二章　预告」：`story-late.js` 的 `CH2_TEASER`，取自 [第二章](../策划/剧本/02-第二章-陈家豪.md) 2-1 楼梯，停在他撞门。
 - 调试跳关：`index.html?level=N`（N = 1–16）。前面各关的必拿物和笔记会自动补上，不读存档。
 - 分段测试：`index.html?test` 出一张目录，每关「从关头」和关中间的几段都能点。也可以直接写 `?level=N&seg=b`（段号见目录，段表在 `levels.js` 的 `SEGS`）。第 10 关只有关头。
 - 旧链接 `?preview=1..26` 仍然能开，按 `PREVIEW_TO` 对到现在的关和段。
@@ -61,11 +63,18 @@
 
 脚本是普通 `<script>`，按 index.html 里的顺序载入，共用一个全局。已拆分的 stub（`story.js`／`web.js`／`style.css`）不要再挂进页面。改了 JS／CSS 记得把 index.html 里的 `?v=` 一起改。
 
+改完任何东西，在仓库根跑一次全量检验（不抽查）：`node tools/全检.mjs`。它检查 JS 语法、index.html 是否纯 ASCII 及引用、函数重名、缺图、缺音效、每句角色台词有没有普通话（含不走 `line()` 的裸对象）、粤普互串、选择有没有后果、禁止的旧写法（地名、人名错字，规则见 `.cursor/rules/`）、控制字符和乱码。有 ERROR 退出码为 1；WARN 要人工逐条看完。
+
 图库在仓库根 [图/](../图/README.md)，不在本目录。
 
 ## 声音
 
 右上角「环境音」按钮切大／小／关，只关地点里循环的环境声。对话翻页、按钮、纸、电话、字幕底乐、录音底噪都不走这个开关。记在 localStorage（键 `undo-sfx`）。浏览器要玩家先点一下才出声。
+
+顶栏另有两个开关，同样只存在本地、不进存档（`core.js` 的 `optButtons()`）：
+
+- 「粤＋普／粤语／普通话」：角色台词显示双语、只显示粤语，或只显示普通话（键 `undo-lang`）。只影响 `talk.js` 的 `talkBody()`，旁白、选项、短讯不变。
+- 「字　中／大／特大」：对白字号 ×1／×1.15／×1.3（键 `undo-size`），改的是 `--say-*` 这几个 CSS 变量。
 
 只用屋里本来会有的声音，不配恐怖音乐、不做突然吓人的响声；诊室刻意几乎无声。
 
@@ -84,4 +93,4 @@
 
 ## 壳文案与编码
 
-index.html 只保留 ASCII 结构；顶栏／底栏／地图／日记簿标题等中文由 ssets/core.js 的 illShellChrome() 写入。不要用编辑器直接往 index.html 里写中文（容易变成 ??）。改措辞只改 illShellChrome。
+index.html 只保留 ASCII 结构；顶栏／底栏／地图／日记簿标题等中文由 `assets/core.js` 的 `fillShellChrome()` 写入。不要用编辑器直接往 index.html 里写中文（容易变成 ??）。改措辞只改 `fillShellChrome`。
