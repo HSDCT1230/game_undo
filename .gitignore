@@ -6,5 +6,21 @@ desktop.ini
 __pycache__/
 *.pyc
 
-# Generated dialogue dumps for hand-edit / DeepSeek (re-run 导出对白.mjs)
+# Agent / local scratch at repo root
+_*.txt
+_*.json
+_*.js
+_zh_*
+_tmp_*
+_clinic_*
+_commit_msg.txt
+_git_out.txt
+_git_err.txt
+
+# Generated dialogue dumps (re-run tools/导出对白.mjs)
 策划/剧本/_导出/
+策划/剧本/改对话/_导出/
+
+# Accidental editor backups
+*.restored
+*.bak
