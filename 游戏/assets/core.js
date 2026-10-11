@@ -371,7 +371,7 @@ function imgSlot(id, className, alt) {
   image.addEventListener("error", () => {
     if (image.naturalWidth) return;
     PIC_MISSING[id] = true;
-    wrap.classList.add("missing");
+    wrap.classList.add("missing", "broken");
     image.hidden = true;
   });
   wrap.append(image, mark);

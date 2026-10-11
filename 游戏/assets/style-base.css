@@ -321,6 +321,8 @@ body {
 }
 .img-slot.missing .img-mark { display: flex; }
 .img-slot:not(.missing) .img-mark { display: none; }
+/* 手机网慢：图还在下载时只铺暗底，真加载失败（.broken）才露出「待补图」字样 */
+.img-slot.missing:not(.broken) .img-mark { color: transparent; background: #15130f; }
 .img-slot.thumb { width: 100%; height: auto; aspect-ratio: 16 / 9; min-height: 0; }
 .img-slot.photo-lg { width: 100%; height: auto; aspect-ratio: 16 / 9; min-height: 0; }
 .avatar-slot { width: 72px; height: 72px; min-height: 0; aspect-ratio: 1; border-radius: 2px; }
