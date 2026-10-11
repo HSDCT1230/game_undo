@@ -1812,7 +1812,7 @@ button.phone-act.done {
   margin-top: 6px;
 }
 .search-desk .search-dock.scene-actions.fork {
-  position: static;
+  position: relative;
   z-index: 1;
   top: auto;
   right: auto;
@@ -4060,7 +4060,10 @@ button.phone-act.done {
 }
 
 @media (max-width: 800px) {
-  .hk-layout, .home-grid, .hk-detail, .district-grid, .district-grid.compact {
+  .hk-layout, .home-grid, .hk-detail {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .district-grid, .district-grid.compact {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
   .forum-row,
@@ -5428,11 +5431,97 @@ img.map-photo {
 .base-boxes span.on {
   background: repeating-linear-gradient(-45deg, rgba(42, 51, 68, 0.75) 0 1.5px, transparent 1.5px 3.5px);
 }
+/* 手机竖屏：便条贴到画面底部，热点卡按便条实际高度（--fork-h，core.js 量）往上让 */
 @media (max-width: 720px) {
-  .scene-actions.fork {
-    width: min(176px, 44vw);
-    padding-right: 10px;
-    padding-left: 32px;
+  #stage > .scene-actions.fork {
+    --rule: 26px;
+    position: absolute;
+    top: auto;
+    right: 8px;
+    bottom: 8px;
+    left: 8px;
+    width: auto;
+    max-height: 46%;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: 14px;
+    padding: 12px 12px 6px 34px;
+    transform: rotate(-0.4deg);
   }
-  .scene-actions.fork > button { font-size: 16px; }
+  #stage > .scene-actions.fork::before {
+    top: -20px;
+    left: auto;
+    right: 26px;
+    height: 46px;
+  }
+  #stage > .scene-actions.fork > button {
+    width: auto;
+    flex: 0 1 auto;
+    min-height: 32px;
+    font-size: 16px;
+    line-height: 32px;
+  }
+  #stage > .scene-actions.fork .fork-or {
+    align-self: baseline;
+    padding-left: 0;
+    line-height: 32px;
+  }
+  #stage > .scene-actions.fork .hub-hint,
+  #stage > .scene-actions.fork .clinic-seg,
+  #stage > .scene-actions.fork .base-boxes {
+    flex: 1 1 100%;
+  }
+  #stage > .scene-actions.fork .hub-hint,
+  #stage > .scene-actions.fork .clinic-seg { font-size: 14px; }
+  .search-desk .search-dock.scene-actions.fork > button { min-width: 0; min-height: 32px; }
+
+  .room.scene-fit > .room-note,
+  .clinic.scene-fit > .room-note {
+    right: 16px;
+    max-width: none;
+  }
+  .room-dock {
+    bottom: calc(var(--fork-h, 0px) + 14px);
+    max-height: calc(100% - var(--fork-h, 0px) - 96px);
+  }
+  .clinic-dock {
+    bottom: calc(var(--fork-h, 0px) + 14px);
+    max-height: calc(100% - var(--fork-h, 0px) - 72px);
+  }
+  .room-dock .hot-copy { font-size: 13px; }
+  .room-dock .hot small,
+  .clinic-dock .hot small { font-size: 11.5px; }
+
+  .playbar-now { display: none; }
+  .playbar-go:has(> #playbar-advance[hidden]) { display: none; }
+}
+
+@media (max-width: 640px), (pointer: coarse) {
+  #os-bar { flex-basis: 40px; height: 40px; min-height: 40px; padding: 0 6px; }
+  #clock { line-height: 1.15; }
+  .os-opt, #sfx-toggle { min-height: 30px; }
+  .browser-nav button { min-width: 36px; min-height: 32px; }
+  .scene-fit .hot small { font-size: 11.5px; }
+
+  .browser-titlebar { font-size: 12px; }
+  .browser-status { display: none; }
+  .go-btn { min-width: 44px; height: 32px; }
+  .addr { min-height: 32px; }
+  .browser-tabs button { min-height: 32px; }
+  .site-header { gap: 6px 10px; padding: 6px 10px; }
+  .site-header .btn.ghost { min-height: 32px; }
+  .hk-nav-item { min-height: 34px; }
+  .crumb { padding: 6px 10px; font-size: 12px; }
+  .chip { display: inline-block; padding: 6px 0; font-size: 13px; }
+  .web-link { display: inline-block; padding: 4px 0; }
+  .wall-nav-item { min-height: 32px; font-size: 13px; }
+  .chat-close { width: 34px; height: 30px; }
+  #map-close { min-height: 32px; }
+  .slate-ok { width: 34px; height: 34px; }
+
+  .post-meta, .post-actions, .post-new, .post-reply-time, .rent small,
+  .phone-status, .sms-status, .phone-fakekeys, .sms-time,
+  .chat-contact span, .chat-choices::before, .chat-status, .bubble-meta { font-size: 11px; }
+  .test-list a { display: inline-block; padding: 6px 0; }
 }

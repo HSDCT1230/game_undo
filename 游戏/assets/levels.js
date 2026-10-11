@@ -580,7 +580,7 @@ const CARD_NIGHT = [3, 4, 7, 9, 11, 13, 15];
 const CARD_NIGHT_OWN = [4, 9, 11, 15];
 
 function cardBgName(n) {
-  if (n <= 1) return "";
+  if (!(n > 1)) return "";
   if ([6, 8, 10, 12, 14].includes(n)) return "场景-候诊";
   if (n === 16) return "场景-天台";
   if (CARD_NIGHT.includes(n)) return "场景-夜里后座厅";

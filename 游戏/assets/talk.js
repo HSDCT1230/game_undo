@@ -471,7 +471,7 @@ function drawMsg(b) {
     el("div", { class: "msg-from " + whoClass(t.contact) }, [t.contact || "未知来源"]),
     el("div", { class: "msg-num" }, [t.number || "语音留言"]),
     el("div", { class: "msg-wave", "aria-hidden": "true" }, ["▶　00:07 / 00:11"]),
-    el("div", { class: "talk-text " + whoClass(t.contact) }, [b.choices ? (b.prompt || "……") : ("「" + (b.text || "") + "」")]),
+    el("div", { class: "talk-text " + whoClass(t.contact) }, [b.choices ? (b.prompt || "……") : b.who ? ("「" + (b.text || "") + "」") : (b.text || "")]),
     b.choices ? choiceBox(b, "msg-choices") : el("div", { class: "talk-actions" }, [nextBtn(b, "听完")]),
   ]));
   return box;

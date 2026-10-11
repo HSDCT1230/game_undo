@@ -324,6 +324,22 @@ function clearStage() {
   if (mapLayer && !mapLayer.hidden) renderMap();
 }
 
+// 手机竖屏便条贴在画面底部（CSS 里 position:absolute），热点卡用 --fork-h 往上让
+const forkWatch = typeof ResizeObserver === "function" ? new ResizeObserver(() => fitFork()) : null;
+let forkNow = null;
+function fitFork() {
+  const f = stage.querySelector(":scope > .scene-actions.fork");
+  if (f !== forkNow) {
+    if (forkNow && forkWatch) forkWatch.unobserve(forkNow);
+    forkNow = f;
+    if (f && forkWatch) forkWatch.observe(f);
+  }
+  const h = f && getComputedStyle(f).position === "absolute" ? f.offsetHeight + 8 : 0;
+  stage.style.setProperty("--fork-h", h + "px");
+}
+new MutationObserver(() => fitFork()).observe(stage, { childList: true });
+addEventListener("resize", () => fitFork());
+
 function el(tag, attrs = {}, kids = []) {
   const n = document.createElement(tag);
   Object.entries(attrs).forEach(([k, v]) => {
