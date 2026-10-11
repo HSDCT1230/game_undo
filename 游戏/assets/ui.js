@@ -477,13 +477,15 @@ function showModal(title, p1, p2, kind, onClose, keep) {
   });
 }
 
-function tip(text) {
+function tip(text, opt) {
+  opt = opt || {};
   const old = document.getElementById("game-tip");
   if (old) old.remove();
   const node = el("div", { class: "game-tip", id: "game-tip", role: "status" }, [text]);
+  if (opt.nearBar) node.classList.add("near-bar");
   document.body.append(node);
-  sfx("tip");
-  setTimeout(() => node.remove(), 3200);
+  if (!opt.quiet) sfx("tip");
+  setTimeout(() => node.remove(), opt.ms || 3200);
 }
 
 function keepThen(item, next) {

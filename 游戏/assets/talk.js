@@ -142,6 +142,17 @@ function speakerOf(b) {
   return b.who || "现场";
 }
 
+/** 粤语主句 + 可选下行括号普通话（只给角色话用；旁白／选项不走这里） */
+function talkBody(text, zh, className) {
+  const box = el("div", { class: "talk-body" });
+  box.append(el("div", { class: "talk-text" + (className ? " " + className : "") }, [text || ""]));
+  if (zh) {
+    const shown = /^\(.*\)$/.test(String(zh).trim()) ? String(zh).trim() : "(" + zh + ")";
+    box.append(el("div", { class: "talk-zh" }, [shown]));
+  }
+  return box;
+}
+
 function portraitSlot(who) {
   if (WHO_IMG[who]) return imgSlot(WHO_IMG[who], "talk-portrait", who);
   const ch = (who && who !== "现场") ? who.slice(0, 1) : "·";
@@ -327,9 +338,13 @@ function drawFace(b) {
 
   if (prompt) {
     const gaze = b.gaze === "you" ? " gaze-you" : b.gaze === "him" ? " gaze-him" : "";
-    body.append(el("div", {
-      class: "talk-text" + (stageDir ? " stage-dir" : " " + tone) + (awen ? " awen-line" : "") + gaze,
-    }, [prompt]));
+    const cls = (stageDir ? "stage-dir" : tone) + (awen ? " awen-line" : "") + gaze;
+    // 旁白不加普通话行；角色话读 b.zh
+    if (stageDir || choosing) {
+      body.append(el("div", { class: "talk-text " + cls }, [prompt]));
+    } else {
+      body.append(talkBody(prompt, b.zh, cls));
+    }
   }
   if (choosing) {
     body.append(choiceBox(b, "face-choices"));
@@ -378,9 +393,14 @@ function drawPhone(b) {
   if (bgId) box.append(imgSlot(bgId, "talk-bg", t.loc || "通话"));
   const narr = !b.choices && !b.who;
   const tone = whoClass(b.choices ? "章慧琪" : (b.who || speaker));
+  const phoneLine = b.choices
+    ? el("div", { class: "talk-text " + tone }, [b.prompt || "……"])
+    : (narr
+      ? el("div", { class: "talk-text stage-dir" }, [b.text || ""])
+      : talkBody(b.text || "", b.zh, tone));
   const script = el("div", { class: "phone-script" }, [
     el("div", { class: "phone-line-who " + tone }, [b.choices ? "你说" : (b.who || (t.eavesdrop ? "隔门" : "听筒"))]),
-    el("div", { class: "talk-text" + (narr ? " stage-dir" : " " + tone) }, [b.choices ? (b.prompt || "……") : (b.text || "")]),
+    phoneLine,
   ]);
   const keys = b.choices
     ? choiceBox(b, "phone-choices")

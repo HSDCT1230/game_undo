@@ -479,7 +479,16 @@ body {
 }
 .talk-loc { color: #b7ae9e; font-size: 12px; letter-spacing: 0.08em; margin-bottom: 18px; }
 .talk-name { color: #e2c48a; font-size: var(--who-face); line-height: var(--lh-who-face); margin-bottom: 6px; }
+.talk-body { max-width: 720px; min-height: 3.4em; }
 .talk-text { font-size: var(--say-face); line-height: var(--lh-say-face); max-width: 720px; min-height: 3.4em; }
+.talk-body > .talk-text { min-height: 0; }
+.talk-zh {
+  margin-top: 0.35em;
+  font-size: calc(var(--say-face) * 0.88);
+  line-height: 1.45;
+  color: #9a9184;
+  max-width: 720px;
+}
 .talk-next { margin-top: 16px; color: #8a8376; font-size: 12px; }
 .choices { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; max-width: 720px; }
 .face-choices > button,
@@ -1702,6 +1711,15 @@ a:hover {
   line-height: var(--lh-say-face);
   white-space: pre-wrap;
 }
+.talk.face .talk-body { max-width: 720px; margin: 0 0 6px; }
+.talk.face .talk-body > .talk-text { margin: 0; }
+.talk.face .talk-zh {
+  margin-top: 0.3em;
+  font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
+  color: rgba(243, 236, 225, 0.55);
+}
+.talk.phone .talk-body { max-width: 100%; }
+.talk.phone .talk-zh { color: rgba(200, 190, 175, 0.65); }
 .talk.face.narr {
   justify-content: center;
 }
@@ -4821,10 +4839,20 @@ button.phone-act.done {
 .ad.gone { color: #aaa; background: #f6f6f3; border-style: dashed; }
 .ad.gone b { color: #999; }
 
-/* 底栏「浏览器」：墙簿有新东西就慢慢明暗，右上一颗红点 */
+/* 底栏「浏览器」：墙簿有新东西就慢慢明暗，右上一颗红点（加大并轻脉冲） */
 @keyframes playbar-breathe {
   0%, 100% { color: #e6d7bc; text-shadow: 0 1px 0 rgba(0, 0, 0, .45); }
   50% { color: #fff3c8; text-shadow: 0 0 8px rgba(255, 226, 150, .75), 0 1px 0 rgba(0, 0, 0, .45); }
+}
+@keyframes playbar-dot-pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(217, 72, 59, 0.55), 0 0 0 1px rgba(0, 0, 0, .35);
+  }
+  50% {
+    transform: scale(1.15);
+    box-shadow: 0 0 0 6px rgba(217, 72, 59, 0), 0 0 0 1px rgba(0, 0, 0, .35);
+  }
 }
 #playbar-house.has-new {
   position: relative;
@@ -4833,16 +4861,18 @@ button.phone-act.done {
 #playbar-house.has-new::after {
   content: "";
   position: absolute;
-  top: 2px;
-  right: -6px;
-  width: 6px;
-  height: 6px;
+  top: 0;
+  right: -8px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
-  background: #d9483b;
+  background: #e23b2e;
   box-shadow: 0 0 0 1px rgba(0, 0, 0, .35);
+  animation: playbar-dot-pulse 1.8s ease-in-out infinite;
 }
 @media (prefers-reduced-motion: reduce) {
   #playbar-house.has-new { animation: none; color: #fff3c8; }
+  #playbar-house.has-new::after { animation: none; }
 }
 
 @media (max-width: 800px) {
@@ -5465,6 +5495,20 @@ button.phone-act.done {
   line-height: 1.6;
   pointer-events: none;
   animation: tip-fade 3.2s ease forwards;
+}
+.game-tip.near-bar {
+  bottom: 78px;
+  padding: 7px 14px;
+  border-color: rgba(226, 100, 90, 0.45);
+  color: #f6e6d0;
+  font-family: "KaiTi", "楷体", "STKaiti", serif;
+  letter-spacing: 0.08em;
+  animation: tip-bar-fade 2.8s ease forwards;
+}
+@keyframes tip-bar-fade {
+  0% { opacity: 0; transform: translate(-50%, 6px); }
+  12%, 78% { opacity: 1; transform: translate(-50%, 0); }
+  100% { opacity: 0; transform: translate(-50%, 0); }
 }
 @keyframes tip-fade {
   0% { opacity: 0; transform: translate(-50%, 6px); }

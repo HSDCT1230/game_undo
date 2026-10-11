@@ -2533,12 +2533,23 @@ if (typeof SFX !== "undefined") {
   };
 }
 
-// 底栏「浏览器」：墙簿有新东西就慢慢明暗、亮一个红点；多了一条叮一声
+// 底栏「浏览器」：墙簿有新东西就慢慢明暗、亮红点；多了一条叮一声 + 底栏上短 toast
 function wallTick() {
-  const n = wallUnread().n;
+  const unread = wallUnread();
+  const n = unread.n;
   const quiet = S.mode === "card" || S.mode === "wait" || S.mode === "end";
   if (!quiet) {
-    if (n > (S.wallLastN || 0)) sfx("wallIn");
+    if (n > (S.wallLastN || 0)) {
+      sfx("wallIn");
+      if (typeof tip === "function" && S.mode !== "web" && !S.paused) {
+        const msg = unread.mail && !unread.feed
+          ? "墙簿有新邮件。"
+          : unread.feed && !unread.mail
+            ? "墙簿有新动态。"
+            : "墙簿有新东西。";
+        tip(msg, { quiet: true, nearBar: true, ms: 2800 });
+      }
+    }
     S.wallLastN = n;
   }
   const b = document.getElementById("playbar-house");

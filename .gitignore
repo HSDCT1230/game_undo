@@ -5,3 +5,6 @@ desktop.ini
 *.local
 __pycache__/
 *.pyc
+
+# Generated dialogue dumps for hand-edit / DeepSeek (re-run 导出对白.mjs)
+策划/剧本/_导出/
