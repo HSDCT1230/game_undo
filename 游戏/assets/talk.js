@@ -255,7 +255,7 @@ function placeSceneFallback() {
   if (p.startsWith("clinic-wait") || p === "clinic-addr") return lvPic("场景-候诊");
   if (p.startsWith("clinic")) return lvPic("场景-诊室");
   if (p === "mei") return lvPic("场景-美娟家");
-  if (p.includes("stair")) return lvPic("场景-楼梯");
+  if (p.includes("stair")) return MAP_PIC + "荣汇街-楼梯";
   if (p.includes("roof") || p.includes("天台")) return lvPic("场景-天台");
   if (p.includes("front") || p === "rong-door") return lvPic("场景-后座门口");
   if (p.includes("corridor")) return MAP_PIC + "荣汇街-走廊";
@@ -328,6 +328,7 @@ function drawTalk() {
     t.sfxAt = t.i;
     sfx(b.sfx);
   }
+  if (b.clue !== undefined) t.clue = b.clue;
   if (b.goto) {
     if (b.note) note(b.note[0], b.note[1]);
     if (b.flag) flag(b.flag, true);
@@ -414,7 +415,8 @@ function drawFace(b) {
   if (S.talk.clue) {
     const fresh = clueSeen.talk !== S.talk || clueSeen.clue !== S.talk.clue;
     clueSeen = { talk: S.talk, clue: S.talk.clue };
-    box.append(imgSlot(S.talk.clue, "talk-clue" + (fresh ? " clue-drop" : ""), S.talk.clue.split("/").pop().replace(/^(示意|场景|证据)-/, "")));
+    const cap = picCap(S.talk.clue);
+    box.append(imgSlot(S.talk.clue, "talk-clue" + (fresh ? " clue-drop" : ""), cap ? cap.name : "线索"));
   }
 
   const inner = el("div", { class: "face-inner" + (stageDir ? " solo" : "") });
@@ -461,18 +463,7 @@ function drawFace(b) {
   }
   inner.append(body);
   box.append(el("div", { class: "face-dock" }, [inner]));
-  if (!b.act && S.talk.loc === "澄心诊室" && [6, 8, 10].includes(S.level)) box.append(askGrey());
   return box;
-}
-
-function askGrey() {
-  return el("button", {
-    type: "button",
-    class: "ask-btn grey",
-    disabled: true,
-    title: "姐夫那句话到了嘴边。",
-    "aria-label": "问他（按不了）",
-  }, ["问他"]);
 }
 
 function drawPhone(b) {
@@ -527,10 +518,10 @@ function drawSms(b) {
     const pop = grew && n === log.length - 1 ? turnIn(mine ? "me" : "them") : "";
     const bubble = el("div", { class: "sms-bubble " + tone });
     const mode = typeof langMode === "string" ? langMode : "both";
-    const zhMain = mode === "zh" && x.zh ? String(x.zh).trim().replace(/^\((.*)\)$/, "$1") : "";
+    const zhMain = mode === "zh" && x.zh ? String(x.zh).trim().replace(/^[（(](.*)[）)]$/, "$1") : "";
     bubble.append(el("div", { class: "talk-text" }, [zhMain || x.text || ""]));
     if (x.zh && mode === "both") {
-      const shown = /^\(.*\)$/.test(String(x.zh).trim()) ? String(x.zh).trim() : "(" + x.zh + ")";
+      const shown = /^[（(].*[）)]$/.test(String(x.zh).trim()) ? String(x.zh).trim() : "(" + x.zh + ")";
       bubble.append(el("div", { class: "talk-zh" }, [shown]));
     }
     thread.append(el("div", { class: "sms-row " + (mine ? "me" : "them") + pop }, [
@@ -571,11 +562,21 @@ function drawMsg(b) {
     el("div", { class: "msg-from " + whoClass(t.contact) }, [t.contact || "未知来源"]),
     el("div", { class: "msg-num" }, [t.number || "语音留言"]),
     el("div", { class: "msg-wave", "aria-hidden": "true" }, ["▶　00:07 / 00:11"]),
-    el("div", { class: "talk-text " + whoClass(t.contact) }, [b.choices ? (b.prompt || "……") : b.who ? ("「" + (b.text || "") + "」") : (b.text || "")]),
+    msgBody(b, whoClass(t.contact)),
     b.choices ? choiceBox(b, "msg-choices") : el("div", { class: "talk-actions" }, [nextBtn(b, "听完")]),
   ]));
-  if (!b.choices) typeLater(box.querySelector(".msg-frame .talk-text"));
   return box;
+}
+
+function msgBody(b, cls) {
+  if (b.choices || !b.who) {
+    const plain = el("div", { class: "talk-text " + cls }, [b.choices ? (b.prompt || "……") : (b.text || "")]);
+    if (!b.choices) typeLater(plain);
+    return plain;
+  }
+  const zhOnly = langMode === "zh" && b.zh;
+  const quote = (s) => "「" + String(s || "").trim().replace(/^[（(](.*)[）)]$/, "$1") + "」";
+  return typeBody(talkBody(quote(zhOnly ? b.zh : b.text), zhOnly ? "" : b.zh, cls));
 }
 
 function line(who, text, extra) {

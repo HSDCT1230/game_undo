@@ -5,6 +5,7 @@
  */
 import fs from "fs";
 import path from "path";
+import vm from "vm";
 import { execFileSync } from "child_process";
 import { fileURLToPath } from "url";
 
@@ -68,6 +69,24 @@ const havePng = new Set();
     else if (/\.png$/i.test(f)) havePng.add(r.replace(/\.png$/i, ""));
   }
 })(imgRoot, "");
+// 图/游戏/README.md 里标了「（待补）」的图：缺了只提示，不算错
+const pendingPng = new Set();
+{
+  let dir = "";
+  for (const ln of read(path.join(imgRoot, "README.md")).split(/\r?\n/)) {
+    const d = ln.match(/^`([^`]+)\/`/);
+    if (d) dir = d[1];
+    const r = ln.match(/^\|\s*`([^`]+)\.png`（待补）/);
+    if (r && dir) pendingPng.add(dir + "/" + r[1]);
+  }
+}
+const missSeen = new Set();
+const missPic = (key) => {
+  if (missSeen.has(key)) return;
+  missSeen.add(key);
+  if (pendingPng.has(key)) warn(`待补图（已登记）：图/游戏/${key}.png`);
+  else err(`缺图：图/游戏/${key}.png`);
+};
 const picLv = [...src["pics.js"].matchAll(/^\s*"([^"]*)",?\s*$/gm)].map((m) => m[1]);
 const mapPic = (src["pics.js"].match(/const MAP_PIC\s*=\s*"([^"]+)"/) || [])[1] || "00-地图/";
 const allSrc = loadedJs.map((f) => src[f] || "").join("\n");
@@ -75,7 +94,7 @@ let picCount = 0;
 for (const m of allSrc.matchAll(/\bpic\(\s*(\d+)\s*,\s*"([^"]+)"\s*\)/g)) {
   picCount++;
   const key = picLv[+m[1]] + "/" + m[2];
-  if (!havePng.has(key)) err(`缺图：图/游戏/${key}.png`);
+  if (!havePng.has(key)) missPic(key);
 }
 for (const m of allSrc.matchAll(/MAP_PIC\s*\+\s*"([^"]+)"/g)) {
   picCount++;
@@ -86,10 +105,81 @@ for (const m of allSrc.matchAll(/"(00-[^"/]+\/[^"]+)"/g)) {
   if (!havePng.has(m[1])) err(`缺图：图/游戏/${m[1]}.png`);
 }
 const lvNames = new Set([...allSrc.matchAll(/\blvPic\(\s*"([^"]+)"\s*\)/g)].map((m) => m[1]));
-for (const name of lvNames) {
-  if (!picLv.some((d) => d && havePng.has(d + "/" + name))) err(`lvPic("${name}") 在任何关卡文件夹都没有`);
+// pics.js 的 LV_HAVE 登记每张 lvPic 图在哪几关有；lvPic 靠它就近借图，所以必须和磁盘一模一样
+const lvHave = {};
+for (const m of src["pics.js"].matchAll(/^\s*"([^"]+)":\s*\[([\d,\s]*)\],?\s*$/gm)) {
+  lvHave[m[1]] = m[2].split(",").map((x) => +x.trim()).filter(Boolean);
 }
-info.push(`图片：仓库 ${havePng.size} 张；代码固定引用 ${picCount} 处，随关底图 ${lvNames.size} 种`);
+for (const name of lvNames) {
+  const disk = picLv.map((d, i) => (d && havePng.has(d + "/" + name) ? i : 0)).filter(Boolean);
+  if (!disk.length) err(`lvPic("${name}") 在任何关卡文件夹都没有`);
+  else if (!lvHave[name]) err(`lvPic("${name}") 没登记进 pics.js 的 LV_HAVE（磁盘上有：${disk.join(", ")}）`);
+  else if (lvHave[name].join(",") !== disk.join(",")) err(`pics.js LV_HAVE「${name}」写的是 ${lvHave[name].join(", ")}，磁盘上是 ${disk.join(", ")}`);
+}
+// map.js 写成 M + "…"（const M = MAP_PIC）
+for (const m of (src["map.js"] || "").matchAll(/\bM\s*\+\s*"([^"]+)"/g)) {
+  picCount++;
+  if (!havePng.has(mapPic + m[1])) err(`缺图：图/游戏/${mapPic}${m[1]}.png（map.js 地图）`);
+}
+// 变量传进 pic() 的图名（日历小图等）：凡是「示意-／场景-／证据-」开头的字面量，至少要在一个关卡文件夹里有
+const loneNames = new Set([...allSrc.matchAll(/"((?:示意|场景|证据)-[^"\n]+)"/g)].map((m) => m[1]));
+for (const name of loneNames) {
+  if (picLv.some((d) => d && havePng.has(d + "/" + name))) continue;
+  const pend = picLv.find((d) => d && pendingPng.has(d + "/" + name));
+  if (pend) missPic(pend + "/" + name);
+  else err(`图名「${name}」在任何关卡文件夹都没有`);
+}
+// 每关字幕卡底图：按 levels.js 的 cardBg(n) 逐关算出来再核对
+{
+  const lv = src["levels.js"] || "";
+  const grab = (re) => (lv.match(re) || [])[0] || "";
+  const code = [
+    grab(/const CARD_NIGHT = \[[^\]]*\];/),
+    grab(/const CARD_NIGHT_OWN = \[[^\]]*\];/),
+    grab(/function cardBgName\(n\) \{[\s\S]*?\n\}/),
+    grab(/function cardBg\(n\) \{[\s\S]*?\n\}/),
+  ];
+  if (code.some((c) => !c)) warn("字幕卡底图：levels.js 里 cardBg／cardBgName 的写法变了，没法逐关核对");
+  else {
+    const box = { pic: (n, name) => picLv[n] + "/" + name, out: [] };
+    vm.runInNewContext(code.join("\n") + "\nfor (let n = 1; n <= 16; n++) out.push(cardBg(n));", box);
+    box.out.forEach((key) => { if (key) { picCount++; if (!havePng.has(key)) missPic(key); } });
+  }
+}
+// 放大图配字：每张 示意-／证据- 图都要有名称（pics.js PIC_CAP 或日记簿 ITEMS），名称不许漏文件名
+let capCount = 0;
+{
+  const ps = src["pics.js"] || "";
+  const items = {};
+  for (const m of (src["diary.js"] || "").matchAll(/^\s*"([^"]+)":\s*\{[^\n]*title: "([^"]+)", time: "([^"]*)"[^\n]*img: pic\((\d+), "([^"]+)"\)/gm)) {
+    items[m[1]] = { title: m[2], time: m[3], img: picLv[+m[4]] + "/" + m[5] };
+  }
+  const box = { ITEMS: items, out: null };
+  try {
+    vm.runInNewContext(ps + "\nout = { picCap, PIC_CAP, PIC_LV };", box);
+  } catch (e) {
+    err("pics.js 跑不起来，配字没法核对：" + e.message);
+  }
+  if (box.out) {
+    const { picCap, PIC_CAP, PIC_LV } = box.out;
+    const want = [...havePng, ...pendingPng].filter((k) => /^(\d\d-[^/]+)\/(示意|证据)-/.test(k) && !k.startsWith(mapPic));
+    for (const key of new Set(want)) {
+      const cap = picCap(key);
+      if (!cap || !cap.name) { err(`配字：图/游戏/${key}.png 没有名称（pics.js PIC_CAP 补一行）`); continue; }
+      capCount++;
+      if (/[-0-9A-Za-z]/.test(cap.name)) err(`配字：图/游戏/${key}.png 的名称「${cap.name}」带了连字符或编号`);
+    }
+    for (const [n, lv] of Object.entries(PIC_CAP)) {
+      const dir = +n === 0 ? "00-通用" : PIC_LV[+n];
+      for (const name of Object.keys(lv)) {
+        if (name === "time") continue;
+        const key = dir + "/" + name;
+        if (!havePng.has(key) && !pendingPng.has(key)) warn(`配字：PIC_CAP 写了 ${key}，磁盘上没有这张图`);
+      }
+    }
+  }
+}
+info.push(`图片：仓库 ${havePng.size} 张；代码固定引用 ${picCount} 处，随关底图 ${lvNames.size} 种，散名 ${loneNames.size} 个；放大配字 ${capCount} 张`);
 
 /* ---------- 5. 音效 ---------- */
 const sfxDir = path.join(assets, "sfx");

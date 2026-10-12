@@ -156,6 +156,7 @@ const initial = () => ({
 
 let S = initial();
 let nightTick = null;
+let clockHold = false;
 
 function setTime(t) {
   S.time = t;
@@ -164,7 +165,7 @@ function setTime(t) {
 }
 
 function renderHud() {
-  if (clockEl) clockEl.textContent = S.time || "";
+  if (clockEl && !clockHold) clockEl.textContent = S.time || "";
   renderWeek();
   if (placeEl) {
     const rec = S.mode === "night" && S.night && S.night.recording ? "（录音中）" : "";
@@ -191,9 +192,16 @@ function renderWeek() {
   if (typeof renderLevelBox === "function") renderLevelBox();
 }
 
+// 画底景（日历、夜里、诊所……）时认领模式。对话常以 goto 收尾直接画回底景，
+// 不认领就停在 talk，之后任何没带回调的弹窗一关，draw() 会把那段对话的最后一步再放一遍。
+function baseView(mode) {
+  S.mode = mode;
+  S.talk = null;
+}
+
 function note(id, text) {
   if (S.notes.some((n) => n.id === id)) return;
-  S.notes.push({ id, text });
+  S.notes.push({ id, text, time: S.time || "" });
   renderNotes();
 }
 
@@ -325,6 +333,7 @@ function renderPlaybar() {
 }
 
 function clearStage() {
+  if (typeof choiceUnlock === "function") choiceUnlock();
   stage.innerHTML = "";
   stage.onclick = null;
   syncPlace();
@@ -414,7 +423,7 @@ const WHO_IMG = {
 function locImg(loc) {
   if (!loc) return "";
   if (loc.includes("天台")) return lvPic("场景-天台");
-  if (loc.includes("楼梯")) return lvPic("场景-楼梯");
+  if (loc.includes("楼梯")) return MAP_PIC + "荣汇街-楼梯";
   if (loc.includes("候诊")) return lvPic("场景-候诊");
   if (loc.includes("澄心")) return lvPic("场景-诊室");
   if (loc.includes("前座门口")) return lvPic("场景-前座门口");

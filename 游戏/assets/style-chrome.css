@@ -446,6 +446,8 @@ a:hover {
   padding: 7px 8px;
 }
 
+.remark-label { display: block; margin-top: 16px; }
+
 .search-row button,
 .btn {
   padding: 6px 14px;
@@ -897,13 +899,32 @@ a:hover {
 }
 .talk.face .talk-body { max-width: 720px; margin: 0 0 6px; }
 .talk.face .talk-body > .talk-text { margin: 0; }
+/* 括号普通话：各自底色上的实色灰（不用半透明，免得透出背景图），字号始终比正文小一档 */
 .talk.face .talk-zh {
   margin-top: 0.3em;
   font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
-  color: rgba(243, 236, 225, 0.55);
+  color: #a9a294;
 }
 .talk.phone .talk-body { max-width: 100%; }
-.talk.phone .talk-zh { color: rgba(200, 190, 175, 0.65); }
+.talk.phone .talk-zh {
+  margin-top: 0.25em;
+  color: #8d9aa6;
+  font-size: calc(var(--say-phone) * 0.9);
+  line-height: var(--lh-say-phone);
+}
+.talk.msg .talk-zh {
+  margin-top: 0.3em;
+  color: #b09a78;
+  font-size: calc(var(--say-msg) * 0.88);
+}
+.sms-bubble .talk-text { min-height: 0; }
+.sms-bubble .talk-zh {
+  margin-top: 2px;
+  color: #6b7178;
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+.sms-row.me .sms-bubble .talk-zh { color: #566849; }
 .talk.face.narr {
   justify-content: center;
 }
@@ -2190,8 +2211,23 @@ button.phone-act.done {
 }
 
 .days .day-img.empty {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
   background:
     linear-gradient(#eef3f7, #e4ebf1);
+}
+
+.days .day-img.empty p {
+  margin: 0;
+  color: #4a5d70;
+  font-size: 12px;
+  line-height: 1.55;
+  text-align: left;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .days .day-msg {
@@ -2238,6 +2274,50 @@ button.phone-act.done {
   color: #2d4e70;
   font-size: 13px;
   letter-spacing: 0.04em;
+}
+
+/* 两周日历：暖日与「说不清」的轻裂缝。不写鬼，只把三格压暗一点点、加一个点。 */
+.days button.warm .day-label {
+  background: #fbf4e6;
+  color: #6b5334;
+}
+.days button.crack .day-label {
+  background: #eef1f3;
+  color: #53616d;
+}
+.days button.crack {
+  position: relative;
+  border-color: #b4bfc7;
+}
+.days button.crack .day-crack {
+  position: absolute;
+  right: 6px;
+  bottom: 42px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #7d8b96;
+  opacity: 0.55;
+}
+
+/* 8月14日傍晚前，她自己的两周小结（一页纸，不是日记簿弹窗） */
+.diary-paper {
+  margin: 10px 0 4px;
+  padding: 16px 18px;
+  border: 1px solid #d8d2c4;
+  background:
+    repeating-linear-gradient(180deg, transparent 0 27px, #e6e1d4 27px 28px),
+    #fdfbf4;
+}
+.diary-paper .diary-line {
+  margin: 0;
+  min-height: 28px;
+  line-height: 28px;
+  color: #2f3a44;
+  font-size: 15px;
+}
+.diary-paper .diary-line.soft {
+  color: #6d6660;
 }
 
 /* 日历框不许比屏幕宽；讯息格跟图片格一样高，整行不被撑开 */
@@ -2935,6 +3015,105 @@ button.phone-act.done {
   outline: none;
 }
 .evidence-open:hover .evidence-go { color: var(--diary-ink, #2a3344); }
+.evidence-thumb {
+  flex: 0 0 auto;
+  width: 32px;
+  height: 22px;
+  margin-right: 8px;
+  border-radius: 2px;
+  object-fit: cover;
+  box-shadow: 0 0 0 1px rgba(42, 51, 68, 0.25);
+}
+.evidence-side {
+  flex: 0 0 auto;
+  margin-right: 8px;
+  color: rgba(42, 51, 68, 0.5);
+  font-size: 13px;
+  letter-spacing: 0.04em;
+}
+
+/* 「收集的」顶上：按日子／按东西 */
+.diary-by { display: flex; gap: 14px; height: var(--diary-cell, 28px); margin-top: var(--diary-cell, 28px); }
+.diary-by-opt {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: rgba(42, 51, 68, 0.5);
+  font: inherit;
+  font-size: 14px;
+  line-height: var(--diary-cell, 28px);
+  letter-spacing: 0.06em;
+  cursor: pointer;
+}
+.diary-by-opt:hover { color: var(--diary-ink, #2a3344); }
+.diary-by-opt.on {
+  color: #8a3c10;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  cursor: default;
+}
+
+/* 「收集的」：这一关以前的日子收成一行 */
+.diary-fold {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  width: 100%;
+  height: var(--diary-cell, 28px);
+  margin: var(--diary-cell, 28px) 0 0;
+  padding: 0 4px 0 0;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: #8a3c10;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: var(--diary-cell, 28px);
+  letter-spacing: 0.06em;
+  text-align: left;
+  cursor: pointer;
+}
+.diary-fold-name { flex: 0 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.diary-fold-go { margin-left: auto; color: rgba(138, 60, 16, 0.7); font-size: 13px; font-weight: 400; }
+.diary-fold:hover,
+.diary-fold:focus-visible { background: rgba(240, 206, 120, 0.32); outline: none; }
+
+/* 作业卡 */
+.diary-note.hw-quote { color: #6a5d4a; font-size: 14px; }
+.hw-list .hw-text { flex: 1 1 auto; min-width: 0; }
+.task-list.hw-list li.done { text-decoration: none; }
+.task-list.hw-list li.done .hw-text { text-decoration: line-through; text-decoration-color: rgba(60, 50, 40, 0.45); }
+.hw-ev {
+  flex: 0 0 auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #8a3c10;
+  font: inherit;
+  font-size: 14px;
+  text-decoration: none;
+  cursor: pointer;
+}
+.hw-ev:hover { text-decoration: underline; }
+
+/* 证物页底：同一样东西 */
+.clue-kin { margin-top: 12px; padding-top: 8px; border-top: 1px dashed rgba(60, 50, 40, 0.3); }
+.clue-kin-h { margin: 0 0 2px; color: #8a7d6a; font-size: 12px; letter-spacing: 0.1em; }
+.clue-kin-link {
+  display: block;
+  width: calc(100% - 96px);
+  padding: 4px 0;
+  border: 0;
+  background: transparent;
+  color: #6a3b2a;
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+.clue-kin-link:hover { text-decoration: underline; }
 
 .diary-sec {
   display: inline-block;
@@ -3484,6 +3663,9 @@ button.phone-act.done {
   .talk.face .talk-text {
     min-height: 0;
     font-size: 16px;
+  }
+  .talk.face .talk-zh {
+    font-size: 14px;
   }
   .talk.face .talk-text.stage-dir {
     font-size: 16px;
@@ -4086,9 +4268,6 @@ button.phone-act.done {
 }
 .wall-draft-drop:hover { color: #5a4a3a; }
 
-.ad.gone { color: #aaa; background: #f6f6f3; border-style: dashed; }
-.ad.gone b { color: #999; }
-
 /* 底栏「浏览器」：墙簿有新东西就慢慢明暗，右上一颗红点（加大并轻脉冲） */
 @keyframes playbar-breathe {
   0%, 100% { color: #e6d7bc; text-shadow: 0 1px 0 rgba(0, 0, 0, .45); }
@@ -4409,6 +4588,50 @@ button.phone-act.done {
 }
 .tool-steps { margin: 0; padding-left: 1.5em; font-size: 15px; line-height: 1.65; }
 .tool-steps li::marker { color: #8a3c10; font-weight: 700; }
+/* 当前该做的那一步加粗加底；做过的变淡 */
+.tool-steps li.now { color: #6e2c08; font-weight: 700; background: rgba(240, 206, 120, 0.45); }
+.tool-steps li.now::after { content: " ←"; color: #c47a28; }
+.tool-steps li.past { color: #8f8574; }
+.tool-steps li.past::after { content: " ✓"; color: #3e7a3a; font-weight: 700; }
+/* 还没收到今晚的线索：别让人以为点不了是坏了 */
+.tool-empty {
+  flex: 1 1 100%;
+  padding: 12px 14px;
+  border: 2px dashed #c47a28;
+  border-radius: 4px;
+  background: rgba(255, 232, 184, 0.55);
+  font-size: 15px;
+  line-height: 1.6;
+}
+.tool-empty p { margin: 0 0 6px; }
+.tool-empty-lead { color: #6e2c08; font-size: 16px; font-weight: 700; }
+.tool-empty-go,
+.tool-more-go {
+  min-height: 36px;
+  margin-top: 4px;
+  padding: 4px 16px;
+  border: 1.5px solid #8a3c10;
+  border-radius: 3px;
+  background: #8a3c10;
+  color: #fff;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.tool-empty-go:hover,
+.tool-more-go:hover { background: #a24a16; }
+.tool-more {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  margin: 6px 0 4px;
+  color: #6e2c08;
+  font-size: 14px;
+}
+.tool-more-go { min-height: 32px; margin-top: 0; padding: 2px 12px; font-size: 14px; }
+.tool-rows.idle .tool-row:not(.done) { opacity: 0.55; }
 .tool-progress {
   position: absolute;
   top: 10px;
@@ -4660,19 +4883,6 @@ button.phone-act.done {
 }
 .act-btn:hover { background: rgba(98, 70, 34, 0.9); }
 .ask-btn { border-color: #74b8e6; }
-.ask-btn.grey {
-  position: absolute;
-  right: 16px;
-  bottom: 16px;
-  z-index: 3;
-  padding: 6px 14px;
-  border: 1px solid #4a4a4a;
-  background: rgba(30, 30, 30, 0.7);
-  color: #6a6a6a;
-  font: inherit;
-  font-size: var(--type-ui);
-  cursor: not-allowed;
-}
 
 .clinic-seg { color: #c4b496; font-size: var(--type-ui); }
 .cal-hint { margin: 6px 0; color: #c4b496; font-size: var(--type-ui); }
@@ -4973,6 +5183,59 @@ button.phone-act.done {
 .modal .sheet:has(.clue-img) {
   max-width: 480px;
 }
+/* 并列卡：几张线索同一高度横排，不分先后 */
+.modal.scene .sheet.scene.clue-board {
+  max-width: min(94vw, 720px);
+}
+.modal.scene .sheet.scene.clue-board:has(.board-row.n2) {
+  max-width: min(94vw, 600px);
+}
+.clue-board .board-row {
+  display: grid;
+  grid-template-columns: repeat(var(--n, 2), minmax(0, 1fr));
+  gap: 14px;
+  margin: 4px 0 6px;
+}
+.clue-board .board-row.n2 { --n: 2; }
+.clue-board .board-row.n3 { --n: 3; }
+.clue-board .board-card {
+  position: relative;
+  margin: 0;
+  min-width: 0;
+}
+.clue-board .img-slot.clue-img,
+.clue-board .img-slot.clue-img:not(.missing) {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  margin: 0 0 8px;
+}
+.clue-board .img-slot.clue-img img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  object-fit: cover;
+}
+.clue-board figcaption {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  line-height: 1.55;
+}
+.clue-board .board-title {
+  font-weight: 600;
+}
+.modal.scene .clue-board .board-card .clue-stamp {
+  top: 8px;
+  right: 8px;
+  bottom: auto;
+}
+@media (max-width: 560px) {
+  .clue-board .board-row { gap: 8px; }
+  .clue-board figcaption { font-size: 13px; }
+  .clue-board .img-slot.clue-img:not(.missing)::after { display: none; }
+}
 .talk.face .img-slot.talk-clue {
   position: absolute;
   top: 52px;
@@ -5072,7 +5335,7 @@ img.map-photo {
   justify-content: center;
   gap: 10px;
   padding: 3vh 3vw;
-  background: rgba(6, 6, 8, 0.9);
+  background: rgba(6, 6, 8, 0.97);
   cursor: zoom-out;
 }
 .pic-zoom img {
@@ -5082,9 +5345,26 @@ img.map-photo {
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7);
 }
 .pic-zoom-cap {
+  text-align: center;
+  letter-spacing: 0.06em;
+}
+.pic-zoom-cap p {
   margin: 0;
-  color: #d9d2c4;
-  font-size: 13px;
+}
+.pic-zoom-name {
+  color: #ece4d4;
+  font-size: 15px;
+  line-height: 1.6;
+}
+.pic-zoom-time {
+  color: #8f877a;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.pic-zoom-hint {
+  margin: 4px 0 0;
+  color: #6f685d;
+  font-size: 12px;
   letter-spacing: 0.06em;
 }
 /* 关卡开场／收尾：像电影字幕，不是弹窗 */
@@ -5176,83 +5456,180 @@ img.map-photo {
   margin-top: var(--cap-gap);
   animation: caption-rise 1s ease 2.2s both;
 }
-/* 开局存档 C：底栏细线三字，不要光晕硬框 */
-.resume-bar {
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  gap: 40px;
-  margin-top: var(--cap-gap);
-  padding-top: 16px;
-  border-top: 1px solid rgba(201, 187, 162, 0.28);
-  animation: caption-rise 1s ease 1.4s both;
-}
-.resume-item {
+/* 开局存档：标题、上次停在、继续（唯一有框）→ 选关 → 重来（最小灰字）；选关和确认在同一张卡里换页 */
+.resume-card .caption-plate img { filter: saturate(.4) brightness(calc(var(--plate-lum, .4) * .6)); }
+.resume-card::after { background: radial-gradient(ellipse at center, rgba(0,0,0,.2) 15%, rgba(0,0,0,.82) 100%); }
+.resume-view {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
-  min-width: 4.5em;
+  line-height: 1.5;
+  animation: caption-rise 1s ease .2s both;
 }
-.resume-link {
-  appearance: none;
-  border: 0;
+.resume-title {
   margin: 0;
-  padding: 2px 4px 8px;
-  background: linear-gradient(currentColor, currentColor) no-repeat center calc(100% - 2px) / 100% 1px;
-  color: rgba(242, 234, 220, 0.92);
-  font: inherit;
-  font-size: var(--cap-body);
+  padding-left: .5em;
+  color: #fff6e8;
+  font-size: clamp(40px, 9vw, 60px);
   font-weight: 400;
-  letter-spacing: 0.22em;
-  line-height: 1.4;
+  letter-spacing: .5em;
+  line-height: 1.2;
+}
+.resume-sub {
+  margin: 6px 0 0;
+  padding-left: .6em;
+  color: #a89880;
+  font-size: 13px;
+  letter-spacing: .6em;
+}
+.resume-where {
+  position: relative;
+  width: min(360px, 100%);
+  margin: 40px 0 34px;
+  padding: 40px 0 18px;
+  border-top: 1px solid rgba(201, 187, 162, .22);
+  border-bottom: 1px solid rgba(201, 187, 162, .22);
+}
+.resume-where p { margin: 0; }
+/* 夹在日记里的书签带，从上面那条线垂下来 */
+.resume-ribbon {
+  position: absolute;
+  top: -1px;
+  left: 50%;
+  width: 12px;
+  height: 30px;
+  transform: translateX(-50%);
+  background: linear-gradient(90deg, #6e2a22, #9a4034 50%, #6e2a22);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 78%, 0 100%);
+  transform-origin: top center;
+  animation: resume-ribbon-sway 1.6s ease-out .6s both;
+}
+@keyframes resume-ribbon-sway {
+  0% { transform: translateX(-50%) scaleY(0); }
+  60% { transform: translateX(-50%) scaleY(1.06) rotate(2deg); }
+  100% { transform: translateX(-50%) scaleY(1) rotate(0); }
+}
+.resume-when { color: #fff6e8; font-size: 20px; }
+.resume-place { margin-top: 2px !important; color: #c9bba2; font-size: 14px; }
+.resume-goal { margin-top: 12px !important; color: #e8dcc6; font-size: 15px; line-height: 1.7; }
+.resume-go,
+.resume-link,
+.resume-quiet,
+.resume-lv {
+  appearance: none;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
   cursor: pointer;
-  transition: color 0.2s ease, background-size 0.25s ease;
+}
+.resume-go {
+  min-width: 9em;
+  padding: 10px 28px;
+  border: 1px solid rgba(242, 234, 220, .7);
+  border-radius: 2px;
+  background: rgba(10, 10, 12, .35);
+  color: #fff6e8;
+  font-size: 18px;
+  letter-spacing: .4em;
+  text-indent: .4em;
+  transition: background .2s ease, border-color .2s ease;
+}
+.resume-go:hover,
+.resume-go:focus-visible { outline: none; border-color: #fff8ea; background: rgba(242, 234, 220, .12); }
+.resume-go.danger { border-color: rgba(214, 128, 104, .8); color: #f4c8b8; }
+.resume-go.danger:hover,
+.resume-go.danger:focus-visible { border-color: #e9a08a; background: rgba(214, 128, 104, .14); }
+.resume-link {
+  margin-top: 14px;
+  padding: 6px 12px;
+  color: rgba(242, 234, 220, .82);
+  font-size: 16px;
+  letter-spacing: .3em;
+  text-indent: .3em;
+}
+.resume-quiet {
+  margin-top: 30px;
+  padding: 4px 10px;
+  color: #7d7466;
+  font-size: 13px;
+  letter-spacing: .3em;
+  text-indent: .3em;
 }
 .resume-link:hover,
 .resume-link:focus-visible,
-.resume-link.on {
-  color: #fffaf0;
+.resume-quiet:hover,
+.resume-quiet:focus-visible {
   outline: none;
-  background-size: 100% 1px;
+  color: #fff8ea;
+  text-decoration: underline;
+  text-underline-offset: 6px;
+  text-decoration-thickness: 1px;
 }
-.resume-mark {
-  color: #a89880;
-  font-size: var(--cap-small);
-  letter-spacing: 0.08em;
-  line-height: 1.3;
+
+/* 选关：跟首页同一套，上次那一关用细线框住、挂书签带 */
+.resume-h {
+  margin: 0 0 6px;
+  padding-left: .5em;
+  color: #fff6e8;
+  font-size: 26px;
+  font-weight: 400;
+  letter-spacing: .5em;
 }
-.caption-levels {
+.resume-list {
+  width: min(360px, 100%);
+  max-height: min(60vh, 540px);
+  overflow-y: auto;
+  padding: 24px 0 28px;
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 28px, #000 calc(100% - 36px), transparent);
+  mask-image: linear-gradient(to bottom, transparent, #000 28px, #000 calc(100% - 36px), transparent);
+  scrollbar-width: none;
+}
+.resume-list::-webkit-scrollbar { display: none; }
+.resume-part {
+  margin: 26px 0 6px;
+  padding-left: .5em;
+  color: #8f8370;
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: .5em;
+}
+.resume-part:first-child { margin-top: 0; }
+.resume-lv {
+  position: relative;
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 8px 10px;
-  max-width: 560px;
-  margin: 16px auto 0;
-  animation: caption-rise 0.7s ease both;
-}
-.caption-levels[hidden] { display: none !important; }
-.caption-lv {
-  appearance: none;
-  border: 0;
-  border-bottom: 1px solid rgba(201, 187, 162, 0.35);
-  background: transparent;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  padding: 9px 0;
   color: #e8dcc6;
-  font: inherit;
-  font-size: 15px;
-  letter-spacing: 0.06em;
-  padding: 4px 2px 6px;
-  cursor: pointer;
-  transition: color 0.15s ease, border-color 0.15s ease;
 }
-.caption-lv:hover {
+.resume-lv-title { font-size: 17px; letter-spacing: .12em; }
+.resume-lv-date { color: #8f8370; font-size: 12px; }
+.resume-lv:hover .resume-lv-title,
+.resume-lv:focus-visible .resume-lv-title {
   color: #fff8ea;
-  border-bottom-color: rgba(232, 220, 198, 0.85);
+  text-decoration: underline;
+  text-underline-offset: 6px;
+  text-decoration-thickness: 1px;
 }
-.caption-lv.now {
-  color: #fff8ea;
-  border-bottom-color: rgba(232, 220, 198, 0.95);
+.resume-lv:focus-visible { outline: none; }
+.resume-lv.now {
+  margin: 8px 0;
+  padding: 38px 0 14px;
+  border-top: 1px solid rgba(201, 187, 162, .22);
+  border-bottom: 1px solid rgba(201, 187, 162, .22);
 }
+.resume-lv.now .resume-lv-title { color: #fff6e8; font-size: 20px; }
+.resume-lv.now .resume-lv-date { color: #c9bba2; font-size: 13px; }
+.resume-list + .resume-quiet { margin-top: 18px; }
+
+/* 重来／重开前的确认 */
+.resume-ask { margin: 0; color: #fff6e8; font-size: 22px; }
+.resume-why { margin: 10px 0 28px; color: #c9bba2; font-size: 14px; }
+.resume-pair { display: flex; align-items: center; justify-content: center; gap: 24px; }
+.resume-pair .resume-link { margin-top: 0; }
+
 /* 上一关收尾和下一关开场同一画面：记下的、时间地点、要做的事，依次浮出 */
 .has-prev .caption-line {
   margin-top: var(--cap-gap);
@@ -5377,11 +5754,104 @@ img.map-photo {
   from { transform: scale(1.06); }
   to { transform: scale(1); }
 }
-/* 新游戏开场：黑底心声 → 屏幕微光亮起、右上角钟打出来 → 从光里放大切进浏览器 */
-#os-bar { transition: opacity 0.8s ease; }
+/* 过场：几格定格淡入淡出，可慢推镜 */
+.desk.cut { cursor: pointer; background: #000; }
+.desk.cut::after { display: none; }
+.cut-frame {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.9s ease;
+}
+.cut-frame.on { opacity: 1; }
+.cut-plate {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  border: 0;
+  background: #000;
+}
+.cut-plate img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform-origin: var(--origin, 50% 50%);
+}
+.cut-frame.push img { animation: cut-push var(--dur, 7s) linear both paused; }
+.cut-frame.push.on img,
+.cut-frame.push.past img { animation-play-state: running; }
+@keyframes cut-push {
+  from { transform: scale(1); }
+  to { transform: scale(1.08); }
+}
+.cut-cap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 14%;
+  margin: 0;
+  text-align: center;
+  color: #efe6d6;
+  font-family: "LXGW WenKai", "KaiTi", "楷体", "STKaiti", serif;
+  font-size: var(--cap-lead);
+  letter-spacing: 0.32em;
+  text-shadow: 0 0 4px rgba(0,0,0,.95), 0 1px 14px rgba(0,0,0,.9), 0 0 28px rgba(0,0,0,.7);
+  opacity: 0;
+  transition: opacity 1.2s ease 0.8s;
+}
+.cut-frame.on .cut-cap { opacity: 1; }
+/* waitWeek 里压在过夜定格上的字幕：定格先亮，文字后到；点一下跳过 */
+.wait-cap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 20%;
+  z-index: 1;
+  margin: 0;
+  text-align: center;
+  color: #efe6d6;
+  font-family: "LXGW WenKai", "KaiTi", "楷体", "STKaiti", serif;
+  font-size: var(--cap-small);
+  letter-spacing: 0.28em;
+  text-shadow: 0 0 4px rgba(0,0,0,.95), 0 1px 14px rgba(0,0,0,.9), 0 0 28px rgba(0,0,0,.7);
+  opacity: 1;
+  transition: opacity 1.4s ease 0.6s;
+}
+.desk.caption-card.leaving .wait-cap { opacity: 0; }
+.caption-text.cut-in > .caption-line { animation-delay: 1.6s; }
+.caption-text.cut-in > .caption-next { animation-delay: 2.2s; }
+.caption-text.cut-in > .caption-acts { animation-delay: 2.6s; }
+.desk.cut.out .cut-frame { opacity: 0; transition-duration: 0.4s; }
+.cut-skip {
+  position: absolute;
+  right: 18px;
+  bottom: 14px;
+  z-index: 2;
+  padding: 4px 10px;
+  border: 0;
+  background: none;
+  color: rgba(232, 220, 198, 0.5);
+  font-size: var(--cap-small);
+  letter-spacing: 0.2em;
+  cursor: pointer;
+}
+.cut-skip:hover,
+.cut-skip:focus-visible { color: #f3eadc; outline: none; }
+@media (prefers-reduced-motion: reduce) {
+  .cut-frame { transition-duration: 0.3s; }
+}
+/* 新游戏开场：黑屋里一行行打出心声 → 整个画面像笔记本屏幕通电亮起 */
 #app.opening-dark #os-bar { opacity: 0; pointer-events: none; }
 #app.opening-dark { background: #030405; }
-.opening-pre { cursor: pointer; }
+.opening-pre { cursor: pointer; background: #030405; }
+.opening-pre.locked { cursor: default; }
+#opening-lock { position: fixed; inset: 0; z-index: 2147483000; background: transparent; cursor: default; }
+.desk.opening-pre.leaving { animation: opening-fade 0.42s ease-in both; }
+@keyframes opening-fade { to { opacity: 0; } }
 .opening-gate {
   margin: 0;
   font-size: var(--cap-small);
@@ -5389,45 +5859,90 @@ img.map-photo {
   letter-spacing: 0.3em;
   animation: caption-rise 1.2s ease 0.4s both, caption-breathe 3.2s ease-in-out 1.6s infinite;
 }
-.caption-line.opening-say { animation: opening-say 2.2s ease both; }
-@keyframes opening-say {
-  0% { opacity: 0; transform: translateY(6px); }
-  30%, 72% { opacity: 1; transform: none; }
+.opening-lines {
+  position: relative;
+  z-index: 1;
+  width: min(21em, 82%);
+  margin-bottom: 6vh;
+  color: #8f8676;
+  font-family: "LXGW WenKai", "KaiTi", "楷体", "STKaiti", serif;
+  font-size: var(--cap-lead);
+  line-height: 1.9;
+  letter-spacing: 0.08em;
+  text-align: left;
+}
+.opening-lines:has(.opening-gate) { width: auto; margin: 0; text-align: center; }
+.opening-line { margin: 0; min-height: 1.9em; }
+.opening-line.goal {
+  margin-top: 1.1em;
+  color: #f3eadb;
+  text-shadow: 0 0 14px rgba(255, 240, 210, 0.18);
+}
+/* 光标跟在正在打的那一行后面；打完停在最后一行一直闪 */
+.opening-line:last-child::after {
+  content: "";
+  display: inline-block;
+  width: 0.08em;
+  height: 1.05em;
+  margin-left: 0.12em;
+  vertical-align: -0.16em;
+  background: currentColor;
+  animation: opening-caret 1s steps(1) infinite;
+}
+@keyframes opening-caret { 50% { opacity: 0; } }
+html.screen-on,
+html.screen-on body { background: #000; }
+/* 笔记本背光通电：不变形，只是从黑里冷灰、发虚地浮上来，再慢慢回到正常颜色 */
+html.screen-on #app { animation: screen-on 1.8s cubic-bezier(0.3, 0.1, 0.3, 1) both; }
+@keyframes screen-on {
+  0% { opacity: 0; filter: brightness(0.3) saturate(0) contrast(0.7) blur(2.5px); }
+  20% { opacity: 1; filter: brightness(0.45) saturate(0.1) contrast(0.75) blur(1.6px); }
+  60% { opacity: 1; filter: brightness(0.85) saturate(0.6) contrast(0.92) blur(0.4px); }
+  100% { opacity: 1; filter: none; }
+}
+html.screen-on body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 9990;
+  pointer-events: none;
+  background: #8fa6c8;
+  mix-blend-mode: multiply;
+  animation: backlight-tint 1.8s ease-in-out both;
+}
+@keyframes backlight-tint {
+  0%, 15% { opacity: 1; }
   100% { opacity: 0; }
 }
-.opening-glow {
-  position: absolute;
-  left: 50%;
-  bottom: -20%;
-  z-index: 0;
-  width: min(130vw, 1500px);
-  height: 95%;
-  transform: translateX(-50%);
-  background: radial-gradient(ellipse at 50% 100%, rgba(176, 200, 232, 0.32) 0%, rgba(120, 150, 200, 0.12) 40%, transparent 70%);
+/* 屏幕通电后正中浮一下「7月31日」再淡掉 */
+.boot-date {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   pointer-events: none;
-  animation: opening-glow-on 1.2s linear both;
+  color: #e9dcc4;
+  font-family: "LXGW WenKai", "KaiTi", "楷体", "STKaiti", serif;
+  font-size: clamp(26px, 5.4vw, 52px);
+  letter-spacing: 0.34em;
+  text-indent: 0.34em;
+  text-shadow: 0 0 22px rgba(255, 240, 210, 0.22);
+  opacity: 0;
+  animation: boot-date-in 1.35s ease both;
 }
-@keyframes opening-glow-on {
-  0% { opacity: 0; }
-  10% { opacity: 0.7; }
-  18% { opacity: 0.12; }
-  30% { opacity: 0.85; }
-  40% { opacity: 0.4; }
-  100% { opacity: 1; }
+.boot-date.leaving { animation: boot-date-out 0.75s ease both; }
+@keyframes boot-date-in {
+  0% { opacity: 0; letter-spacing: 0.6em; }
+  34% { opacity: 0.92; }
+  100% { opacity: 0.62; letter-spacing: 0.34em; }
 }
-.caption-card.opening .caption-line { animation-delay: 2s; }
-.caption-card.opening .caption-acts { animation-delay: 3.2s; }
-.caption-card.opening .caption-go { animation-delay: 4.2s; }
-.caption-card.opening.now .caption-line,
-.caption-card.opening.now .caption-acts { animation-delay: 0s; animation-duration: 0.35s; }
-.caption-card.opening.now .opening-glow { animation: none; }
-.caption-card.opening.leaving {
-  transform-origin: 50% 85%;
-  animation: opening-out 0.6s ease-in both;
-}
-@keyframes opening-out {
-  from { opacity: 1; transform: none; filter: none; }
-  to { opacity: 0; transform: scale(1.3); filter: brightness(1.9); }
+@keyframes boot-date-out { to { opacity: 0; letter-spacing: 0.18em; } }
+@media (prefers-reduced-motion: reduce) {
+  html.screen-on #app { animation: none; }
+  html.screen-on body::after { display: none; }
+  .opening-line:last-child::after { animation: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   .desk.caption-card, .caption-card *, .caption-plate img { animation: none !important; }

@@ -20,7 +20,7 @@ const LEVELS = [
   {
     part: 1, title: "廿八屋", date: "7月31日 夜", place: "她的电脑",
     clock: "2014年7月31日 周四 23:14",
-    goal: "找一间今晚之后就能住的房。",
+    goal: "上廿八屋，找到能马上搬进去的那一间。",
     tasks: [
       { text: "把求助帖顶上去", need: true, done: () => flag("postedHelp"), hint: "帖子沉下去了，顶上去。" },
       { text: "找到一间四条都过得去的房", need: true, done: () => !!(S.known && S.known.rong), hint: "拿四条对着盘看。卡住哪条，就划哪条。" },
@@ -52,16 +52,17 @@ const LEVELS = [
     tasks: [
       { text: "屋里看清四样东西", count: () => [cnt(["family", "car", "sill", "door"], S.view), 4], need: true, done: () => cnt(["family", "car", "sill", "door"], S.view) >= 4, hint: "厅里的相和车、走廊尽头的门、主房窗台，我还没看齐。" },
       { text: "问周生一句", need: true, done: () => !!(S.view && S.view.asked), hint: "问他一句再说。" },
-      { text: "跟他一起看主房窗台", after: "他踩住窗台那圈水印", done: () => flag("sawSillTour") },
+      { text: "跟他一起看主房窗台", after: "他的手盖住窗台那圈水印", done: () => flag("sawSillTour") },
       { text: "问他一个人住怕不怕", done: () => flag("debtSlip") },
     ],
     advance: { when: "8月1日", where: "交定金，拿钥匙", fn: () => payDeposit() },
-    next: "当晚　你一个人",
+    next: "当晚　后座",
     start: () => startViewing(),
     gives: () => {
       S.view = { family: true, car: true, sill: true, door: true, asked: true };
       flag("sawSillTour", true);
       markPlace("rong-hall");
+      seedItems(["obj-keytag"]);
     },
   },
   {
@@ -71,14 +72,14 @@ const LEVELS = [
     tasks: [
       { text: "屋里的样子，记下至少四样", need: true, count: () => [baseCount(), 4], done: () => baseCount() >= 4, hint: "屋里的东西，我还没看清，至少四样。" },
       { text: "日历上，夜里那卷录音", after: "08-13 的录音「只有水」", need: true, show: () => !!S.calOpen, done: () => ev("rec-water"), hint: "有一夜水管响，我开了录音。" },
-      { text: "日历上别的日子", show: () => !!S.calOpen, count: () => [cnt(["08-03", "08-07", "08-08", "08-10", "08-12"], S.calSeen), 5], done: () => cnt(["08-03", "08-07", "08-08", "08-10", "08-12"], S.calSeen) >= 5 },
+      { text: "日历上别的日子", show: () => !!S.calOpen, count: () => [cnt(["08-01", "08-02", "08-03", "08-04", "08-05", "08-06", "08-07", "08-08", "08-09", "08-10", "08-11", "08-12", "08-13"], S.calSeen), 13], done: () => cnt(["08-01", "08-02", "08-03", "08-04", "08-05", "08-06", "08-07", "08-08", "08-09", "08-10", "08-11", "08-12", "08-13"], S.calSeen) >= 13 },
     ],
-    advance: { when: "8月14日　傍晚", where: "荣汇街后座", fn: () => finishLevel(3), modes: ["cal"] },
-    next: "8月14日 傍晚　后座",
+    advance: { when: "8月14日　傍晚", where: "荣汇街后座", fn: () => twoWeekSummary(), modes: ["cal"] },
+    next: "8月14日 傍晚　有人敲门",
     start: () => moveInStart(),
     gives: () => {
       S.base = { car: true, tap: true, storage: true, sill: true, family: true };
-      S.calSeen = { "08-03": true, "08-07": true, "08-08": true, "08-10": true, "08-12": true, "08-13": true };
+      S.calSeen = { "08-01": true, "08-02": true, "08-03": true, "08-04": true, "08-05": true, "08-06": true, "08-07": true, "08-08": true, "08-09": true, "08-10": true, "08-11": true, "08-12": true, "08-13": true };
       seedItems(["rec-water"]);
       seedNotes([
         ["move-car", "车头朝窗。敞篷座位里没有灰。"],
@@ -99,7 +100,7 @@ const LEVELS = [
       { text: "打给阿乐", show: nightOn, done: () => flag("calledLok") },
       { text: "敲周生的门", show: nightOn, done: () => flag("knockedZhou") },
     ],
-    next: "天亮",
+    next: "天亮　前座门口",
     start: () => startChange(),
     gives: () => {
       S.tonight = { car: true, tap: true, storage: true, sill: true, print: true };
@@ -143,7 +144,7 @@ const LEVELS = [
       { text: "诊室里看三样：执照、抽屉、电脑一角", need: true, count: () => [cnt(["lic", "drawer", "list"], S.clinicLooked), 3], done: () => cnt(["lic", "drawer", "list"], S.clinicLooked) >= 3, hint: "这间房，我还没看清楚。" },
       { text: "把你搜集的东西给他看", need: true, done: () => !!(S.handed && S.handed.ok6), hint: "讲到屋的时候，把最要紧的给他看。" },
     ],
-    next: "8月16日 21:40　回到后座",
+    next: "8月16日 21:40　后座",
     start: () => goClinic(),
     gives: () => {
       S.handed = { ok6: true };
@@ -286,7 +287,7 @@ const LEVELS = [
   {
     part: 4, title: "罗医生的秘密", date: "9月7日 16:10", place: "澄心诊室、走廊、邮箱",
     clock: "2014年9月7日 周日 16:10",
-    goal: "去拿他说整理好的笔记。本子不在。",
+    goal: "去拿他说整理好的笔记。",
     tasks: [
       { text: "看一眼他的工作台", after: "他去倒水时，看工作台", need: true, done: () => noted("stolen"), hint: "桌上的东西，我还没看清。" },
       { text: "去走廊", after: "走廊碰到陈家豪", need: true, show: () => noted("stolen"), done: () => !!(S.miss && S.miss.chen), hint: "走廊那边，我还没去。" },
@@ -322,13 +323,13 @@ const LEVELS = [
     tasks: [
       { text: "打给他", after: "录音叫了我的名字，打给他", need: true, done: () => flag("calledMing2"), hint: "打给他。" },
       { text: "他到门口，听他讲", after: "他来了，在门口叫出一个字", need: true, show: () => flag("calledMing2"), done: () => noted("countbreath"), hint: "" },
-      { text: "有人敲门，听他要什么", after: "周来要天台钥匙", need: true, show: () => false, done: () => flag("roofKeyAsked"), hint: "" },
+      { text: "有人敲门，听他要什么", after: "周来要天台钥匙", show: () => noted("countbreath"), done: () => flag("roofKeyAsked"), hint: "" },
       { text: "还没看的旧闻：西贡、市建局", after: "翻了西贡山泥、市建局荣汇街两篇", show: () => flag("calledMing2") && !noted("twofiles"), done: () => noted("twofiles") },
       { text: "想想天台白天的样子", after: "想起天台白天的样子", show: () => flag("calledMing2"), done: () => !!S.searchRoof },
-      { text: "上楼前问他白天", after: "他认：企喺楼梯，冇揿门铃", show: () => false, done: () => noted("day-admit") },
+      { text: "上楼前问他白天", after: "他认：站在楼梯，没有按门铃", show: () => noted("countbreath"), done: () => noted("day-admit") },
     ],
     advance: { when: "9月7日　夜", where: "他来了", fn: () => mingReturn(), modes: ["search"], ready: () => flag("calledMing2") },
-    next: "约一小时后",
+    next: "约一小时后　后楼梯",
     start: () => nightName(),
     gives: () => {
       flag("calledMing2", true);
@@ -466,12 +467,24 @@ function levelReady() {
   return L.tasks.every((t) => !t.need || t.done());
 }
 
-function levelHint() {
+const hintSay = (x) => (typeof x.hint === "function" ? x.hint() : x.hint);
+
+function hintTask() {
   const L = levelNow();
-  if (!L) return "";
-  const say = (x) => (typeof x.hint === "function" ? x.hint() : x.hint);
-    const t = L.tasks.find((x) => x.need && !x.done() && (!x.show || x.show()) && say(x));
-  return t ? say(t) : "";
+  if (!L) return null;
+  return L.tasks.find((x) => x.need && !x.done() && (!x.show || x.show()) && hintSay(x)) || null;
+}
+
+function levelHint() {
+  const t = hintTask();
+  return t ? hintSay(t) : "";
+}
+
+// 提示的字大半已在那条任务里（「候诊。」对「候诊，看一眼」），日记簿就不再写一遍
+function hintEchoes(hint, task) {
+  const chars = [...hint.replace(/[\s，。、；：！？「」…—\-我你还没的了是在就都也这那再]/g, "")];
+  if (!chars.length) return true;
+  return chars.filter((c) => task.includes(c)).length / chars.length >= 0.55;
 }
 
 function levelAdvance() {
@@ -499,7 +512,7 @@ function renderLevelBox() {
   if (typeof renderDiaryIndex === "function") renderDiaryIndex();
 }
 
-// 日记簿「待办事项」那一页：必做在上；空一行，可做的用虚线圈、颜色浅一点，不写「可做可不做」
+// 日记簿「要做的」那一页：必做在上；空一行，可做的用虚线圈、颜色浅一点，不写「可做可不做」
 function levelBlocks() {
   const L = levelNow();
   if (!L || S.mode === "end") return [];
@@ -516,10 +529,42 @@ function levelBlocks() {
   const blocks = [el("p", { class: "diary-note level-name" }, [L.goal])];
   if (need.length) blocks.push(el("ul", { class: "task-list" }, need.map(row)));
   if (opt.length) blocks.push(el("ul", { class: "task-list opt-list" }, opt.map(row)));
-  const hint = levelHint();
-  if (hint) blocks.push(el("p", { class: "diary-note task-hint" }, [hint]));
-  if (S.homework) blocks.push(el("h4", { class: "diary-sub" }, ["作业"]), el("p", { class: "diary-note" }, [S.homework.body]));
+  const ht = hintTask();
+  const hint = ht ? hintSay(ht) : "";
+  if (hint && !hintEchoes(hint, ht.text)) blocks.push(el("p", { class: "diary-note task-hint" }, [hint]));
+  blocks.push(...homeworkBlocks(), ...freshBlocks());
   return blocks;
+}
+
+// 作业到下一次复诊交掉为止
+function homeworkBlocks() {
+  const hw = S.homework;
+  if (!hw || S.level > hw.n + 2) return [];
+  const rows = HOMEWORK_ROWS[hw.n] || [];
+  const done = rows.filter(([, id]) => ev(id)).length;
+  const out = [
+    diarySubHead("作业", rows.length ? done + "／" + rows.length : ""),
+    el("p", { class: "diary-note hw-quote" }, ["罗启明写：" + hw.body]),
+  ];
+  if (rows.length) {
+    out.push(el("ul", { class: "task-list hw-list" }, rows.map(([text, id]) => {
+      const have = ev(id);
+      return el("li", { class: have ? "done" : "" }, [
+        el("span", { class: "task-mark", "aria-hidden": "true" }, [have ? "✓" : "○"]),
+        el("span", { class: "hw-text" }, [text]),
+        have ? el("button", { type: "button", class: "hw-ev", onclick: () => diaryOpen(() => showClueModal(item(id), { canFile: false, fromIndex: true })) }, [item(id).title + " ›"]) : "",
+      ]);
+    })));
+  }
+  return out;
+}
+
+// 这一关收进日记簿的
+function freshBlocks() {
+  const mark = S.levelMark || { ev: [] };
+  const fresh = (S.evidence || []).filter((e) => !mark.ev.includes(e.id));
+  if (!fresh.length) return [];
+  return [diarySubHead("这一段收到的", fresh.length), ...fresh.map((e) => evidenceEntry(e))];
 }
 
 function paperPages() {
@@ -577,7 +622,7 @@ function noteSkip(it) {
 }
 
 const CARD_NIGHT = [3, 4, 7, 9, 11, 13, 15];
-const CARD_NIGHT_OWN = [4, 9, 11, 15];
+const CARD_NIGHT_OWN = [4, 7, 9, 11, 15];
 
 function cardBgName(n) {
   if (!(n > 1)) return "";
@@ -590,7 +635,7 @@ function cardBgName(n) {
 function cardBg(n) {
   const name = cardBgName(n);
   if (!name) return "";
-  if (name === "场景-夜里后座厅" && !CARD_NIGHT_OWN.includes(n)) return pic(4, name);
+  if (name === "场景-夜里后座厅" && !CARD_NIGHT_OWN.includes(n)) return pic(n, "场景-后座厅");
   return pic(n, name);
 }
 
@@ -656,6 +701,7 @@ function drawCard() {
   clearStage();
   try {
     const c = S.card || {};
+    if (c.type === "cut") return drawCut(c);
     if (c.type === "test") {
       const kids = [
         el("p", { class: "talk-loc" }, ["暗度　第一章　分段测试"]),
@@ -719,6 +765,7 @@ function drawCaption(c, L) {
   const { desk, go, leave } = captionShell(cardBg(c.n), CARD_LUM[cardBgName(c.n)]);
   const kids = [];
   if (c.type === "resume") {
+    desk.classList.add("resume-card");
     kids.push(...resumeCaption(c, L, go, leave));
   } else if (c.type === "start") {
     const prev = c.from && LEVELS[c.from];
@@ -741,17 +788,26 @@ function drawCaption(c, L) {
   renderPlaybar();
   const app = document.getElementById("app");
   if (app) app.classList.remove("opening-dark");
-  if (openingGlow && c.type === "start" && c.n === 1) {
-    openingGlow = false;
-    openingScreen(desk);
-  }
+  if (c.type === "resume") choiceLock(desk);
 }
 
-/* ---------- 新游戏开场：耳机提示 → 黑底三句心声 → 屏幕微光、钟打出来 → 「要做」→ 从光里切进浏览器 ----------
-   不打标题、不写第几关（标题留到第一章结尾）。心声只写她此刻知道的事。 */
-const OPENING_SAY = ["五月，分了手。", "短租、沙发、日租。", "今晚之后，要有地方住。"];
-const OPENING_SAY_MS = 2200;
-let openingGlow = false;
+/* ---------- 新游戏开场：耳机提示 → 黑屋里一行行打出心声，最后一行就是这一关要做的 → 电脑屏幕亮起，直接进廿八屋 ----------
+   不打标题、不写第几关、不再弹第 1 关字幕卡（标题留到第一章结尾）。心声只写她此刻知道的事——
+   她此刻知道什么：分了手、没有自己的地方、散工、现金、口头、被当有问题、不想坐别人家沙发。
+   语气是书面中文（和 story-*.js 的 showModal／note 心声同一种），不是广东话口语——口语只留人物对白。
+   基调偏暖：她说的是疼，不是怨；表姐爱她，只是也把她当病人。她只是要一间自己的门。
+   她此刻不知道什么：荣汇街、周、藤先生、这间屋出过事。开场一个字都不许提前。 */
+const OPENING_SAY = [
+  "五月分了手。",
+  "短租、日租、朋友家的沙发，一样一样试。",
+  "散工。收现金，口头讲定，没有粮单。",
+  "试到七月尾，也不好意思再开口借住。",
+  "阿乐当我有病；表姐嘴上不说，眼神是一样的。",
+  "她留了沙发。可我不想再坐别人家的沙发。",
+  "想找一间能马上搬进去的房。",
+];
+const OPENING_TYPE_MS = 75;
+const OPENING_HOLD_MS = 2000;
 let openingTimers = [];
 
 function openingLater(fn, ms) {
@@ -763,72 +819,140 @@ function openingClear() {
   openingTimers = [];
 }
 
+// 开场一旦开始就不许跳：盖一层透明罩吃掉所有点击，键盘也拦下（浏览器自己的组合键放行）。
+function openingKeyBlock(e) {
+  if (e.ctrlKey || e.metaKey || e.altKey || /^F\d+$/.test(e.key)) return;
+  e.preventDefault();
+  e.stopImmediatePropagation();
+}
+
+function openingLock(on) {
+  const old = document.getElementById("opening-lock");
+  if (old) old.remove();
+  window.removeEventListener("keydown", openingKeyBlock, true);
+  if (!on) return;
+  document.body.append(el("div", { id: "opening-lock", "aria-hidden": "true" }));
+  window.addEventListener("keydown", openingKeyBlock, true);
+}
+
 function playOpening() {
   openingClear();
+  openingLock(false);
+  clockHold = false;
   S.mode = "card";
   S.card = null;
   clearStage();
   const app = document.getElementById("app");
   if (app) app.classList.add("opening-dark");
-  const text = el("div", { class: "caption-text" });
-  const desk = el("div", { class: "desk caption-card opening-pre" }, [text]);
+  const lines = el("div", { class: "opening-lines" });
+  const desk = el("div", { class: "desk caption-card opening-pre" }, [lines]);
   stage.append(desk);
   renderPlaybar();
 
-  let done = false;
-  const toScreen = () => {
-    if (done) return;
-    done = true;
-    openingClear();
-    openingGlow = true;
-    enterLevel(1);
+  const rows = OPENING_SAY.map((text) => ({ text })).concat([{ text: LEVELS[1].goal, goal: true }]);
+  const lineEl = (r, text) => el("p", { class: "opening-line" + (r.goal ? " goal" : "") }, [text]);
+  // gate → typing → hold → leaving；只有 gate 要点（解锁声音），之后一路播完，屏幕通电、日期淡掉才放手
+  let phase = "gate";
+
+  const hold = () => {
+    phase = "hold";
+    desk.classList.add("typed");
+    openingLater(powerOn, OPENING_HOLD_MS);
   };
-  const says = () => {
-    roomTone(true);
-    text.replaceChildren();
-    // 同一次点击里加的监听不会被这次点击触发
-    desk.addEventListener("click", toScreen);
-    let i = 0;
-    const next = () => {
-      if (i >= OPENING_SAY.length) return toScreen();
-      text.replaceChildren(el("p", { class: "caption-line opening-say" }, [OPENING_SAY[i]]));
-      if (i === 1) sfx("drip");
-      i += 1;
-      openingLater(next, OPENING_SAY_MS);
+  const typeRow = (i) => {
+    if (i >= rows.length) return hold();
+    const r = rows[i];
+    const p = lineEl(r, "");
+    lines.append(p);
+    const chars = Array.from(r.text);
+    let n = 0;
+    const tick = () => {
+      n += 1;
+      const ch = chars[n - 1];
+      p.textContent = chars.slice(0, n).join("");
+      const stop = /[，。、]/.test(ch);
+      if (!stop) sfx("key");
+      if (n < chars.length) openingLater(tick, stop ? OPENING_TYPE_MS * 4 : OPENING_TYPE_MS);
+      else openingLater(() => typeRow(i + 1), 650);
     };
-    openingLater(next, 500);
+    openingLater(tick, r.goal ? 450 : 0);
   };
+  const powerOn = () => {
+    if (phase === "leaving") return;
+    phase = "leaving";
+    openingClear();
+    desk.classList.add("leaving");
+    openingLater(() => {
+      clockHold = true;
+      if (clockEl) clockEl.textContent = "";
+      enterLevel(1);
+      screenOn();
+      startLevelNow();
+      bootDate(); // 屏幕通电时先浮一下今天的日期，接住开场白那句「试到七月尾」
+      const lit = Date.now();
+      typeClock(() => {
+        const left = typeMotionOff() ? 0 : Math.max(0, 1900 - (Date.now() - lit));
+        setTimeout(() => openingLock(false), left);
+      });
+    }, 420);
+  };
+  const begin = () => {
+    phase = "typing";
+    desk.classList.add("locked");
+    openingLock(true);
+    roomTone(true);
+    lines.replaceChildren();
+    openingLater(() => typeRow(0), 700);
+  };
+  desk.addEventListener("click", () => {
+    if (phase === "gate") begin();
+  });
   // 已经点过（重来）声音早解锁了，不再问
-  if (sfxReady) return says();
-  text.append(el("p", { class: "opening-gate" }, ["戴上耳机，点一下"]));
-  desk.addEventListener("click", says, { once: true });
+  if (sfxReady) return begin();
+  lines.append(el("p", { class: "opening-gate" }, ["戴上耳机，点一下"]));
 }
 
-function openingScreen(desk) {
-  desk.classList.add("opening");
-  desk.prepend(el("div", { class: "opening-glow", "aria-hidden": "true" }));
-  const full = S.time || "";
-  const settle = () => {
-    openingClear();
-    if (desk.isConnected) clockEl.textContent = S.time || "";
-  };
-  desk.addEventListener("click", (e) => {
-    if (e.target.closest("button")) return;
-    settle();
-    desk.classList.add("now");
-  });
+// 整个画面像笔记本背光通电：从黑里冷灰发虚地浮上来，约 1.8 秒回到正常
+function screenOn() {
   if (typeMotionOff()) return;
-  const chars = Array.from(full);
+  const root = document.documentElement;
+  root.classList.remove("screen-on");
+  void root.offsetWidth;
+  root.classList.add("screen-on");
+  setTimeout(() => root.classList.remove("screen-on"), 1900);
+}
+
+// 屏幕亮起后左上角的钟一个字一个字打出来。这一步是开场的一部分：不许点掉，关动效也照打。
+const CLOCK_TYPE_MS = 55;
+function typeClock(done) {
+  const chars = Array.from(S.time || "");
   let n = 0;
-  clockEl.textContent = "";
   const tick = () => {
-    if (!desk.isConnected) return;
     n += 1;
-    clockEl.textContent = chars.slice(0, n).join("");
+    if (clockEl) clockEl.textContent = chars.slice(0, n).join("");
     if (String(chars[n - 1] || "").trim()) sfx("key");
-    if (n < chars.length) openingLater(tick, 55);
+    if (n < chars.length) return openingLater(tick, CLOCK_TYPE_MS);
+    clockHold = false;
+    renderHud();
+    if (done) done();
   };
-  openingLater(tick, 700);
+  if (!chars.length) {
+    clockHold = false;
+    renderHud();
+    return done && done();
+  }
+  openingLater(tick, typeMotionOff() ? 300 : 900);
+}
+
+// 屏幕通电后，正中先浮一下「7月31日」，淡掉。接住开场白那句「试到七月尾」——
+// 免得心声停在「想找一间能马上搬进去的房」，画面却一下落到七月底的那一夜。
+function bootDate() {
+  if (typeMotionOff()) return; // 关动效时不闪，右上角钟仍在
+  if (document.querySelector(".boot-date")) return;
+  const node = el("div", { class: "boot-date" }, ["7月31日"]);
+  document.body.append(node);
+  setTimeout(() => node.classList.add("leaving"), 1150);
+  setTimeout(() => { if (node.parentNode) node.parentNode.removeChild(node); }, 1900);
 }
 
 function startLevelNow() {
@@ -997,12 +1121,20 @@ function loadSave() {
 }
 
 // 关头档缺失时（旧档只有 current／max）：按跳关同样方式补齐 1…n-1 的 gives
+// 补的笔记按那一关的日子记
+function givePast(n) {
+  for (let i = 1; i < n; i++) {
+    if (!LEVELS[i] || !LEVELS[i].gives) continue;
+    S.level = i;
+    if (LEVELS[i].clock) S.time = LEVELS[i].clock;
+    LEVELS[i].gives();
+  }
+}
+
 function buildCheckpointSnap(n) {
   const bak = S;
   S = initial();
-  for (let i = 1; i < n; i++) {
-    if (LEVELS[i] && LEVELS[i].gives) LEVELS[i].gives();
-  }
+  givePast(n);
   const snap = snapState();
   S = bak;
   return snap;
@@ -1059,7 +1191,53 @@ function newGame() {
   playOpening();
 }
 
-// 开局存档 C：问句 + 底栏「继续　选关　重来」；选关展开 1…max
+// 「继续　选关　重来」没选之前锁死：卡片以外的东西全部 inert（顶栏、底栏、地图、日记簿、浮层），
+// 键盘只认卡片里的按钮——Tab 在卡片里转圈，Enter／空格只按当前那颗，其余键吞掉（浏览器组合键放行）。
+let choiceRelease = null;
+
+function choiceLock(card) {
+  choiceUnlock();
+  const app = document.getElementById("app");
+  const shut = [];
+  const seal = (node) => {
+    if (!node || node.inert || node.tagName === "SCRIPT") return;
+    node.inert = true;
+    shut.push(node);
+  };
+  Array.from(document.body.children).forEach((n) => { if (n !== app) seal(n); });
+  if (app) Array.from(app.children).forEach((n) => { if (n.id !== "stage") seal(n); });
+  const keys = () => Array.from(card.querySelectorAll("button")).filter((b) => !b.disabled && b.offsetParent);
+  const onKey = (e) => {
+    if (e.ctrlKey || e.metaKey || e.altKey || /^F\d+$/.test(e.key)) return;
+    const list = keys();
+    const at = list.indexOf(document.activeElement);
+    if (e.key === "Tab") {
+      e.preventDefault();
+      if (list.length) list[(at + (e.shiftKey ? -1 : 1) + list.length) % list.length].focus();
+    } else if ((e.key === "Enter" || e.key === " ") && at >= 0) {
+      e.stopImmediatePropagation();
+      return;
+    } else {
+      e.preventDefault();
+    }
+    e.stopImmediatePropagation();
+  };
+  window.addEventListener("keydown", onKey, true);
+  choiceRelease = () => {
+    window.removeEventListener("keydown", onKey, true);
+    shut.forEach((n) => { n.inert = false; });
+  };
+  const first = keys()[0];
+  if (first) setTimeout(() => { if (card.isConnected) first.focus({ preventScroll: true }); }, 0);
+}
+
+function choiceUnlock() {
+  if (choiceRelease) choiceRelease();
+  choiceRelease = null;
+}
+
+// 开局存档：标题 → 上次停在（日子、地方、要做的事）→ 继续／选关／重来。
+// 选关和确认都在同一张卡片里换页，不弹浏览器对话框；没玩到的关不写名字。
 function resumeCaption(c, L, go, leave) {
   const store = readStore() || emptyStore();
   const max = resumeMax(store, c.n);
@@ -1068,60 +1246,88 @@ function resumeCaption(c, L, go, leave) {
     writeStore(store);
   }
   const curN = (store.current && store.current.n) || max;
-  const curTitle = (LEVELS[curN] && LEVELS[curN].title) || "";
-  const pickHost = el("div", { class: "caption-levels", hidden: true });
+  const cur = LEVELS[curN] || L || {};
+  const savedTime = (store.current && store.current.S && store.current.S.time) || cur.clock || "";
+  if (savedTime) setTime(savedTime);
+  const shortDay = (t) => String(t || "").replace(/^\d{4}年/, "");
 
-  // 选关：确认后直接进关（不走淡出），避免 leave→clearStage 抛错留下空台
-  // keepLater 仅当点的是当前最远关（不删后面的档）
-  const pickLevel = (n) => {
-    if (!LEVELS[n] || n < 1 || n > max) return;
-    if (n < max && !window.confirm("从第 " + n + " 关重开，第 " + (n + 1) + " 关及之后的进度会清掉。确定？")) {
-      return;
-    }
+  const host = el("div", { class: "resume-view" });
+  const show = (kids) => {
+    host.replaceChildren(...kids);
+    const first = host.querySelector("button");
+    if (first) setTimeout(() => { if (first.isConnected) first.focus({ preventScroll: true }); }, 0);
+  };
+  const btn = (cls, label, fn, aria) => el("button", { type: "button", class: cls, "aria-label": aria || null, onclick: fn }, [label]);
+
+  const home = () => show([
+    el("h1", { class: "resume-title" }, ["暗度"]),
+    el("p", { class: "resume-sub" }, ["第一章"]),
+    el("div", { class: "resume-where", role: "group", "aria-label": "存档" }, [
+      el("span", { class: "resume-ribbon", "aria-hidden": "true" }),
+      el("p", { class: "resume-when" }, [shortDay(savedTime)]),
+      cur.place ? el("p", { class: "resume-place" }, [cur.place]) : "",
+      cur.goal ? el("p", { class: "resume-goal" }, [cur.goal]) : "",
+    ]),
+    btn("resume-go", "继续", leave(() => { choiceUnlock(); loadSave(); })),
+    btn("resume-link", "选关", pick),
+    btn("resume-quiet", "重来", () => confirm(
+      "从头来？",
+      "所有进度都会清掉。",
+      "清掉，重来",
+      leave(() => { choiceUnlock(); newGame(); }),
+      home,
+    )),
+  ]);
+
+  const enter = (n) => {
+    choiceUnlock();
     loadCheckpoint(n, n >= max);
   };
 
-  const openPick = (btn) => {
-    const show = pickHost.hidden;
-    pickHost.hidden = !show;
-    btn.classList.toggle("on", show);
-    if (!show) return;
-    pickHost.replaceChildren();
-    for (let i = 1; i <= max; i++) {
-      if (!LEVELS[i]) continue;
-      const n = i;
-      pickHost.append(el("button", {
-        type: "button",
-        class: "caption-lv" + (n === curN ? " now" : ""),
-        onclick: () => pickLevel(n),
-      }, [n + ". " + LEVELS[n].title]));
+  const pick = () => {
+    const list = el("div", { class: "resume-list" });
+    for (let p = 1; p < PARTS.length; p++) {
+      const ns = [];
+      for (let n = 1; n <= max; n++) if (LEVELS[n] && LEVELS[n].part === p) ns.push(n);
+      if (!ns.length) continue;
+      list.append(el("h4", { class: "resume-part" }, [PARTS[p].split("·").pop().trim()]));
+      ns.forEach((n) => {
+        const lv = LEVELS[n];
+        const now = n === curN;
+        list.append(el("button", {
+          type: "button",
+          class: "resume-lv" + (now ? " now" : ""),
+          "aria-current": now ? "true" : null,
+          onclick: () => (n < max
+            ? confirm("从「" + lv.title + "」重开？", "后面几关的进度会清掉。", "重开", () => enter(n), pick)
+            : enter(n)),
+        }, [
+          now ? el("span", { class: "resume-ribbon", "aria-hidden": "true" }) : "",
+          el("span", { class: "resume-lv-title" }, [lv.title]),
+          el("span", { class: "resume-lv-date" }, [lv.date]),
+        ]));
+      });
     }
+    show([
+      el("h2", { class: "resume-h" }, ["选关"]),
+      list,
+      btn("resume-quiet", "返回", home),
+    ]);
+    const now = list.querySelector(".resume-lv.now");
+    if (now) list.scrollTop = Math.max(0, now.offsetTop - list.offsetTop - list.clientHeight / 2 + now.offsetHeight / 2);
   };
 
-  const cont = el("div", { class: "resume-item" }, [
-    el("button", {
-      type: "button",
-      class: "resume-link",
-      onclick: leave(() => loadSave()),
-    }, ["继续"]),
-    el("span", { class: "resume-mark" }, [curN + ". " + curTitle]),
+  const confirm = (q, why, yes, onYes, onNo) => show([
+    el("p", { class: "resume-ask" }, [q]),
+    el("p", { class: "resume-why" }, [why]),
+    el("div", { class: "resume-pair" }, [
+      btn("resume-link", "算了", onNo),
+      btn("resume-go danger", yes, onYes),
+    ]),
   ]);
-  const pickBtn = el("button", {
-    type: "button",
-    class: "resume-link",
-    onclick: () => openPick(pickBtn),
-  }, ["选关"]);
-  const redo = el("button", {
-    type: "button",
-    class: "resume-link",
-    onclick: leave(() => newGame()),
-  }, ["重来"]);
 
-  return [
-    el("p", { class: "caption-line" }, [L ? L.goal : "暗度"]),
-    el("div", { class: "caption-acts resume-bar" }, [cont, pickBtn, redo]),
-    pickHost,
-  ];
+  home();
+  return [host];
 }
 
 if (typeof window !== "undefined") {
@@ -1140,7 +1346,7 @@ function markPastSeen() {
 
 function jumpLevel(n, segKey) {
   S = initial();
-  for (let i = 1; i < n; i++) LEVELS[i].gives();
+  givePast(n);
   renderNotes();
   const seg = segKey && (SEGS[n] || []).find((s) => s.key === segKey);
   if (!seg) {

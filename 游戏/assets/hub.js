@@ -70,6 +70,7 @@ function hubPlaceDone(p) {
 }
 
 function drawHub() {
+  baseView("hub");
   const d = hubDef();
   const p = hubPlace();
   // 缺 hub 定义时也要清台，避免 leave 淡出后停在空白／旧画面

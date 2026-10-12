@@ -7,10 +7,10 @@ const RONG_PLAN = [
   { id: "rong-stair", name: "楼梯", line: "公共楼梯。无电梯。", x: 172, y: 118, w: 88, h: 56, img: M + "荣汇街-楼梯" },
   { id: "rong-door", name: "后座门", line: "双锁。对着平台。", x: 136, y: 182, w: 88, h: 24, img: M + "荣汇街-后座门" },
   { id: "rong-kitchen", name: "厨房", line: "后座西侧。", x: 24, y: 214, w: 112, h: 88, img: M + "荣汇街-厨房" },
-  { id: "rong-corridor", name: "走廊", line: "从大门望向天井那扇窗。", x: 136, y: 214, w: 60, h: 164, lx: 142, ly: 348, points: "136,214 260,214 260,302 196,302 196,378 136,378", img: M + "荣汇街-走廊" },
+  { id: "rong-corridor", name: "走廊", line: "从大门望进去，尽头是储物室门。", x: 136, y: 214, w: 60, h: 164, lx: 142, ly: 348, points: "136,214 260,214 260,302 196,302 196,378 136,378", img: M + "荣汇街-走廊" },
   { id: "rong-bath", name: "厕所", line: "后座。", x: 24, y: 302, w: 112, h: 76, img: M + "荣汇街-厕所" },
   { id: "rong-store", name: "储物室", line: "锁着。钥匙在周生手上。", x: 196, y: 302, w: 64, h: 76, img: M + "荣汇街-储物室" },
-  { id: "rong-bed", name: "睡房", line: "铁窗朝天井。", x: 24, y: 378, w: 112, h: 108, img: M + "荣汇街-睡房" },
+  { id: "rong-bed", name: "主房", line: "铁窗朝天井。", x: 24, y: 378, w: 112, h: 108, img: M + "荣汇街-主房" },
   { id: "rong-hall", name: "厅", line: "后座。窗朝天井。", x: 136, y: 378, w: 124, h: 108, img: M + "荣汇街-厅", imgNight: M + "荣汇街-厅-夜里" },
   { id: "rong-roof", name: "天台", line: "晾衫。晚上风大。后楼梯上去。", x: 276, y: 118, w: 100, h: 64, img: M + "荣汇街-天台" },
   { id: "rong-backstair", name: "后楼梯", line: "贴后巷，上天台。", x: 276, y: 182, w: 48, h: 304, img: M + "荣汇街-后楼梯" },
@@ -82,7 +82,7 @@ function syncPlace() {
 function placeLine(id) {
   const lines = {
     nowhere: "还没有住的地方",
-    mei: "表姐家",
+    mei: "美娟家",
     "rong-listing": "深水埗，荣汇街 28 号",
     "rong-street": "深水埗，荣汇街",
     "rong-stair": "荣汇街 28 号，楼梯",
@@ -90,7 +90,7 @@ function placeLine(id) {
     "rong-front": "荣汇街 28 号，前座门口",
     "rong-door": "荣汇街 28 号，后座门口",
     "rong-hall": "荣汇街 28 号，4 楼后座，厅",
-    "rong-bed": "荣汇街 28 号，睡房",
+    "rong-bed": "荣汇街 28 号，主房",
     "rong-kitchen": "荣汇街 28 号，厨房",
     "rong-bath": "荣汇街 28 号，厕所",
     "rong-store": "荣汇街 28 号，储物室门口",
@@ -151,7 +151,7 @@ function selectRoom(id) {
 }
 
 function detailSpec(id) {
-  if (id === "mei") return { name: "表姐家", line: "陈美娟。午饭。沙发在。", img: M + "表姐家" };
+  if (id === "mei") return { name: "美娟家", line: "陈美娟。表姐。午饭。沙发在。", img: M + "表姐家" };
   if (id === "rong-listing") return { name: "荣汇街 28 号", line: "深水埗，4 楼后座。放盘上的走廊。", img: M + "荣汇街-放盘照" };
   if (id === "clinic-addr") return { name: "澄心诊所", line: "湾仔。罗启明。" };
   if (!id || id === "nowhere") return { name: "章慧琪", line: "还没有住的地方。" };
@@ -286,7 +286,7 @@ function renderMap() {
   else if (S.mapView === "rong") host.append(mapPhoto(M + "荣汇街-放盘照", "荣汇街"));
   else if (clinicDirect && S.known.clinicIn) renderClinicSlots(host);
   else if (clinicDirect) host.append(el("p", { class: "map-empty" }, ["湾仔澄心诊所。罗启明。"]));
-  else host.append(el("p", { class: "map-empty" }, [S.place === "mei" ? "表姐家。" : "还没有住的地方。"]));
+  else host.append(el("p", { class: "map-empty" }, [S.place === "mei" ? "美娟家。" : "还没有住的地方。"]));
   if (clinicDirect) $("#map-detail").replaceChildren();
   else renderDetail();
 }

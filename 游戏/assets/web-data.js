@@ -12,7 +12,7 @@ const LISTINGS = [
     featured: true,
     title: "大角咀 套房 近奥海城",
     rent: "$8,200",
-    sub: "空房发霉，隔音差，业主已下线，07-29",
+    sub: "空房发霉，隔音差，业主现时不在线，07-29",
     keys: ["大角咀", "套房", "平租", "油尖旺", "业主自让"],
     img: pic(1, "廿八屋租盘/01-大角咀"),
     district: "油尖旺",
@@ -22,7 +22,7 @@ const LISTINGS = [
     walk: "奥海城步行 6 分钟",
     date: "07-29",
     views: 86,
-    owner: "陈太（已下线）",
+    owner: "陈太（现时不在线）",
     agent: false,
   },
   {
@@ -640,6 +640,7 @@ const WALL_FEED = [
 const WALL_MAIL = [
   { id: "house-rent", who: "house", name: "廿八屋", at: ["08-01", "19:00"], after: () => S.level >= 3, text: "你收藏的「荣汇街 28 号 4 楼后座」已标记为已租。多谢使用廿八屋。" },
   { id: "lok-pm", who: "lok", name: "阿乐", at: ["08-16", "01:40"], after: () => flag("calledLok"), text: "你打嚟做咩？我瞓紧。", key: "你打嚟做咩", note: ["wall-lokpm", "阿乐在墙簿问我打去做咩。我没有回。"], mute: "你打了几个字，又删掉。" },
+  { id: "mei-wait", who: "mei", name: "陈美娟", at: ["08-17", "01:05"], after: () => flag("meiSofa"), text: "我等到一点。门而家先锁。", mute: "你打了「我冇事」，又删掉。" },
   {
     id: "mei-pm", who: "mei", name: "陈美娟", at: ["08-27", "23:10"], after: () => ev("note-meiwater"), text: "电话入面成日有水声。系咪你屋企？唔好一个人顶。",
     answer: [{ text: "冇事。水喉旧。", back: "有事打俾我。几夜都得。" }, { text: "我惊。", back: "过嚟住。沙发仍在。" }],

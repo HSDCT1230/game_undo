@@ -920,7 +920,7 @@ function viewList() {
       el("p", {}, ["点进盘源可看屋况、预约睇楼，或经站内留言联络业主。结果按放盘日期排列。"]),
     ]),
     el("div", { class: "listing-meta" }, [
-      rows.length + " 个盘，" + filterLabel + "，「" + (S.query || "全部") + "」，按放盘日期",
+      rows.length + " 个盘，" + filterLabel + "，「" + (S.query || "全部") + "」，按放盘日期排列",
     ]),
     el("div", { class: "hk-layout" }, [cards, side]),
   ], viewListTrail());
@@ -1047,8 +1047,8 @@ function detailTk() {
         ["放盘", l.date + "　浏览 " + l.views],
         ["业主", l.owner],
       ]),
-      el("p", {}, ["上个月住客评语只剩一句：「夜里听得到隔壁。」天花有水渍。相片是空房。"]),
-      el("p", { class: "fine" }, ["留言功能：对方已下线。系统不保证送达。"]),
+      el("p", {}, ["上手住客评语只剩一句：「夜里听得到隔壁。」天花有水渍。相片是空房。"]),
+      el("p", { class: "fine" }, ["留言功能：对方现时不在线，上线后才会看到。"]),
       el("div", { class: "actions" }, [
         el("button", { class: "btn", type: "button", onclick: () => {
           strikeFour("业主不在线", listingShort(l));
@@ -1078,7 +1078,7 @@ function detailTw() {
         ["资格", "要担保人、要粮单"],
         ["放盘", "地产代理代放"],
       ]),
-      el("p", {}, ["管理处日间有人。新楼唔收周租。"]),
+      el("p", {}, ["管理处日间有人。本盘不接受周租。"]),
       el("div", { class: "actions" }, [
         el("button", {
           class: "btn",
@@ -1157,6 +1157,16 @@ function detailSsp() {
         webLink("周先生", () => goWeb("landlord")),
         "　独居　自己放盘　上次上线 " + (flag("sawMail") ? "08-01 09:12" : "07-28 22:17") + "　浏览 " + l.views,
       ]),
+      sspRented() ? siteNotice("盘源状态", [el("p", {}, ["业主已标示：已租出（08-01）。"])]) : "",
+      el("div", { class: "actions" }, [
+        sspRented() ? "" : el("button", { class: "btn", type: "button", onclick: () => goViewing(false) }, [
+          flag("sawMail") ? "赴约看房" : "预约睇楼",
+        ]),
+        sspRented() ? "" : el("button", { class: "btn ghost", type: "button", onclick: () => goWeb("pm") }, ["写站内留言"]),
+        el("button", { class: "btn ghost", type: "button", onclick: () => goWeb("landlord") }, ["业主档案"]),
+        el("button", { class: "btn ghost", type: "button", onclick: () => goWeb("list") }, ["返回租盘"]),
+        favBtn(l),
+      ]),
       el("h3", { class: "sec-h" }, ["屋况（业主原文）"]),
       el("p", {}, ["唐楼，行到地铁。屋内仍有家人旧物，不介意者优先。可即时入住。储物室上锁，钥匙业主收，不入租。后楼梯通往天台，住客可用。"]),
       el("h3", { class: "sec-h" }, ["交易条款"]),
@@ -1172,17 +1182,7 @@ function detailSsp() {
         el("h3", { class: "sec-h" }, ["盘源留言板（2）"]),
       el("p", { class: "bbs-line" }, ["过路人　07-29：「相里面有车？业主有细路住？」　——　业主未回。"]),
       el("p", { class: "bbs-line" }, ["深水埗住开　07-30：「后座平一截正常。问清楚锁门嗰间系乜。」"]),
-      el("label", {}, ["备注（仅自己可见）", remark]),
-      sspRented() ? siteNotice("盘源状态", [el("p", {}, ["业主已标示：已租出（08-01）。"])]) : "",
-      el("div", { class: "actions" }, [
-        sspRented() ? "" : el("button", { class: "btn", type: "button", onclick: () => goViewing(false) }, [
-          flag("sawMail") ? "赴约看房" : "预约睇楼",
-        ]),
-        sspRented() ? "" : el("button", { class: "btn ghost", type: "button", onclick: () => goWeb("pm") }, ["写站内留言"]),
-        el("button", { class: "btn ghost", type: "button", onclick: () => goWeb("landlord") }, ["业主档案"]),
-        el("button", { class: "btn ghost", type: "button", onclick: () => goWeb("list") }, ["返回租盘"]),
-        favBtn(l),
-      ]),
+      el("label", { class: "remark-label" }, ["备注（仅自己可见）", remark]),
     ]),
   ]);
 }
@@ -1218,7 +1218,14 @@ function sendPm() {
   sfx("send");
   S.pmSent = text;
   flag("askedOld", true);
-  waitWeek("2014年7月31日 周四 23:14", "他夜间不在线。", "8月1日　上午", reachMorning);
+  // 他没在线。这一夜她没回表姐（22:48「沙发留住」她没回），去快餐店坐了一晚。
+  waitWeek(
+    "2014年7月31日 周四 23:14",
+    "他夜间不在线。",
+    "你坐到天亮。",
+    reachMorning,
+    { plate: pic(1, "场景-过场-快餐店"), lum: 0.34 }
+  );
 }
 
 function viewPm() {
@@ -1261,7 +1268,7 @@ function viewPm() {
   return houseShell([
     el("h2", { class: "sec-h" }, ["写站内留言"]),
     el("p", { class: "mail-meta" }, ["收件人：周先生　　主旨：荣汇街 28 号后座　预约睇楼"]),
-    el("p", { class: "hint" }, ["业主夜间常不在线。回复于翌日上午显示。"]),
+    el("p", { class: "hint" }, ["业主夜间常不在线，回复要到翌日上午才送到。"]),
     el("label", {}, ["留言正文", box]),
       el("div", { class: "actions" }, [
       el("button", { class: "btn", type: "button", onclick: sendPm }, ["送出"]),
@@ -1448,7 +1455,7 @@ function viewNews() {
 
 function applyNewsNotes(id) {
   const kept = {
-    mud: ["web-zhou", "2012年9月。妻儿遇难。他们话天意。土木署：雨后斜坡失稳。"],
+    mud: ["web-zhou", "2012年9月。妻儿遇难。周说是天意。土木署：雨后斜坡失稳。"],
     urb: ["web-ura", "荣汇街在研究名单。业主将获补偿。"],
   }[id];
   if (!kept) return;
@@ -1923,30 +1930,41 @@ function wallTick() {
   if (b) b.classList.toggle("has-new", n > 0 && S.mode !== "web" && !S.paused);
 }
 
+// 这格跟他在论坛出没同步：她搬进去后收起，08-24 回帖那天冒一天，09-07 论坛发帖同一分钟回来。字从来不改。
 function linAdState() {
   if (webPast(webDate("09-07", "14:40"))) return "back";
+  if (webPast(webDate("08-24", "11:14")) && !webPast(webDate("08-25", "11:14"))) return "blip";
   if (webPast(webDate("08-15", "06:00"))) return "gone";
   return "on";
+}
+
+// 他不在时，这一格让给普通广告，按日子轮
+const FILLER_ADS = [
+  ["细搬屋", "$380 起　九龙新界", "一车起搬　即日上门　$380 起"],
+  ["小学补习", "中英数　荔枝角", "一对四小组　荔枝角　免费试堂"],
+  ["迷你仓", "首月半价　葵涌", "24 小时出入　葵涌　首月半价"],
+];
+
+function fillerAd() {
+  const day = Math.floor(clockDate().getTime() / 86400000);
+  const [title, line, detail] = FILLER_ADS[day % FILLER_ADS.length];
+  return el("button", { class: "ad mute", type: "button", onclick: () => showPrompt(title, detail) }, [el("b", {}, [title]), line]);
 }
 
 function linAdButton() {
   const st = linAdState();
   if (st === "gone") {
-    return el("button", {
-      class: "ad gone",
-      type: "button",
-      onclick: () => {
-        note("wall-ad-gone", "藤先生那格广告下架了。");
-        showPrompt("此广告已下架。", "");
-      },
-    }, [el("b", {}, ["此广告已下架"]), "——"]);
+    if (flag("sawLinAd")) note("wall-ad-gone", "墙簿右边藤先生那格广告不见了，换成别的。");
+    return fillerAd();
   }
   return el("button", {
     class: "ad",
     type: "button",
     onclick: () => {
+      const seen = flag("sawLinAd");
       flag("sawLinAd", true);
-      if (st === "back") note("wall-ad-back", "藤先生那格广告又出现了。字一样。");
+      if (st === "back" && seen) note("wall-ad-back", "藤先生那格广告又出现了。字一样。");
+      else if (st === "blip" && noted("wall-ad-gone")) note("wall-ad-blip", "藤先生那格广告今天又在，字一样。之前不见了好一阵。");
       else note("lin", "有人在网上等人聊。藤先生。");
       if (flag("sawOwnPost")) note("same-name", "墙上和帖里是同一个名字。");
       goWeb("ad");

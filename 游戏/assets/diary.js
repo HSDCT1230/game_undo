@@ -1,13 +1,14 @@
 /* ---------- 日记簿：她自己的纸、四条、屋里的样子，和几种「拿出来」 ---------- */
 
 const ITEMS = {
+  "obj-keytag": { kind: "物件", title: "钥匙牌", time: "2014年8月1日", body: "钥匙圈上绑着一块硬纸牌，周先生的字：\n大门　铁闸　天台（挂门内小钩）\n水喉坏咗拍门。唔使自己整。\n天台晾衫用。", img: pic(2, "证据-钥匙牌"), key: "水喉坏咗拍门" },
   "rec-water": { kind: "录音", title: "只有水", time: "2014年8月13日 夜", body: "录音里只有水。没有人声。", key: "只有水" },
   "letter-red": { kind: "信封", title: "红圈", time: "2014年8月14日 傍晚", body: "新闻纸一角。红笔圈的弧。他的拇指挡住圈里的字。", img: pic(4, "证据-红圈信封"), key: "红笔圈" },
   "photo-sill": { kind: "照片", title: "窗台童码", time: "2014年8月15日 凌晨", body: "把自己的鞋并上去比过：小两号。今晚没下雨。水是新的。搬进来时那圈是干的。", img: pic(4, "证据-窗台童码"), key: "小两号" },
   "photo-print": { kind: "照片", title: "门底湿脚印", time: "2014年8月15日 凌晨", body: "门底湿脚印，到一半停住。", img: pic(4, "证据-门底湿脚印"), key: "门底湿脚印" },
   "rec-axuan": { kind: "录音", title: "阿轩，返嚟食饭", time: "2014年8月15日 凌晨", body: "女人声从储物室门底那边来：「阿轩，返嚟食饭。」声线稳，像留过言。门缝下没有光。", key: "阿轩，返嚟食饭" },
   "note-dry": { kind: "记下", title: "鞋是干的", time: "2014年8月15日", body: "周问我脚湿不湿。我低头看：鞋是干的。", key: "鞋是干的" },
-  "photo-car-out": { kind: "照片", title: "出门前的车", time: "2014年8月16日 14:30", body: "敞篷。车头朝窗。茶几贴着储物室门一侧。出门前拍的。", img: pic(5, "证据-出门前的车"), key: "车头朝窗" },
+  "photo-car-out": { kind: "照片", title: "出门前的车", time: "2014年8月16日 14:30", body: "十五号早上，我把地上的车捡起来，放回茶几那圈晒痕里。敞篷。车头朝窗。茶几靠着储物室那面墙。出门前拍的。", img: pic(5, "证据-出门前的车"), key: "车头朝窗" },
   "photo-tap-out": { kind: "照片", title: "出门前的水喉", time: "2014年8月16日 14:30", body: "拧紧。等了十秒，没有滴——八月三日修好之后一直这样。出门前拍的。", img: pic(5, "证据-出门前的水喉"), key: "没有滴" },
   "paper-16": { kind: "纸", title: "十六号晚", time: "2014年8月16日", body: "二十一点四十。我返到。车已经转。水已经滴。我未离开客厅。出门前两张相：车头朝窗，水喉没有滴。", key: "车已经转" },
   "paper-20": { kind: "纸", title: "离开两分钟", time: "2014年8月20日", body: "二十三点十七。坐在厅里望住两分钟，什么都不动。入厕所两分钟，出来门底先有湿脚印。我在厅里望住，佢唔动。", key: "入厕所两分钟" },
@@ -15,8 +16,12 @@ const ITEMS = {
   "note-notsaid": { kind: "记下", title: "医生没这样讲", time: "2014年8月24日", body: "姐夫说：佢话你精神唔太好。阿明没有这样讲过。", key: "阿明没有这样讲过" },
   "note-meiwater": { kind: "电话", title: "表姐听到水声", time: "2014年8月27日 夜", body: "我拧紧了水喉。表姐在电话那头仍然听到滴水。她听到的是水，不是阿轩。", key: "仍然听到滴水" },
   "paper-30": { kind: "纸", title: "带去第三次的对照", time: "2014年8月27日", body: "", key: "头两个礼拜" },
+  "obj-referral": { kind: "信封", title: "抽屉缝", time: "2014年8月30日", body: "抽屉缝里一个折好的信封，封口朝里。回形针卡住一角，只露出两个字：……转介。其余压在节拍器底下。", img: pic(10, "示意-抽屉缝"), key: "……转介" },
   "note-zhoutue": { kind: "记下", title: "我没讲", time: "2014年8月31日 夜", body: "周说：下星期六又有人上嚟？我煮糖水。我没有同他讲过。", key: "我没有同他讲过" },
+  "obj-zhoucal": { kind: "物件", title: "周的月历", time: "2014年8月31日 夜", body: "前座门边，银行送的月历。周先生的字：\n8/1　后座入伙\n8/3　换胶圈\n8/10　租。问电话——冇。\n8/16　入（用笔涂掉了）\n8/23　六　出\n8/30　六　出\n翻到九月，只写了一格：\n9/6　六　医生", img: pic(11, "证据-周的月历"), key: "9/6　六　医生" },
   "paper-06": { kind: "纸", title: "带去第四次的补充", time: "2014年9月5日", body: "", key: "九月" },
+  "photo-back": { kind: "照片", title: "全家福背面", time: "2014年9月6日 夜", body: "相框翻过来，背面一行铅笔字：\n丽芬　阿轩　十二乡村屋门口　二〇一二年春", img: pic(13, "证据-全家福背面"), key: "十二乡村屋门口　二〇一二年春" },
+  "paper-ming": { kind: "纸", title: "他留下的一页", time: "2014年9月6日 夜", body: "压在玩具车下面，从他本子上撕下来的一页：\n9/6　21:52　荣汇街后座\n水喉：拧紧后约 3 秒再滴。人手可做到。\n车：头朝储物室门。\n走廊尽头——（这一行用力划掉了）\n不写「鬼」。", img: pic(13, "证据-笔记一页"), key: "不写「鬼」" },
   "mail-dirt": { kind: "邮件", title: "你信紧的医生", time: "2014年9月7日", body: "二〇〇四年十一月，维港大学，一个女学生坠楼。新闻写男友罗某，自称有责任。名字涂掉，露出一个鱼。偷拍：有盖走廊，年轻的罗和一个长发女生，她望住他。信说你是下一个。没有全名，没有过程。", img: pic(14, "证据-你信紧的医生"), key: "名字涂掉，露出一个鱼" },
   "rec-name": { kind: "录音", title: "章慧琪。你知", time: "2014年9月7日 夜", body: "先是阿轩，返嚟食饭。再低一句：章慧琪。你知。声从门底来。", key: "章慧琪。你知" },
 };
@@ -29,9 +34,82 @@ function item(id) {
   return out;
 }
 
+const evSeen = (id) => hasEvidence(id) || !!(S.evOpened && S.evOpened[id]);
+
+// 第一次看完接 next；看过再点只弹夹页
+function peekItem(id, next) {
+  if (evSeen(id)) showClueModal(item(id));
+  else keepThen(item(id), next);
+}
+
 function itemLabel(id) {
   const it = hasEvidence(id) ? (S.evidence.find((e) => e.id === id) || item(id)) : item(id);
   return it.kind + "　" + it.title;
+}
+
+/* ---------- 日记簿目录用：每样东西关于屋里哪样、哪句笔记和证物重复 ---------- */
+
+const THINGS = ["车", "水喉", "储物室门", "窗台", "周生", "罗启明", "表姐一家"];
+
+const ITEM_ABOUT = {
+  "obj-keytag": ["周生"],
+  "rec-water": ["水喉"],
+  "letter-red": ["周生"],
+  "photo-sill": ["窗台"],
+  "photo-print": ["储物室门"],
+  "rec-axuan": ["储物室门"],
+  "note-dry": ["周生"],
+  "photo-car-out": ["车"],
+  "photo-tap-out": ["水喉"],
+  "paper-16": ["车", "水喉"],
+  "paper-20": ["车", "储物室门"],
+  "paper-norec": ["车"],
+  "note-notsaid": ["表姐一家", "罗启明"],
+  "note-meiwater": ["水喉", "表姐一家"],
+  "paper-30": ["车", "水喉", "窗台"],
+  "obj-referral": ["罗启明"],
+  "note-zhoutue": ["周生"],
+  "obj-zhoucal": ["周生"],
+  "paper-06": ["车", "水喉"],
+  "photo-back": ["周生"],
+  "paper-ming": ["罗启明", "车", "水喉"],
+  "mail-dirt": ["罗启明"],
+  "rec-name": ["储物室门"],
+};
+
+const itemAbout = (id) => ITEM_ABOUT[id] || [];
+
+// 笔记和已记下的证物讲同一件事时，目录只列证物
+const NOTE_IN_ITEM = { print: "photo-print", voice: "rec-axuan", sill: "photo-sill", dirt: "mail-dirt", namecall: "rec-name" };
+
+// 第 3 关日历上点开的那几天，钟仍停在八月一日
+const NOTE_DAY = { "tap-fixed": "8月3日", "gate-tick": "8月11日", "car-still": "8月12日" };
+
+const noteTime = (n) => NOTE_DAY[n.id] || n.time;
+
+function noteShown(n) {
+  if (/^cal-/.test(n.id)) return !hasEvidence("paper-06");
+  const it = NOTE_IN_ITEM[n.id];
+  return !(it && hasEvidence(it));
+}
+
+// 同一样东西的其他证物（证物页底下列出来）：同的越多越前，再按日子近，最多三样
+function itemKin(id) {
+  const about = itemAbout(id);
+  if (!about.length) return [];
+  const day = (t) => {
+    const m = /(\d+)月(\d+)日/.exec(t || "");
+    return m ? Number(m[1]) * 31 + Number(m[2]) : 0;
+  };
+  const self = (S.evidence || []).find((e) => e.id === id) || ITEMS[id] || {};
+  const at = day(self.time);
+  return (S.evidence || [])
+    .filter((e) => e.id !== id)
+    .map((e) => ({ e, shared: itemAbout(e.id).filter((a) => about.includes(a)).length, gap: Math.abs(day(e.time) - at) }))
+    .filter((r) => r.shared)
+    .sort((a, b) => b.shared - a.shared || a.gap - b.gap)
+    .slice(0, 3)
+    .map((r) => r.e);
 }
 
 /* ---------- 四条 ---------- */
@@ -39,7 +117,7 @@ function itemLabel(id) {
 const FOUR = [
   { id: "pay", text: "冇粮单", hit: /粮单|在职证明|公司|面试|商业登记|上班族|从业员/ },
   { id: "guar", text: "冇担保", hit: /担保/ },
-  { id: "now", text: "要即刻住", hit: /即日|一年|十个月|不在线|下线|订金/ },
+  { id: "now", text: "要即刻住", hit: /即日|一年|十个月|不在线|订金/ },
   { id: "week", text: "每星期三千几", hit: /周租|口头|家庭户/ },
 ];
 
@@ -69,7 +147,6 @@ function fourRows() {
 function openFour() {
   showDiaryTool({
     kind: "四条",
-    title: "我自己写的",
     build: (host) => {
       host.append(el("ul", { class: "four-list" }, fourRows()));
       host.append(el("p", { class: "tool-note" }, [
@@ -84,7 +161,7 @@ function openFour() {
 const BASE = [
   { id: "car", name: "玩具车", mark: "玩具车", base: "车头朝窗。敞篷座位里没有灰。", tonight: "车头朝门，后来掉在地上朝储物室。" },
   { id: "tap", name: "厨房水龙头", mark: "关了还会滴一滴", base: "关了还会滴一滴。", tonight: "拧紧，三秒后又滴。" },
-  { id: "storage", name: "储物室门", mark: "贴门听，很静", base: "贴门听，很静。", tonight: "门底有翻纸声。门缝下没有光。" },
+  { id: "storage", name: "储物室门", mark: "锁着，门底没有光", base: "锁着，门底没有光。", tonight: "门底有翻纸声。门缝下没有光。" },
   { id: "sill", name: "主房窗台", mark: "一圈水印，是干的", base: "一圈水印，是干的。", tonight: "湿的童码。鞋并上去比过，小两号。" },
   { id: "family", name: "全家福", mark: "挂得很正", base: "客厅墙上，挂得很正，相后两个纸箱。女人头发齐肩。", tonight: "" },
 ];
@@ -140,15 +217,18 @@ function markTonight(id) {
 function openBase() {
   const nightSide = S.level === 4 ? "今晚" : "十四号夜";
   showDiaryTool({
-    kind: "屋里的样子",
-    title: S.level <= 3 ? "这间屋的样子" : "搬进来那晚记下的",
+    kind: S.level <= 3 ? "屋里的样子" : "搬进来那晚",
     build: (host) => {
-      const rows = BASE.map((b) => el("li", { class: S.base && S.base[b.id] ? "" : "empty" }, [
+      const kept = (b) => S.base && S.base[b.id];
+      const late = (b) => S.tonight && S.tonight[b.id];
+      const rows = BASE.filter((b) => kept(b) || late(b)).map((b) => el("li", { class: kept(b) ? "" : "empty" }, [
         el("span", { class: "four-k" }, [b.name]),
-        el("small", {}, [S.base && S.base[b.id] ? baseText(b.id) : "（没有记下）"]),
-        S.tonight && S.tonight[b.id] ? el("small", { class: "tonight" }, [nightSide + "：" + tonightText(b.id)]) : "",
+        kept(b) ? el("small", {}, [baseText(b.id)]) : "",
+        late(b) ? el("small", { class: "tonight" }, [nightSide + "：" + tonightText(b.id)]) : "",
       ]));
-      host.append(el("ul", { class: "four-list" }, rows));
+      if (rows.length) host.append(el("ul", { class: "four-list" }, rows));
+      const left = BASE.filter((b) => !kept(b) && !late(b)).map((b) => b.name);
+      if (left.length) host.append(el("p", { class: "tool-note" }, ["还没看清：" + left.join("、")]));
     },
   });
 }
@@ -158,23 +238,35 @@ function openPairs(onClose) {
   const rows = BASE.concat([PRINT_ROW]);
   showDiaryTool({
     kind: "摆在一起",
-    title: "好像有什么悄悄变了？",
     onClose,
     build: (host, redraw) => {
       S.pairs = S.pairs || {};
+      const full = pairCount() >= 3;
+      const need = 3 - pairCount();
+      const found = rows.filter((r) => S.tonight && S.tonight[r.id]).length;
+      const loose = rows.filter((r) => S.tonight && S.tonight[r.id] && !S.pairs[r.id]);
+      const empty = !full && !loose.length;
+      const leave = () => {
+        closeDiaryTool();
+        afterModalClose(onClose);
+      };
+      const step = full ? 0 : empty ? 1 : pick ? 3 : 2;
       const guide = el("div", { class: "tool-guide" });
-      guide.append(el("p", { class: "tool-lead" }, ["把今晚和搬进来那晚不同的线索对应起来"]));
-      const steps = el("ol", { class: "tool-steps" });
-      steps.append(el("li", {}, ["先点一张今晚看见的"]));
-      steps.append(el("li", {}, ["再点它对应的那一格"]));
-      guide.append(steps);
-      guide.append(el("span", { class: "tool-progress" + (pairCount() >= 3 ? " done" : "") }, [
-        pairCount() >= 3 ? "✓ 齐了" : "已摆好 " + pairCount() + "／3",
+      const lead = ["", "先去屋里找，今晚哪里不一样。", "点一张今晚看见的。", "再点它对应的那一格。"][step];
+      if (lead) guide.append(el("p", { class: "tool-lead" }, [lead]));
+      guide.append(el("span", { class: "tool-progress" + (full ? " done" : "") }, [
+        full ? "✓ 齐了" : "已摆好 " + pairCount() + "／3",
       ]));
       host.append(guide);
-      const loose = rows.filter((r) => S.tonight && S.tonight[r.id] && !S.pairs[r.id]);
       const cards = el("div", { class: "tool-cards" });
-      if (!loose.length) cards.append(el("p", { class: "tool-note" }, [pairCount() >= 3 ? "摆齐了。" : "今晚看见的，都摆上了。再去看看屋里还有什么不一样。"]));
+      if (full) cards.append(el("p", { class: "tool-note" }, ["摆齐了。"]));
+      else if (empty) {
+        cards.append(el("div", { class: "tool-empty" }, [
+          el("p", { class: "tool-empty-lead" }, [found ? "找到的都摆上了，还差 " + need + " 处。" : "今晚看见的，这里还一张都没有。"]),
+          el("p", {}, ["先合上日记簿，去屋里看看哪里跟搬进来那晚不一样。看到了，会自己放到这里。"]),
+          el("button", { type: "button", class: "tool-empty-go", onclick: leave }, ["先去屋里看看"]),
+        ]));
+      }
       loose.forEach((r) => {
         cards.append(el("button", {
           type: "button",
@@ -186,7 +278,13 @@ function openPairs(onClose) {
         }, ["今晚：" + tonightText(r.id)]));
       });
       host.append(cards);
-      const list = el("div", { class: "tool-rows" });
+      if (!full && loose.length && loose.length < need) {
+        host.append(el("p", { class: "tool-more" }, [
+          "这些摆好也还差 " + (need - loose.length) + " 处，要再去屋里找。",
+          el("button", { type: "button", class: "tool-more-go", onclick: leave }, ["去屋里"]),
+        ]));
+      }
+      const list = el("div", { class: "tool-rows" + (empty ? " idle" : "") });
       rows.forEach((r) => {
         if (r.id === "family") return;
         const known = r.id === "print" || (S.base && S.base[r.id]);
@@ -196,8 +294,12 @@ function openPairs(onClose) {
           class: "tool-row" + (paired ? " done" : ""),
           onclick: () => {
             if (paired) return;
+            if (empty) {
+              toolSay(host, "手上还没有今晚的线索。先去屋里找，再回来摆。");
+              return;
+            }
             if (!pick) {
-              toolSay(host, "先点一张今晚的。");
+              toolSay(host, "先点上面一张「今晚」的。");
               return;
             }
             if (!known) {
@@ -237,6 +339,13 @@ const HOMEWORK = {
   6: "写时间。几时、喺边间房、离开几耐、边样动咗。唔好写「好恐怖」。下星期六带录音同纸。",
   8: "有一夜唔开录音，仍然写纸。写低头两个礼拜边样唔动、十五号先开始边样。下星期六带来。",
   10: "纸仍然要带。多写呢个星期：车几转、你几时喺边间房、水喉几耐滴一次。",
+};
+
+// 作业卡：每条要求对哪张纸；手上有就打勾
+const HOMEWORK_ROWS = {
+  6: [["几点、在哪间房、怎样动", "paper-16"], ["离开多久：盯住和走开，各试一次", "paper-20"]],
+  8: [["有一夜不开录音，照样写", "paper-norec"], ["头两个礼拜和十五号之后，对照", "paper-30"]],
+  10: [["这星期：车几转、我在哪间房、水喉多久滴一次", "paper-06"]],
 };
 
 function giveHomework(n, next) {
@@ -367,9 +476,9 @@ function sortPiles(onDone) {
   let say = "";
   showDiaryTool({
     kind: "分两堆",
-    title: "纸上写的，和心里信的，分开",
     lock: true,
     build: (host, redraw) => {
+      host.append(el("p", { class: "tool-lead" }, ["纸上写的，和心里信的，分开。"]));
       if (say) host.append(el("p", { class: "tool-reply" }, ["罗启明：" + say]));
       const rows = el("div", { class: "tool-rows" });
       PILES.forEach(([text, pile], i) => {
@@ -410,6 +519,32 @@ function sortPiles(onDone) {
       },
     }],
   });
+}
+
+/* ---------- 诊所里做过的：交了什么、他回了什么，分两堆的结果 ---------- */
+
+const CLINIC_DAY = { 6: "2014年8月16日", 8: "2014年8月23日", 10: "2014年8月30日", 12: "2014年9月6日" };
+
+function handLog(n) {
+  const rule = HAND_RULE[n] || { from: [], exactly: 0 };
+  const given = (S.handed && Array.isArray(S.handed[n]) && S.handed[n].length) ? S.handed[n] : rule.from.slice(0, rule.exactly);
+  const body = given.map((id) => itemLabel(id) + "\n罗启明：" + ((HAND_REPLY[n] || {})[id] || "呢样我记低。")).join("\n\n");
+  return { kind: "交给罗启明", title: "交给罗启明", time: CLINIC_DAY[n], body };
+}
+
+function sortLog() {
+  const pile = (p) => PILES.filter(([, at]) => at === p).map(([t]) => "「" + t + "」").join("\n");
+  return { kind: "分两堆", title: "分两堆", time: CLINIC_DAY[8], body: "纸上写住的：\n" + pile("paper") + "\n\n我心里信的：\n" + pile("heart") };
+}
+
+// 「我写的」里诊所那一栏：按日子排
+function clinicLogs() {
+  const rows = [];
+  [6, 8, 10, 12].forEach((n) => {
+    if (S.handed && S.handed["ok" + n]) rows.push({ day: CLINIC_DAY[n], label: "交给罗启明", open: () => handLog(n) });
+    if (n === 8 && S.sorted) rows.push({ day: CLINIC_DAY[8], label: "分两堆", open: sortLog });
+  });
+  return rows;
 }
 
 /* ---------- 对照纸 ---------- */
@@ -532,17 +667,11 @@ function openCompare(onDone) {
   ensureCompareMaterials();
   showDiaryTool({
     kind: "对照纸",
-    title: "哪边先不一样？",
     build: (host, redraw) => {
       hostEl = host;
       const n = compareDone().length;
       const guide = el("div", { class: "tool-guide" });
-      guide.append(el("p", { class: "tool-lead" }, ["把头两个礼拜和十五号之后的线索对照起来"]));
-      const steps = el("ol", { class: "tool-steps" });
-      steps.append(el("li", {}, ["拖起一张卡片（或点选）"]));
-      steps.append(el("li", {}, ["放到亮起来的空格"]));
-      steps.append(el("li", {}, ["至少写满四行"]));
-      guide.append(steps);
+      guide.append(el("p", { class: "tool-lead" }, [pick ? "放到亮起来的空格。" : "点卡片，放进下面的格。"]));
       guide.append(el("span", { class: "tool-progress" + (compareReady() ? " done" : "") }, [
         compareReady() ? "✓ 齐了" : "已写 " + n + "／4",
       ]));
@@ -632,9 +761,9 @@ function openCompare(onDone) {
 /* ---------- 补充纸：九月头一个礼拜 ---------- */
 
 const WEEK_DAYS = [
-  ["09-01", "车又转。我出门买饭，十分钟，返来车头朝门。"],
+  ["09-01", "车又转。早上我摆返车头朝窗，出门买饭，十分钟，返来车头朝门。"],
   ["09-02", "水又滴。拧紧，数到三，又滴。"],
-  ["09-04", "冇录音。车仍然自己动。"],
+  ["09-04", "冇录音。车仍然自己动，跌落地，车头朝储物室。我冇再执。"],
 ];
 
 function weekCalBody() {
@@ -645,8 +774,7 @@ function weekCalBody() {
 function openWeekCal(onDone) {
   S.cal11 = S.cal11 || {};
   showDiaryTool({
-    kind: "日历",
-    title: "九月头一个礼拜",
+    kind: "九月头一个礼拜",
     build: (host, redraw) => {
       host.append(el("p", { class: "tool-note" }, ["每天写一行。照作业：车几转、我在哪、水隔多久。"]));
       const rows = el("div", { class: "tool-rows" });
@@ -695,16 +823,15 @@ function showDiaryTool(spec) {
   closeModal();
   if (typeof ensureStageBackdrop === "function") ensureStageBackdrop();
   if (mapLayer) mapLayer.hidden = true;
-  S.diaryLeaf = { tool: true, lock: !!spec.lock, onClose: spec.onClose };
+  const nested = !spec.lock && typeof diaryNested !== "undefined" && diaryNested;
+  S.diaryLeaf = { tool: true, lock: !!spec.lock, onClose: spec.onClose, fromIndex: nested };
   const redraw = () => {
     const host = el("div", { class: "diary-tool" });
     spec.build(host, redraw);
     if (notesIndex) notesIndex.hidden = true;
     if (notesLeaf) {
       notesLeaf.hidden = false;
-      const head = [el("div", { class: "diary-meta" }, [el("span", { class: "diary-kind" }, [spec.kind || spec.title || ""])])];
-      if (spec.title && spec.title !== spec.kind) head.push(el("h4", { class: "diary-title" }, [spec.title]));
-      head.push(host);
+      const head = [el("h4", { class: "diary-title" }, [spec.kind || spec.title || ""]), host];
       notesLeaf.replaceChildren(...head);
     }
     if (notesActions) {
@@ -715,6 +842,7 @@ function showDiaryTool(spec) {
           afterModalClose(spec.onClose);
         },
       }];
+      if (nested) acts.unshift({ label: diaryBackLabel(), fn: diaryBack });
       notesActions.replaceChildren(...acts.map((a) => el("button", {
         type: "button",
         class: "diary-btn" + (a.primary ? " primary" : ""),
