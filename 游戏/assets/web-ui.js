@@ -1440,7 +1440,7 @@ function applyNewsNotes(id) {
   if (!kept) return;
   note(kept[0], kept[1]);
   if (hasEvidence("news-mud") && hasEvidence("news-urb")) {
-    note("twofiles", "两篇都看完了。西贡山泥、市建局荣汇街。看完更乱。");
+    note("twofiles", "两篇都看完了。看完更乱。");
   }
 }
 

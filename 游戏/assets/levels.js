@@ -107,7 +107,7 @@ const LEVELS = [
       S.pairs = { car: true, tap: true, storage: true };
       flag("photoSill", true);
       seedItems(["photo-sill", "photo-print", "rec-axuan"]);
-      seedNotes([["car-move", "车自己转了方向。"], ["voice", "女人声「阿轩，返嚟食饭。」从储物室门底那边来。"], ["print", "门底下伸出一小截湿脚印，到一半停住。"]]);
+      seedNotes([["car-move", "车头朝了门。昨晚放的时候朝窗。"], ["voice", "女人声「阿轩，返嚟食饭。」从储物室门底那边来。"], ["print", "门底下伸出一小截湿脚印，到一半停住。"]]);
     },
   },
   {
@@ -149,7 +149,7 @@ const LEVELS = [
     gives: () => {
       S.handed = { ok6: true };
       S.homework = { n: 6, body: HOMEWORK[6] };
-      seedNotes([["linWait", "上一个病人。瘦，戴细框眼镜。笑很客气，人很奇怪。五官记不住。"]]);
+      seedNotes([["linWait", "上一个病人。瘦，戴细框眼镜。笑很客气。五官记不住。"]]);
     },
   },
   {
@@ -186,7 +186,7 @@ const LEVELS = [
       S.handed = Object.assign(S.handed || {}, { ok8: true });
       S.sorted = true;
       S.homework = { n: 8, body: HOMEWORK[8] };
-      seedNotes([["clinic2", "第二次。他信我写的时间，未信鬼。叫我有一夜不开录音。"], ["bento", "楼下便当。姐夫叫我快回去，又低声叫他不要上门。像怕他真的会去。"]]);
+      seedNotes([["clinic2", "第二次。他信我写的时间。叫我有一夜不开录音。"], ["bento", "楼下便当。姐夫叫我快回去，又低声叫他不要上门。像怕他真的会去。"]]);
     },
   },
   {
@@ -224,7 +224,7 @@ const LEVELS = [
       S.handed = Object.assign(S.handed || {}, { ok10: true });
       flag("fought3", true);
       S.homework = { n: 10, body: HOMEWORK[10] };
-      seedNotes([["clinic3", "第三次。上一个号又拖过。抽屉里有封未开的信。他读了两次周问脚湿那句，说更像人。"]]);
+      seedNotes([["clinic3", "第三次。上一个号又拖过。抽屉里有封未开的信。他读了两次周问脚湿那句。"]]);
     },
   },
   {
@@ -281,7 +281,7 @@ const LEVELS = [
     next: "9月7日 16:10　澄心",
     start: () => visitHome(),
     gives: () => {
-      seedNotes([["notsame", "我们看见的不是同一只。"], ["delay", "阿明：延迟三秒。人为可以做到。"], ["phone-you", "周在储物室打电话。有一个你。"]]);
+      seedNotes([["notsame", "我们看见的不是同一只。"], ["delay", "阿明在本子上写了：延迟三秒。"], ["phone-you", "周在储物室打电话。他说留不得。"]]);
     },
   },
   {
@@ -293,7 +293,7 @@ const LEVELS = [
       { text: "去走廊", after: "走廊碰到陈家豪", need: true, show: () => noted("stolen"), done: () => !!(S.miss && S.miss.chen), hint: "走廊那边，我还没去。" },
       { text: "手机响了，看完", show: () => !!(S.miss && S.miss.chen), after: "打开邮件，两个附件都看", need: true, count: () => (S.miss && (S.miss.att1 || S.miss.att2) ? [cnt(["att1", "att2"], S.miss), 2] : null), done: () => ev("mail-dirt"), hint: "" },
       { text: "把那封信给他看", after: "给他看", show: () => ev("mail-dirt"), done: () => flag("showedDirt") },
-      { text: "翻廿八屋：西贡山泥、市建局荣汇街", show: () => ev("mail-dirt"), done: () => noted("twofiles") },
+      { text: "翻廿八屋站内旧闻", show: () => ev("mail-dirt"), done: () => noted("twofiles") },
       { text: "回家，听周一句，看门口", after: "楼梯口周一句；铁闸差一格；门底干水印", need: true, show: () => ev("mail-dirt"), done: () => noted("day-trace"), hint: "回家。" },
     ],
     advance: {
@@ -324,7 +324,7 @@ const LEVELS = [
       { text: "打给他", after: "录音叫了我的名字，打给他", need: true, done: () => flag("calledMing2"), hint: "打给他。" },
       { text: "他到门口，听他讲", after: "他来了，在门口叫出一个字", need: true, show: () => flag("calledMing2"), done: () => noted("countbreath"), hint: "" },
       { text: "有人敲门，听他要什么", after: "周来要天台钥匙", show: () => noted("countbreath"), done: () => flag("roofKeyAsked"), hint: "" },
-      { text: "还没看的旧闻：西贡、市建局", after: "翻了西贡山泥、市建局荣汇街两篇", show: () => flag("calledMing2") && !noted("twofiles"), done: () => noted("twofiles") },
+      { text: "还没看完廿八屋的旧闻", after: "翻了站内那两篇旧闻", show: () => flag("calledMing2") && !noted("twofiles"), done: () => noted("twofiles") },
       { text: "想想天台白天的样子", after: "想起天台白天的样子", show: () => flag("calledMing2"), done: () => !!S.searchRoof },
       { text: "上楼前问他白天", after: "他认：站在楼梯口，没有按门铃", show: () => noted("countbreath"), done: () => noted("day-admit") },
       { text: "他上去之后，打给家豪", after: "零点二十分打给家豪，他说马上到", show: () => noted("roofpause"), done: () => flag("calledChen") },
@@ -385,7 +385,7 @@ const SEGS = {
     { key: "c", name: "陈家豪来电", go: () => { flag("knockedZhou", true); seedItems(["note-dry"]); S.chatLogs.mei16 = { lines: [["she", "……"]], step: 99, closed: true }; S.hub = { id: "dawn", at: "hall" }; howardCall(); } },
   ],
   6: [
-    { key: "b", name: "诊室（候诊已过）", go: () => { S.visitSeen = { 1: true }; S.clinicLooked = {}; seedNotes([["linWait", "上一个病人。瘦，戴细框眼镜。笑很客气，人很奇怪。五官记不住。"]]); enterClinic(1); } },
+    { key: "b", name: "诊室（候诊已过）", go: () => { S.visitSeen = { 1: true }; S.clinicLooked = {}; seedNotes([["linWait", "上一个病人。瘦，戴细框眼镜。笑很客气。五官记不住。"]]); enterClinic(1); } },
     { key: "c", name: "坐下谈，把搜集的给他看", go: () => { S.visitSeen = { 1: true }; S.clinic = { visit: 1, seg: 3 }; clinicTalk(); } },
   ],
   7: [
@@ -416,7 +416,7 @@ const SEGS = {
     { key: "b", name: "坐下谈，问他", go: () => { S.visitSeen = { 4: true }; S.clinicLooked = { drawer4: true }; S.clinic = { visit: 4, seg: 0 }; clinic4Talk(); } },
   ],
   13: [
-    { key: "b", name: "他走之后", go: () => { S.visit = { family: true, left: true }; seedNotes([["notsame", "我们看见的不是同一只。"], ["delay", "阿明：延迟三秒。人为可以做到。"]]); enterHub("visit", "corridor"); } },
+    { key: "b", name: "他走之后", go: () => { S.visit = { family: true, left: true }; seedNotes([["notsame", "我们看见的不是同一只。"], ["delay", "阿明在本子上写了：延迟三秒。"]]); enterHub("visit", "corridor"); } },
   ],
   14: [
     { key: "b", name: "邮件", go: () => { S.miss = { desk: true, chen: "quiet" }; seedNotes([["stolen", "上门行程被删了。现场笔记不见。"]]); enterHub("miss", "room"); } },

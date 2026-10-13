@@ -743,7 +743,7 @@ function fireNightEvents() {
   if (m === 79 && !n.fired.car) {
     n.fired.car = true;
     n.car = "地";
-    note("car-move", "车自己转了方向。");
+    note("car-move", "车头朝了门。昨晚放的时候朝窗。");
     changed = true;
   }
   if (m === 91 && !n.fired.voice) {
@@ -1163,7 +1163,7 @@ function waitDawn() {
   const unseenPrint = !nightAct("sawPrint");
   if (!n.fired.car) {
     n.car = "地";
-    note("car-move", "车自己转了方向。");
+    note("car-move", "车头朝了门。昨晚放的时候朝窗。");
   }
   if (missedVoice) {
     note("voice", "女人声「阿轩，返嚟食饭。」从储物室门底那边来。");
@@ -1601,8 +1601,8 @@ function howardCall() {
 
 function howardClose() {
   return [
-    line("陈家豪", "系喇。房东姓周，系咪？旧闻我有印象。天灾嚟嘅。你唔好自己查东查西。自己查，越查越惊。惊咗更难瞓。准时去见佢就得。", { zh: "对了。房东姓周，是吧？那件旧闻我有印象。天灾。你别自己东查西查。自己查，越查越怕。怕了更难睡。准时去见他就是了。" }),
-    { note: ["dontlook", "陈不让我查房东。他像已经知道这条街。"], who: "陈家豪", text: "我收线喇。等阵发地址俾你。同一部手机。", zh: "我挂了。等会儿把地址发你。还是这部手机。" },
+    line("陈家豪", "准时去见佢就得。旧楼啲嘢，自己查越查越惊。你安心去。", { zh: "准时去见他就是了。旧楼那些事，自己查越查越怕。你安心去。" }),
+    { note: ["dontlook", "陈叫我准时去见阿明。叫我别自己乱查。"], who: "陈家豪", text: "我收线喇。等阵发地址俾你。同一部手机。", zh: "我挂了。等会儿把地址发你。还是这部手机。" },
     { goto: howardSms },
   ];
 }
