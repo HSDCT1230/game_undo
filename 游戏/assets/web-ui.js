@@ -223,46 +223,25 @@ function blockedLogout() {
   showPrompt("登出失败。", "网页无回应，请稍后再试。");
 }
 
+// 网页里的任务提示，和其他场景一样别在屏幕右边的便条上
 function currentSlate() {
-  if (S.mode === "search" && !(S.slateOff || {}).look) {
-    return { id: "look", text: "站内新闻可以再翻。" };
-  }
-  if (S.mode !== "web") return null;
-  if (S.pendingPost && S.screen === "post" && !(S.slateOff || {})["draft-" + S.pendingPost]) {
-    return { id: "draft-" + S.pendingPost, text: "检查无误后发布。" };
-  }
-  if (!postedHelp() && S.screen === "post" && !(S.slateOff || {}).start) {
-    return { id: "start", text: "帖子沉下去了，顶上去，再自己搜。" };
-  }
-  return null;
+  if (S.mode !== "web") return "";
+  if (S.pendingPost && S.screen === "post") return "检查无误后发布。";
+  if (!postedHelp() && S.screen === "post") return "帖子沉下去了，顶上去，再自己搜。";
+  return !S.paused && typeof levelHint === "function" ? levelHint() : "";
 }
 
 function offerSlate() {
-  const s = currentSlate();
-  if (!s || S.modal || document.getElementById("slate")) return;
-  const desk = stage.querySelector(".desk");
-  if (!desk) return;
-  desk.classList.add("has-slate");
-  desk.append(el("div", { class: "slate", id: "slate" }, [
-    el("span", { class: "slate-k" }, ["提示"]),
-    el("p", {}, [s.text]),
-    el("button", {
-      type: "button",
-      class: "slate-ok",
-      title: "收起",
-      onclick: () => {
-        S.slateOff[s.id] = true;
-        clearSlate();
-      },
-    }, ["×"]),
+  const text = currentSlate();
+  if (!text || S.modal || document.getElementById("slate")) return;
+  stage.append(el("div", { class: "scene-actions fork task-note", id: "slate" }, [
+    el("p", { class: "hub-hint" }, [text]),
   ]));
 }
 
 function clearSlate() {
   const n = document.getElementById("slate");
   if (n) n.remove();
-  const desk = document.querySelector(".desk");
-  if (desk) desk.classList.remove("has-slate");
 }
 
 function publishHelpPost() {
@@ -817,7 +796,7 @@ function viewHome() {
         ? webLink("讨论区：散工女急求平租", () => goWeb("thread", { forumId: "helpzhang" }))
         : webLink("免费刊登", () => goWeb("post")),
       el("br"),
-      webLink("讨论区：旧楼夜响", () => goWeb("thread", { forumId: "night" })),
+      webLink("讨论区：天水围要担保？", () => goWeb("thread", { forumId: "yuenlong" })),
       el("br"),
       webLink("市建局研究新闻", () => goWeb("newsitem", { newsId: "urb" })),
     ]),
@@ -1180,8 +1159,8 @@ function detailSsp() {
         webLink("相关新闻", () => goWeb("newsitem", { newsId: "urb" })),
       ]),
         el("h3", { class: "sec-h" }, ["盘源留言板（2）"]),
-      el("p", { class: "bbs-line" }, ["过路人　07-29：「相里面有车？业主有细路住？」　——　业主未回。"]),
-      el("p", { class: "bbs-line" }, ["深水埗住开　07-30：「后座平一截正常。问清楚锁门嗰间系乜。」"]),
+      el("p", { class: "bbs-line" }, ["过路人　07-29：「厅角嗰架车系卖屋送定自己留？」　——　业主未回。"]),
+      el("p", { class: "bbs-line" }, ["深水埗住开　07-30：「问清楚周租点计，同埋锁住嗰间入唔入租。」"]),
       el("label", { class: "remark-label" }, ["备注（仅自己可见）", remark]),
     ]),
   ]);
@@ -1461,7 +1440,7 @@ function applyNewsNotes(id) {
   if (!kept) return;
   note(kept[0], kept[1]);
   if (hasEvidence("news-mud") && hasEvidence("news-urb")) {
-    note("twofiles", "他那边死过人。这边楼还要赔一笔。");
+    note("twofiles", "两篇都看完了。西贡山泥、市建局荣汇街。看完更乱。");
   }
 }
 
@@ -1902,8 +1881,8 @@ function wallMarkAllSeen() {
 
 if (typeof SFX !== "undefined") {
   SFX.wallIn = () => {
-    sfxTone(1047, 0, 0.09, { type: "triangle", gain: 0.08 });
-    sfxTone(1568, 0.08, 0.2, { type: "triangle", gain: 0.07 });
+    sfxTone(1047, 0, 0.09, { type: "triangle", gain: 0.057 });
+    sfxTone(1568, 0.08, 0.2, { type: "triangle", gain: 0.05 });
   };
 }
 
@@ -1990,7 +1969,11 @@ function wallLatest(who) {
 function wallStatus(who) {
   const h = clockDate().getHours();
   if (who === "mei") return h >= 7 && h < 24 ? { on: true, text: "在线" } : { on: false, text: "离线" };
-  if (who === "howard") return h >= 9 && h < 21 ? { on: false, text: "当更中" } : { on: false, text: "离线" };
+  if (who === "howard") {
+    const d = clockDate();
+    if (d.getMonth() === 8 && d.getDate() >= 7) return { on: false, text: "休班" };
+    return h >= 9 && h < 18 ? { on: false, text: "当更中" } : { on: false, text: "离线" };
+  }
   if (who === "ping") return h >= 19 || h < 1 ? { on: true, text: "在线" } : { on: false, text: "离线" };
   if (who === "lok") return { on: false, text: lokOnline() + " 上线" };
   return { on: false, text: "" };

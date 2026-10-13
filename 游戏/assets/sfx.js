@@ -184,45 +184,44 @@ const SFX_WAV = {
 };
 const sfxWavAudio = {};
 
+// 提示类（打勾、录音键、短讯、倾偈、接听、提示）对齐到约 -36 dB（最响 50ms），比点击轻 7 dB 左右
 const SFX = {
   // 清单打勾
   tick() {
-    sfxNoise(0, 0.05, { freq: 2400, q: 1.8, gain: 0.045, attack: 0.012 });
-    sfxNoise(0.05, 0.1, { freq: 2200, to: 2800, q: 1.8, gain: 0.05, attack: 0.012 });
+    sfxNoise(0, 0.05, { freq: 2400, q: 1.8, gain: 0.14, attack: 0.012 });
+    sfxNoise(0.05, 0.1, { freq: 2200, to: 2800, q: 1.8, gain: 0.155, attack: 0.012 });
   },
   // 走过去：唐楼水泥地几步
   steps() {
     [0, 0.42, 0.84].forEach((at, i) => {
-      sfxTone(78 + i * 4, at, 0.11, { gain: 0.15, attack: 0.018 });
-      sfxNoise(at, 0.07, { filter: "lowpass", freq: 480, gain: 0.09, attack: 0.018 });
+      sfxTone(78 + i * 4, at, 0.11, { gain: 0.11, attack: 0.018 });
+      sfxNoise(at, 0.07, { filter: "lowpass", freq: 480, gain: 0.068, attack: 0.018 });
     });
   },
   // 屏幕上的一句提示
-  tip() { sfxTone(620, 0, 0.24, { gain: 0.016, attack: 0.035 }); },
+  tip() { sfxTone(620, 0, 0.24, { gain: 0.035, attack: 0.035 }); },
   // 「往下」第一次亮
   ready() {
-    sfxTone(470, 0, 0.44, { gain: 0.016, attack: 0.045 });
-    sfxTone(700, 0.14, 0.52, { gain: 0.013, attack: 0.045 });
+    sfxTone(470, 0, 0.44, { gain: 0.028, attack: 0.045 });
+    sfxTone(700, 0.14, 0.52, { gain: 0.023, attack: 0.045 });
   },
   // 接听
-  answer() { sfxTone(820, 0, 0.11, { gain: 0.024, attack: 0.018 }); },
-  // 短讯收到
-  smsIn() {
-    sfxTone(1180, 0, 0.1, { type: "triangle", gain: 0.024 });
-    sfxTone(1580, 0.1, 0.14, { type: "triangle", gain: 0.022 });
-    sfxTone(55, 0, 0.3, { type: "sawtooth", gain: 0.015 });
-  },
+  answer() { sfxTone(820, 0, 0.11, { gain: 0.05, attack: 0.018 }); },
+  // 短讯收到：录音，见 SFX_FILES
   // 短讯发出
   smsOut() {
-    sfxNoise(0, 0.24, { freq: 1000, to: 2200, q: 0.8, gain: 0.03, attack: 0.07 });
-    sfxTone(900, 0.12, 0.08, { gain: 0.015 });
+    sfxNoise(0, 0.24, { freq: 1000, to: 2200, q: 0.8, gain: 0.11, attack: 0.07 });
+    sfxTone(900, 0.12, 0.08, { gain: 0.055 });
   },
   // 倾偈：表姐来消息／自己发出
   chatIn() {
-    sfxTone(540, 0, 0.16, { gain: 0.024 });
-    sfxTone(800, 0.09, 0.24, { gain: 0.02 });
+    sfxTone(540, 0, 0.16, { gain: 0.042 });
+    sfxTone(800, 0.09, 0.24, { gain: 0.035 });
   },
-  chatOut() { sfxTone(800, 0, 0.1, { gain: 0.015 }); },
+  chatOut() {
+    sfxTone(900, 0, 0.26, { gain: 0.035 });
+    sfxTone(1320, 0.08, 0.32, { gain: 0.021 });
+  },
   // 旧键盘一下
   key() {
     sfxNoise(0, 0.035, { freq: 1300 + Math.random() * 400, q: 1, gain: 0.07, attack: 0.012 });
@@ -230,17 +229,18 @@ const SFX = {
   },
   // 廿八屋：送出、顶帖
   send() {
-    sfxTone(900, 0, 0.26, { gain: 0.02 });
-    sfxTone(1320, 0.08, 0.32, { gain: 0.012 });
+    sfxTone(1180, 0, 0.1, { type: "triangle", gain: 0.047 });
+    sfxTone(1580, 0.1, 0.14, { type: "triangle", gain: 0.043 });
+    sfxTone(55, 0, 0.3, { type: "sawtooth", gain: 0.03 });
   },
   // 录音键
   recOn() {
-    sfxNoise(0, 0.03, { freq: 1100, gain: 0.16, attack: 0.012 });
-    sfxNoise(0.06, 0.035, { freq: 900, gain: 0.13, attack: 0.012 });
+    sfxNoise(0, 0.03, { freq: 1100, gain: 0.6, attack: 0.012 });
+    sfxNoise(0.06, 0.035, { freq: 900, gain: 0.49, attack: 0.012 });
   },
-  recOff() { sfxNoise(0, 0.045, { freq: 750, gain: 0.17, attack: 0.012 }); },
+  recOff() { sfxNoise(0, 0.045, { freq: 750, gain: 0.6, attack: 0.012 }); },
   // 语音留言开始
-  vm() { sfxTone(820, 0, 0.3, { gain: 0.024, attack: 0.025 }); },
+  vm() { sfxTone(820, 0, 0.3, { gain: 0.033, attack: 0.025 }); },
 };
 
 /* 打开廿八屋那一下才响；在站内翻页不再响，离开网页再回来又响 */
@@ -268,9 +268,10 @@ const SFX_FILES = {
   drip: "操作-滴水",
   browserOpen: "操作-打开浏览器",
   browserClose: "操作-关闭浏览器",
+  smsIn: "操作-短讯收到",         // 滴水候选 1「短滴一下」，压到约 -36 dB
 };
 // 换了同名文件就改这个
-const SFX_REV = "20261010f";
+const SFX_REV = "20261012b";
 const sfxFileAudio = {};
 
 function sfxFileGet(name) {
@@ -363,7 +364,7 @@ function padStart(root) {
   const t = c.currentTime;
   const g = c.createGain();
   g.gain.setValueAtTime(0.0001, t);
-  g.gain.exponentialRampToValueAtTime(0.05, t + 3);
+  g.gain.exponentialRampToValueAtTime(0.025, t + 3);
   const f = c.createBiquadFilter();
   f.type = "lowpass";
   f.frequency.value = 650;
@@ -466,14 +467,15 @@ function roomTone(on) {
 
 /* 环境声：按地点循环。只用 assets/sfx/ 里的选用文件，不用 备用/ 里挑剩的 */
 const AMB_FILES = {
-  "rong-day": "环境-后座白天",           // Documentary Mystery（1～3 关全天；之后七点前）
+  "rong-early": "环境-后座入住",         // Lonely – Beautiful Piano Music（1～3 关全天，周生上门前）
+  "rong-day": "环境-后座白天",           // Documentary Mystery（第 5 关起七点前）
   "rong-night": "环境-后座夜里",         // Night Interior（第 4 关整天；第 5～12 关夜里）
   "rong-night-late": "环境-后座夜里-后段", // Hidden Hypothesis（第 13 关起后座夜里）
   "rong-stair": "环境-楼梯走廊",
-  "rong-roof": "环境-天台",
+  "rong-roof": "环境-天台",               // 风声（拼成首尾无缝）+ Reflective Serious Piano，混成一个文件
   "rong-street": "环境-深水埗街道",
   "clinic-wait": "环境-澄心候诊",
-  "clinic-room": "环境-澄心诊室",         // 初诊：Low Energy
+  "clinic-room": "环境-澄心诊室",         // 初诊：A Calm Soundtrack for Thoughtful Narration
   "clinic-room-8": "环境-澄心诊室-第8关",   // 第二次：8-2 Thoughtful Piano Calm
   "clinic-room-10": "环境-澄心诊室-第10关", // 第三次：10-2 Quiet Suspicions
   "clinic-room-12": "环境-澄心诊室-第12关", // 第四次：10-3 Tense Sad Piano
@@ -491,7 +493,7 @@ const CLINIC_AMB_BY_VISIT = {
 const CLINIC_VISIT_BY_LEVEL = { 6: 1, 8: 2, 10: 3, 12: 4, 14: 5 };
 const AMB_VOL = 0.5;
 // 换了同名文件就改这个，免得浏览器放旧的
-const AMB_REV = "20261010f";
+const AMB_REV = "20261012e";
 const ambMissing = {};
 
 function ambSrc(key) {
@@ -536,8 +538,8 @@ function ambKey() {
   // 唐楼走廊／楼梯：楼梯环境声（含上门关的走廊尽头）
   if (p === "rong-stair" || p === "rong-landing" || p === "rong-backstair" || p === "rong-corridor") return "rong-stair";
   if (p.startsWith("rong")) {
-    // 刚入住（1～3 关）日夜都放白天那首；第 4 关整关夜里那首
-    if (S.level <= 3) return "rong-day";
+    // 刚入住（1～3 关）日夜都放入住那首；第 4 关整关夜里那首
+    if (S.level <= 3) return "rong-early";
     if (S.level === 4) return rongNightKey();
     // 钟面优先：点证据时 sfxUnlock 会再对一次，不能靠停着的旧夜里那首
     const part = dayPart(S.time);
@@ -549,7 +551,32 @@ function ambKey() {
   return "";
 }
 
+/* iOS 不许网页改 audio.volume：环境声接进 AudioContext，用增益节点管音量和淡入淡出。接不上才退回 audio.volume */
+function ambWire(a) {
+  const c = sfxAudio();
+  if (!c) return;
+  try {
+    const g = c.createGain();
+    g.gain.value = 0;
+    c.createMediaElementSource(a).connect(g).connect(c.destination);
+    a.ambGain = g;
+  } catch (e) { /* 无 */ }
+}
+
+function ambVol(a) {
+  return a.ambGain ? a.ambGain.gain.value : a.volume;
+}
+
 function ambFade(audio, to, ms, done) {
+  const g = audio.ambGain;
+  if (g && sfxCtx) {
+    const t = sfxCtx.currentTime;
+    g.gain.cancelScheduledValues(t);
+    g.gain.setValueAtTime(g.gain.value, t);
+    g.gain.linearRampToValueAtTime(to, t + ms / 1000);
+    if (done) setTimeout(done, ms);
+    return;
+  }
   const from = audio.volume;
   const t0 = performance.now();
   const step = () => {
@@ -565,24 +592,33 @@ function ambPlay(a) {
   const vol = AMB_VOL * BG_VOL[bgLevel];
   a.play().then(() => {
     if (ambNow.audio !== a) return;
-    if (a.volume < vol * 0.9) ambFade(a, vol, 1500);
-    else a.volume = vol;
+    ambFade(a, vol, ambVol(a) < vol * 0.9 ? 1500 : 200);
   }).catch(() => { /* 浏览器还不许出声；下次点按再试 */ });
 }
 
 function ambSet(key) {
-  // 同地点但上次被自动播放拦住、停着：在同一次用户点按里再试
+  // 同地点但上次被自动播放拦住、停着：在同一次用户点按里再试；在放着就跟上开关的大／小
   if (key && key === ambNow.key && ambNow.audio) {
-    if (ambNow.audio.paused && BG_VOL[bgLevel]) ambPlay(ambNow.audio);
+    const a = ambNow.audio;
+    const vol = AMB_VOL * BG_VOL[bgLevel];
+    if (a.paused) { if (vol) ambPlay(a); }
+    else if (Math.abs(ambVol(a) - vol) > 0.01) ambFade(a, vol, 600);
     return;
   }
   const old = ambNow;
-  if (old.audio) ambFade(old.audio, 0, 1200, () => old.audio.pause());
+  if (old.audio) {
+    const oa = old.audio;
+    ambFade(oa, 0, 1200, () => {
+      oa.pause();
+      if (oa.ambGain) oa.ambGain.disconnect();
+    });
+  }
   ambNow = { key, audio: null };
   if (!key || ambMissing[key]) return;
   const a = new Audio(ambSrc(key));
   a.loop = true;
-  a.volume = 0;
+  ambWire(a);
+  if (!a.ambGain) a.volume = 0;
   a.addEventListener("error", () => {
     ambMissing[key] = true;
     if (ambNow.audio === a) { ambNow.audio = null; ambNow.key = ""; }
@@ -596,6 +632,7 @@ function sfxSync() {
   if (!sfxReady || typeof S === "undefined") return;
   if (S.mode !== "web") webHeard = false;
   ambSet(bgOn() ? ambKey() : "");
+  if (!bgOn()) roomTone(false);
   if (S.mode === "card" || S.mode === "wait" || S.mode === "end") padStart(S.mode === "end" ? 82.4 : 110);
   else padStop();
   hissOn(S.mode === "night" && S.night && S.night.recording);

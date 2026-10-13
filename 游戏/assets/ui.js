@@ -128,6 +128,7 @@ function diaryBack() {
   closeModal();
   const prev = diaryTrail.pop();
   if (prev) {
+    sfx("paper");
     diaryShow(prev);
     return;
   }

@@ -289,7 +289,7 @@ function drawMoveIn() {
   const box = el("div", { class: "room scene-fit" });
   box.append(
     imgSlot(pic(3, "场景-后座厅"), "room-bg", "后座"),
-    el("p", { class: "room-note" }, ["周生下楼回前座。你一个人站在走廊里。钥匙在掌心，三把。"]),
+    el("p", { class: "room-note" }, ["周生下楼回前座。你一个人站在走廊里。钥匙在掌心，两把；天台那把挂在门内小钩上。"]),
     el("div", { class: "room-dock" }, [el("div", { class: "room-map" }, looks)])
   );
   const wrap = el("div", { class: "desk night-desk" });
@@ -359,12 +359,30 @@ const CAL_DAYS = [
   ["08-09", "无事。把带来的书立起来，靠着墙。这只箱以后就是书架。", "warm", "", true],
   ["08-10", "第二笔周租，现金。他数两遍，忽然问有没有陌生人打电话来问这栋楼。你说没有。他点头，写在日历上。", "warm", "示意-日历-0810-交租", true],
   ["08-11", "夜里回来，铁闸推到一半，那声「咔」比前几天多响了一下。你回头看了一眼，什么也没有。", "crack", "示意-日历-0811-铁闸", true],
-  ["08-12", "你把玩具车挪到墙角。过了一夜，它还在墙角。你把它放回茶几晒痕上，车头朝窗。……好像是自己记岔了。", "crack", "示意-日历-0812-车放回茶几", true],
+  ["08-12", "你把玩具车挪到墙角。过了一夜，它还在墙角，一点没动。你说不出为什么，反而有点不安，又把它放回茶几晒痕上，车头朝窗。", "crack", "示意-日历-0812-车放回茶几", true],
   ["08-13", "夜里水管响。你开了录音。听完只有水声。傍晚楼下有个戴帽子的男人在对街站了一会儿，又走了。", "crack", "示意-日历-0813-对街的人", true],
 ];
 
+// 8月13日傍晚：平静时光的最后一拍日常。让玩家亲口跟周讲一次话、收一次好，
+// 才翻到那页小结——后面 8/14 的翻脸才有东西可碎。不产线索、不解谜、不暗示。
+function twoWeekCalm() {
+  startTalk([
+    line("", "傍晚，楼梯上有脚步。是周生，抱着一竿晒干的衫，从天台下来。他在门口停住，没有进来。"),
+    line("周", "晒衫呀？天台最上嗰格我收返，唔阻你。", { zh: "晾衣服吗？天台最上面那格我收回来了，不挡你。" }),
+    line("章慧琪", "唔阻。我用下面嗰格就得。", { zh: "不挡。我用下面那格就行。" }),
+    line("周", "住咗半个月，惯唔惯？", { zh: "住了半个月，习惯了吗？" }),
+    line("章慧琪", "……好静。静到有时会听见自己嘅声。", { zh: "……很静。静到有时听见自己的声音。" }),
+    line("", "他笑了一下，把衫换个手抱。"),
+    line("周", "旧楼系咁。我一个人坐前座，都系听收音机过日辰。", { zh: "旧楼就这样。我一个人坐前座，也是听收音机过日子。" }),
+    line("周", "有咩唔妥就拍门，唔使客气。重建嗰啲嘢讲咗好耐，未轮到，你安心住。", { zh: "有什么不方便就敲门，别客气。重建那事说了很久，还没轮到，你安心住。" }),
+    line("章慧琪", "嗯。", { zh: "嗯。" }),
+    line("", "他没有多留，抱着衫往下走。脚步很稳，一级一级，像做过很多次。"),
+    { goto: () => { S.talk = null; S.mode = "cal"; twoWeekPaper(); } },
+  ], "荣汇街 28 号 4 楼后座门口");
+}
+
 // 8月14日傍晚前的一页：她自己写的两周小结。不产线索、不解谜，只做「日常结束」的分隔。
-function twoWeekSummary() {
+function twoWeekPaper() {
   closeModal();
   if (notesLayer && !notesLayer.hidden) notesLayer.hidden = true;
   if (typeof ensureStageBackdrop === "function") ensureStageBackdrop();
@@ -374,6 +392,7 @@ function twoWeekSummary() {
     "箱没 unpack，衣服晾了三次。",
     "周生修好水龙头。真的不滴了。",
     "他送过一次糖水，碗第二天来收。",
+    "他把天台上格让给我。说，安心住。",
     "我把这里叫「屋企」，是第三日的事了。",
     "……应该可以住落去。",
   ];
@@ -397,7 +416,6 @@ function drawCalendar() {
     imgSlot(pic(3, "场景-两周"), "scene-plate", "后座"),
     el("div", { class: "calendar" }, [
       el("h2", {}, ["两周"]),
-      el("p", { class: "cal-hint" }, [levelHint() || "看完这几日，就往下。"]),
       el("div", {
         class: "days",
         onclick: (e) => {
@@ -425,7 +443,10 @@ function drawCalendar() {
       })),
     ]),
   ]);
-  stage.append(box);
+  const hint = levelHint();
+  stage.append(box, el("div", { class: "scene-actions fork task-note" }, [
+    el("p", { class: "hub-hint" + (hint ? "" : " ready") }, [hint || "要做的都做完了。"]),
+  ]));
   renderPlaybar();
 }
 
@@ -444,15 +465,23 @@ function openCalDay(id, text) {
   if (id === "08-13") {
     const man = pic(3, "示意-日历-0813-对街的人");
     const rec = pic(3, "示意-日历-0813-录音只有水");
+    const board = () => {
+      flag("saw0813", true);
+      showBoard("八月十三日", "2014年8月13日", [
+        { img: man, title: "傍晚　对街的人", body: "骑楼底下，鸭舌帽压得低。他看的是这栋楼。" },
+        { img: rec, title: "夜里　录音", item: item("rec-water") },
+      ], () => drawCalendar());
+    };
+    if (flag("saw0813")) {
+      board();
+      return;
+    }
     startTalk([
       line("", "八月十三日，傍晚。你下楼买饭，在楼门口等车过马路。", { clue: man }),
       line("", "对面骑楼底下，站着一个男人。鸭舌帽压得低，看不清脸。他没有看铺面，也没有看手机。他看的是这栋楼。"),
       line("", "你多看了一眼。他转过身，慢慢走开了。"),
       line("", "夜里水管响。你开了录音。听完，只有水声。", { clue: rec }),
-      { goto: () => showBoard("八月十三日", "2014年8月13日", [
-        { img: man, title: "傍晚　对街的人", body: "骑楼底下，鸭舌帽压得低。他看的是这栋楼。" },
-        { img: rec, title: "夜里　录音", item: item("rec-water") },
-      ], () => drawCalendar()) },
+      { goto: board },
     ], "荣汇街 28 号 楼下");
     return;
   }
@@ -497,8 +526,8 @@ const CAL_TALK = {
   ],
   "08-12": () => [
     line("", "八月十二日。你顺手把茶几上的玩具车挪到墙角，免得挡路。"),
-    line("", "第二天早上，它还在墙角。"),
-    line("", "……你明明记得自己是把它放回茶几晒痕上的？还是没放？你蹲下去看了两秒。车头朝窗。跟搬进来那天一样。"),
+    line("", "第二天早上，它还在墙角，车头朝墙，跟你放下时一模一样。"),
+    line("", "没有动过。你蹲下去看了两秒，说不出为什么，心里反而不踏实。你把它放回茶几晒痕上，车头朝窗，跟搬进来那天一样。"),
   ],
   "08-10": () => [
     line("", "八月十日。第二笔周租，现金。他把钞票数了一遍，又数一遍。"),
@@ -509,17 +538,57 @@ const CAL_TALK = {
   ],
 };
 
+// 过场图约 1MB：手机／Pages 上若等不到 onload 就开播，会黑好几秒。先预载再播。
+function preloadCut(frames, done) {
+  const urls = frames.map((f) => f.img).filter(Boolean);
+  if (!urls.length) {
+    done();
+    return;
+  }
+  let left = urls.length;
+  let settled = false;
+  const finish = () => {
+    if (settled) return;
+    settled = true;
+    done();
+  };
+  const tick = () => {
+    left -= 1;
+    if (left <= 0) finish();
+  };
+  setTimeout(finish, 4000);
+  urls.forEach((id) => {
+    const img = new Image();
+    img.onload = tick;
+    img.onerror = tick;
+    img.src = picSrc(id);
+    if (img.complete && img.naturalWidth) tick();
+  });
+}
+
 // 过场：几格定格依次淡入。push 慢推镜；cap 压在下三分之一；sfx 在这一格亮起后 sfxAt 毫秒响。
 // 点一下跳下一格，「跳过」直接走完。期间记作 card 模式，不入档，刷新回到上一个存档点。
 function playCut(frames, done) {
   closeModal();
   S.mode = "card";
-  S.card = { type: "cut", frames, done };
-  drawCut(S.card);
+  const card = { type: "cut", frames, done, playing: false };
+  S.card = card;
+  // 预载未完先贴黑底，避免空台；图到了再开播
+  clearStage();
+  stage.append(el("div", { class: "desk caption-card cut" }));
+  renderPlaybar();
+  preloadCut(frames, () => {
+    if (S.card !== card) return;
+    drawCut(card);
+  });
 }
 
 function drawCut(c) {
+  if (!c || c.type !== "cut") return;
+  // 已在播同一支：不要 clearStage 把画面清成黑底再从头来
+  if (c.playing && stage.querySelector(".desk.cut")) return;
   clearStage();
+  c.playing = true;
   const still = typeMotionOff();
   const desk = el("div", { class: "desk caption-card cut" });
   const plates = c.frames.map((f) => {
@@ -542,8 +611,8 @@ function drawCut(c) {
     clearTimeout(timer);
     desk.classList.add("out");
     setTimeout(() => {
-      if (!live()) return;
-      S.card = null;
+      if (S.card === c) S.card = null;
+      if (!desk.isConnected) return;
       c.done();
     }, 450);
   };
@@ -585,7 +654,7 @@ function doorTalk() {
     line("", "他衬衫皱，领口却是干的。手背青筋。信封角朝里，像怕你看见。"),
     line("周", "章小姐。后座……我想收回自住。定金我退你。周租都退。你再住两日，走得唔得？", { zh: "章小姐。后座……我想收回来自己住。定金退你，周租也退。你再住两天，走得开吗？" }),
     line("章慧琪", "我冇地方去。……我啱啱先当咗呢度系屋企。", { zh: "我没地方去。……我才刚把这儿当成家。" }),
-    line("周", "当我冇讲。当我冇讲。水喉有问题我再睇。你当今日冇呢句。", { zh: "当我没说。当我没说。水管有问题我再来看。你当今天没这句话。" }),
+    line("周", "……算。当我冇讲。水喉有问题我再睇。", { zh: "……算了。当我没说。水管有问题我再来看。" }),
     line("", "信封角从指缝露出来，上面有一截红圈，字看不清。他的手抖了一下，又把信夹紧。"),
     {
       prompt: "他已经转身。",
@@ -612,14 +681,14 @@ function doorTalk() {
           label: "发生什么事？",
           note: ["takeback", "他前几日还好好。今日傍晚要收回。手抖，信封朝里。他说重建，又说未定。"],
           then: [
-            line("周", "冇。重建……未定。有人……你唔好问。当我冇讲。", { zh: "没有。重建……还没定。有人……你别问。当我没说。" }),
+            line("周", "冇。重建……未定。有人……你唔好问。", { zh: "没有。重建……还没定。有人……你别问。" }),
             { goto: nightStart },
           ],
         },
         {
           label: "我可以晚一点走。",
           then: [
-            line("周", "唔使你答应。当我冇讲。", { zh: "不用你答应。当我没说。" }),
+            line("周", "唔使你答应。你住你嘅。", { zh: "不用你答应。你住你的。" }),
             { goto: nightStart },
           ],
         },
@@ -726,15 +795,14 @@ function resumeNight() {
   startNightClock();
 }
 
-// 第一夜开始：黑，一滴水将落未落，灯亮，就是房间页那间厅
+// 第一夜开始：一滴水将落未落 → 灯亮进厅。不再先播一格空黑底（图未载完时整段像坏掉）。
 function nightStart() {
   S.talk = null;
   S.night = { min: 63, car: "窗", recording: false, print: false, fired: {}, acted: {}, phase: "phone" };
   setTime(nightClockText());
   playCut([
-    { ms: 1100 },
-    { img: pic(4, "场景-过场-一滴水"), ms: 2600, sfx: "drip", sfxAt: 1200 },
-    { img: pic(4, "场景-过场-第一夜灯亮"), ms: 3200, cap: "08-15　01:03" },
+    { img: pic(4, "场景-过场-一滴水"), ms: 2800, sfx: "drip", sfxAt: 900, origin: "82% 42%" },
+    { img: pic(4, "场景-过场-第一夜灯亮"), ms: 3400, cap: "08-15　01:03", origin: "40% 55%" },
   ], () => {
     S.mode = "night";
     drawNight();
@@ -974,7 +1042,7 @@ function phoneMenu() {
       el("p", { class: "phone-sec" }, ["短讯"]),
       row("陈家豪", "诊所地址　已读", () => {
         closeModal();
-        showModal("陈家豪", "湾仔澄心诊所，罗启明 Kimon Law。明天 16:00。\n日间请经医院门诊。", "短讯　已读", "memo", () => phoneMenu());
+        showModal("陈家豪", "湾仔澄心诊所，罗启明 Kimon Law。明天 16:00。\n三点我喺你楼下。", "短讯　已读", "memo", () => phoneMenu());
       }, " done")
     );
   }
@@ -1032,9 +1100,12 @@ function alarm() {
 
 function leaveNightToMei() {
   stopNightClock();
-  // 这一夜过完才回头想：声响、车、录音，都从储物室／前座那一侧来。写在离开房间之前，不提前。
-  note("whisper", "前座一个人说话。他说吓。");
-  finishLevel(4);
+  setTime("2014年8月15日 周五 05:40");
+  startTalk([
+    line("", "天快亮了。隔着墙，前座有人在说话，压得很低，只有他一个人的声音，像在讲电话。"),
+    line("", "你只听清一个字：「吓。」之后就没有了。", { note: ["whisper", "前座一个人说话。他说吓。"] }),
+    { goto: () => finishLevel(4) },
+  ], "后座", "face");
 }
 
 function passFrontDoor() {
@@ -1151,7 +1222,7 @@ function startChat(pack) {
 }
 
 const CHAT_MEI16 = [
-  { me: ["旧。平。夜里响。今次有嘢会自己动。唔係我「见到」。"] },
+  { me: ["荣汇街。旧。平。夜里响。今次有嘢会自己动。唔係我「见到」。"] },
   { she: "你又……阿乐同我讲过。你今次真搬出去住，我以为会好。" },
   { me: ["我唔想再听人话我神经。"] },
   { she: "我冇话你神经。你一个人我担心。唔好再同阿乐讲，佢听唔懂。" },
@@ -1250,7 +1321,7 @@ HUBS.dawn = {
           title: "手机：短讯", sub: "陈家豪发来的地址。", img: pic(5, "示意-手机短讯"),
           show: () => flag("clinicAddr"),
           seen: () => true,
-          go: () => showModal("陈家豪", "湾仔澄心诊所，罗启明 Kimon Law。明天 16:00。\n日间请经医院门诊。", "短讯　已读", "memo"),
+          go: () => showModal("陈家豪", "湾仔澄心诊所，罗启明 Kimon Law。明天 16:00。\n三点我喺你楼下。", "短讯　已读", "memo"),
         },
         {
           title: "拍一张：玩具车", sub: () => (flag("clinicAddr") ? "出门前。" : "先拍好。"), img: pic(5, "示意-拍玩具车"),
@@ -1464,6 +1535,7 @@ function drawChat() {
           type: "button",
           onclick: () => {
             S.chat.push(["me", t]);
+            if (t === "我不是病人。") flag("notPatient", true);
             if (noise) S.chat.push(["she", "佢对阿明好到像亲兄弟。人唔怪。我都嫌。"]);
             S.chatClosed = true;
             persistChat();
@@ -1487,12 +1559,14 @@ function drawChat() {
 
 function howardCall() {
   flag("howardCalled", true);
-  setTime("2014年8月15日 周五 10:18");
+  setTime("2014年8月15日 周五 11:20");
   startTalk([
-    line("陈家豪", "阿琪？美娟叫我打俾你。我喺差馆。住唔住得惯？旧楼响，好正常。", { zh: "阿琪？美娟让我打给你的。我在局里。住得惯吗？旧楼响，正常。" }),
+    flag("notPatient")
+      ? line("陈家豪", "阿琪？美娟叫我打俾你。佢话你唔想当病人睇——唔紧要，当见个朋友。我喺差馆。住唔住得惯？旧楼响，好正常。", { zh: "阿琪？美娟让我打给你的。她说你不想当病人去看——没关系，当见个朋友。我在局里。住得惯吗？旧楼响，正常。" })
+      : line("陈家豪", "阿琪？美娟叫我打俾你。我喺差馆。住唔住得惯？旧楼响，好正常。", { zh: "阿琪？美娟让我打给你的。我在局里。住得惯吗？旧楼响，正常。" }),
     line("章慧琪", "车会自己转。……录音入面有个女人叫仔食饭。前两个礼拜冇㗎。", { zh: "车会自己转。……录音里有个女人叫孩子吃饭。前两个礼拜都没有。" }),
-    line("陈家豪", "美娟话你搬咗去深水埗。荣汇街，系咪？旧楼。我带你去见个人。唔系急症。大学识嘅，佢读医——我读社会学，宿舍隔一层。日头喺医院，夜晚喺湾仔有私家诊所。我哋叫佢阿明。罗启明。团年饭我讲过。", { zh: "美娟说你搬去深水埗了。荣汇街，是吧？旧楼。我带你见个人。不是急症。大学认识的，他读医——我读社会学，宿舍隔一层。白天在医院，晚上在湾仔有私家诊所。我们都叫他阿明。罗启明。年夜饭我提过。" }),
-    line("章慧琪", "就系……姐夫成日攞你做借口嗰个？", { zh: "就是……姐夫老拿你当借口那个？" }),
+    line("陈家豪", "美娟话你搬咗去深水埗。荣汇街，系咪？旧楼。我带你去见个人。唔系急症。大学识嘅，佢读医——我读社会学，宿舍隔一层。日头喺医院，夜晚同礼拜六喺湾仔有私家诊所。我哋叫佢阿明。罗启明。团年饭我讲过。", { zh: "美娟说你搬去深水埗了。荣汇街，是吧？旧楼。我带你见个人。不是急症。大学认识的，他读医——我读社会学，宿舍隔一层。白天在医院，晚上和周六在湾仔开私家诊所。我们都叫他阿明。罗启明。年夜饭我提过。" }),
+    line("章慧琪", "就系……你成日攞佢做借口嗰个？", { zh: "就是……你老拿他当借口那个？" }),
     line("陈家豪", "系。佢肯听。我介绍，佢会收。你同佢讲真话。佢听完会揽晒上身。所以你……准时到就得。楼下嗰间面档，佢有时会唔记得食。", { zh: "是。他肯听。我介绍，他会收。你跟他说真话。他听完就全往自己身上揽。所以你……准时到就行。楼下那家面档，他有时候会忘了吃。" }),
     line("章慧琪", "佢……点㗎？", { zh: "他……人怎么样？" }),
     line("陈家豪", "专业。用心。佢本人精神有时唔太好。过劳。你当我冇讲。睇病人一流。", { zh: "专业。用心。他本人精神有时不太好。过劳。你就当我没说。看病一流。" }),
@@ -1534,10 +1608,10 @@ function howardClose() {
 }
 
 function howardSms() {
-  setTime("2014年8月15日 周五 10:21");
+  setTime("2014年8月15日 周五 11:24");
   flag("clinicAddr", true);
   startTalk([
-    line("陈家豪", "湾仔澄心诊所，罗启明 Kimon Law。明天 16:00。\n日间请经医院门诊。", { zh: "湾仔澄心诊所，罗启明 Kimon Law。明天 16:00。\n日间请经医院门诊。" }),
+    line("陈家豪", "湾仔澄心诊所，罗启明 Kimon Law。明天 16:00。\n三点我喺你楼下。", { zh: "湾仔澄心诊所，罗启明 Kimon Law。明天 16:00。\n三点我在你楼下。" }),
     {
       choices: [
         {
@@ -1553,7 +1627,7 @@ function howardSms() {
 
 function afterHowardSms() {
   waitWeek(
-    "2014年8月15日 周五 10:21",
+    "2014年8月15日 周五 11:24",
     "地址到了，明天赴约。",
     "",
     () => backToHub()

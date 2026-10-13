@@ -69,6 +69,13 @@ function phoneOnly(b) {
   return !!(b.choices && b.choices.length && b.choices.every((c) => c.phone));
 }
 
+// emoji 听筒在各系统上颜色不一，统一画成白色线稿
+const PHONE_ICO = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25c1.1.37 2.3.57 3.6.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z"/></svg>';
+
+function phoneIco() {
+  return el("span", { class: "phone-act-ico", "aria-hidden": "true", html: PHONE_ICO });
+}
+
 function phoneButton(label, onclick, opt) {
   opt = opt || {};
   if (opt.hangup) {
@@ -78,15 +85,18 @@ function phoneButton(label, onclick, opt) {
       onclick,
     }, [label || "挂断"]);
   }
-  const copy = [el("span", { class: "phone-act-label" }, [label])];
-  if (opt.hint) copy.push(el("span", { class: "phone-act-hint" }, [opt.hint]));
+  // 「拨给阿明」画成通讯录里的一行：名字、号码类别、右边绿色拨号键
+  const dial = /^拨给(.+)$/.exec(label || "");
+  const copy = [el("span", { class: "phone-act-label" }, [dial ? dial[1] : label])];
+  if (opt.hint || dial) copy.push(el("span", { class: "phone-act-hint" }, [opt.hint || "手提电话"]));
   return el("button", {
     type: "button",
     class: "phone-act" + (opt.done ? " done" : ""),
+    "aria-label": label,
     onclick,
   }, [
-    el("span", { class: "phone-act-ico", "aria-hidden": "true" }, ["📞"]),
     el("span", { class: "phone-act-copy" }, copy),
+    phoneIco(),
   ]);
 }
 
@@ -337,6 +347,10 @@ function drawTalk() {
     b.goto();
     return;
   }
+  if (!b.text && !b.choices && !b.act && t.beats[t.i + 1]) {
+    advanceBeat(b);
+    return;
+  }
   clearStage();
   typeQueue = [];
   if (t.kind === "phone") stage.append(drawPhone(b));
@@ -385,7 +399,7 @@ function drawIncoming() {
           t.callSec = 0;
           drawTalk();
         },
-      }, [el("span", { class: "phone-act-ico", "aria-hidden": "true" }, ["📞"]), "接听"]),
+      }, [phoneIco(), "接听"]),
     ]),
   ]));
   return el("div", { class: "talk phone" + phoneEnterClass(), "aria-live": "polite" }, kids);
@@ -405,9 +419,10 @@ function awenVisible(prompt) {
 
 function drawFace(b) {
   const choosing = !!b.choices;
-  const stageDir = !b.who && !choosing;
-  const speaker = choosing ? "章慧琪" : speakerOf(b);
   const prompt = choosing ? (b.prompt && b.prompt !== "……" ? b.prompt : "") : (b.text || "");
+  // 选项上面那句提示是旁白，不挂章慧琪的名字和头像
+  const stageDir = choosing ? !!prompt : !b.who;
+  const speaker = choosing ? "章慧琪" : speakerOf(b);
   const awen = awenVisible(prompt);
   const bgId = awen ? AWEN_BG : talkBgId();
   const box = el("div", { class: "talk face" + (stageDir ? " narr" : "") + (awen ? " awen-photo" : ""), "aria-live": "polite" });
@@ -427,8 +442,7 @@ function drawFace(b) {
   if (!stageDir) body.append(el("div", { class: "talk-name " + tone }, [speaker]));
 
   if (prompt) {
-    const gaze = b.gaze === "you" ? " gaze-you" : b.gaze === "him" ? " gaze-him" : "";
-    const cls = (stageDir ? "stage-dir" : tone) + (awen ? " awen-line" : "") + gaze;
+    const cls = (stageDir ? "stage-dir" : tone) + (awen ? " awen-line" : "");
     // 旁白不加普通话行；角色话读 b.zh
     // 旁白走 narr-in 淡入，不打字
     if (stageDir || choosing) {
@@ -473,16 +487,17 @@ function drawPhone(b) {
   const box = el("div", { class: "talk phone" + phoneEnterClass(), "aria-live": "polite" });
   const bgId = talkBgId();
   if (bgId) box.append(imgSlot(bgId, "talk-bg", t.loc || "通话"));
-  const narr = !b.choices && !b.who;
+  const cue = b.choices && b.prompt && b.prompt !== "……";
+  const narr = b.choices ? cue : !b.who;
   const tone = whoClass(b.choices ? "章慧琪" : (b.who || speaker));
-  const phoneLine = b.choices
-    ? el("div", { class: "talk-text " + tone }, [b.prompt || "……"])
-    : narr
-      ? el("div", { class: "talk-text stage-dir" }, [b.text || ""])
+  const phoneLine = narr
+    ? el("div", { class: "talk-text stage-dir" }, [b.choices ? b.prompt : (b.text || "")])
+    : b.choices
+      ? el("div", { class: "talk-text " + tone }, ["……"])
       : typeBody(talkBody(b.text || "", b.zh, tone));
-  if (narr) typeLater(phoneLine);
+  if (narr && !b.choices) typeLater(phoneLine);
   const script = el("div", { class: "phone-script" }, [
-    el("div", { class: "phone-line-who " + tone }, [b.choices ? "你说" : (b.who || (t.eavesdrop ? "隔门" : "听筒"))]),
+    narr ? "" : el("div", { class: "phone-line-who " + tone }, [b.choices ? "你说" : b.who]),
     phoneLine,
   ]);
   const keys = b.choices
@@ -570,7 +585,8 @@ function drawMsg(b) {
 
 function msgBody(b, cls) {
   if (b.choices || !b.who) {
-    const plain = el("div", { class: "talk-text " + cls }, [b.choices ? (b.prompt || "……") : (b.text || "")]);
+    const cue = b.choices ? (b.prompt && b.prompt !== "……" ? b.prompt : "") : (b.text || "");
+    const plain = el("div", { class: "talk-text " + (cue ? "stage-dir" : cls) }, [cue || "……"]);
     if (!b.choices) typeLater(plain);
     return plain;
   }

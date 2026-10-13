@@ -74,7 +74,7 @@ const LEVELS = [
       { text: "日历上，夜里那卷录音", after: "08-13 的录音「只有水」", need: true, show: () => !!S.calOpen, done: () => ev("rec-water"), hint: "有一夜水管响，我开了录音。" },
       { text: "日历上别的日子", show: () => !!S.calOpen, count: () => [cnt(["08-01", "08-02", "08-03", "08-04", "08-05", "08-06", "08-07", "08-08", "08-09", "08-10", "08-11", "08-12", "08-13"], S.calSeen), 13], done: () => cnt(["08-01", "08-02", "08-03", "08-04", "08-05", "08-06", "08-07", "08-08", "08-09", "08-10", "08-11", "08-12", "08-13"], S.calSeen) >= 13 },
     ],
-    advance: { when: "8月14日　傍晚", where: "荣汇街后座", fn: () => twoWeekSummary(), modes: ["cal"] },
+    advance: { when: "8月14日　傍晚", where: "荣汇街后座", fn: () => twoWeekCalm(), modes: ["cal"] },
     next: "8月14日 傍晚　有人敲门",
     start: () => moveInStart(),
     gives: () => {
@@ -186,7 +186,7 @@ const LEVELS = [
       S.handed = Object.assign(S.handed || {}, { ok8: true });
       S.sorted = true;
       S.homework = { n: 8, body: HOMEWORK[8] };
-      seedNotes([["clinic2", "第二次。他信我写的时间，未信鬼。上一个时段拖过，他说不关我。"], ["bento", "楼下便当。姐夫叫我快回去，又低声叫他不要上门。像怕他真的会去。"]]);
+      seedNotes([["clinic2", "第二次。他信我写的时间，未信鬼。叫我有一夜不开录音。"], ["bento", "楼下便当。姐夫叫我快回去，又低声叫他不要上门。像怕他真的会去。"]]);
     },
   },
   {
@@ -233,7 +233,7 @@ const LEVELS = [
     goal: "再记一个礼拜，撑到星期六。",
     tasks: [
       { text: "8月31日夜车又转，打给他", need: true, done: () => noted("offhours"), hint: "车又转了，我想打给他。" },
-      { text: "去楼梯口看看", after: "周知道星期六有人来", need: true, show: () => noted("offhours"), done: () => ev("note-zhoutue"), hint: "楼梯口，我还没去。" },
+      { text: "去楼梯口看看", after: "周说星期六有人来", need: true, show: () => noted("offhours"), done: () => ev("note-zhoutue"), hint: "楼梯口，我还没去。" },
       { text: "日历点开三天，收成补充纸", need: true, show: () => noted("offhours"), count: () => [cnt(["09-01", "09-02", "09-04"], S.cal11), 3], done: () => ev("paper-06"), hint: "九月头。点开三天就够。" },
       { text: "发第三帖", need: true, done: () => flag("serial3"), hint: "讨论区，第三帖。" },
       { text: "表姐来电", show: () => noted("offhours"), done: () => flag("meiTue") },
@@ -285,7 +285,7 @@ const LEVELS = [
     },
   },
   {
-    part: 4, title: "罗医生的秘密", date: "9月7日 16:10", place: "澄心诊室、走廊、邮箱",
+    part: 4, title: "他说整理好了", date: "9月7日 16:10", place: "澄心诊室、走廊、邮箱",
     clock: "2014年9月7日 周日 16:10",
     goal: "去拿他说整理好的笔记。",
     tasks: [
@@ -308,7 +308,7 @@ const LEVELS = [
       S.miss = { chen: true, att1: true, att2: true };
       seedItems(["mail-dirt"]);
       seedNotes([
-        ["forget", "事实他记得。画面跟不回白房。"],
+        ["forget", "他说本子不在，却讲得出一串细节。"],
         ["stolen", "上门行程被删了。现场笔记不见。"],
         ["dirt", "二〇〇四年十一月，维港大学，女学生坠楼。名字涂掉，露出一个鱼。"],
         ["zhou-day", "周说他白天来过。他下午明明在诊所。"],
@@ -317,29 +317,31 @@ const LEVELS = [
     },
   },
   {
-    part: 4, title: "你知道", date: "9月7日 夜", place: "后座、电脑、走廊",
-    clock: "2014年9月7日 周日 23:40",
-    goal: "今晚等他，这栋楼和周得弄清楚。",
+    part: 4, title: "夜里有人敲门", date: "9月7日 夜", place: "后座、电脑、走廊",
+    clock: "2014年9月7日 周日 23:10",
+    goal: "录音叫了我的名字。今晚他会不会来。",
     tasks: [
       { text: "打给他", after: "录音叫了我的名字，打给他", need: true, done: () => flag("calledMing2"), hint: "打给他。" },
       { text: "他到门口，听他讲", after: "他来了，在门口叫出一个字", need: true, show: () => flag("calledMing2"), done: () => noted("countbreath"), hint: "" },
       { text: "有人敲门，听他要什么", after: "周来要天台钥匙", show: () => noted("countbreath"), done: () => flag("roofKeyAsked"), hint: "" },
       { text: "还没看的旧闻：西贡、市建局", after: "翻了西贡山泥、市建局荣汇街两篇", show: () => flag("calledMing2") && !noted("twofiles"), done: () => noted("twofiles") },
       { text: "想想天台白天的样子", after: "想起天台白天的样子", show: () => flag("calledMing2"), done: () => !!S.searchRoof },
-      { text: "上楼前问他白天", after: "他认：站在楼梯，没有按门铃", show: () => noted("countbreath"), done: () => noted("day-admit") },
+      { text: "上楼前问他白天", after: "他认：站在楼梯口，没有按门铃", show: () => noted("countbreath"), done: () => noted("day-admit") },
+      { text: "他上去之后，打给家豪", after: "零点二十分打给家豪，他说马上到", show: () => noted("roofpause"), done: () => flag("calledChen") },
     ],
     advance: { when: "9月7日　夜", where: "他来了", fn: () => mingReturn(), modes: ["search"], ready: () => flag("calledMing2") },
-    next: "约一小时后　后楼梯",
+    next: "零点四十一分　后楼梯",
     start: () => nightName(),
     gives: () => {
       flag("calledMing2", true);
       flag("roofKeyAsked", true);
       flag("keptMing", true);
+      flag("calledChen", true);
       seedItems(["rec-name"]);
       seedNotes([
         ["namecall", "鬼叫我的名字。它说我知。"],
         ["countbreath", "他叫出了一个字：鱼。"],
-        ["day-admit", "他说白天站在楼梯。没按门铃。不该问我。"],
+        ["day-admit", "他说白天站在楼梯口，没按门铃。没问过我就来，不该。"],
       ]);
     },
   },
@@ -701,7 +703,10 @@ function drawCard() {
   clearStage();
   try {
     const c = S.card || {};
-    if (c.type === "cut") return drawCut(c);
+    if (c.type === "cut") {
+      if (c.playing && stage.querySelector(".desk.cut")) return;
+      return drawCut(c);
+    }
     if (c.type === "test") {
       const kids = [
         el("p", { class: "talk-loc" }, ["暗度　第一章　分段测试"]),

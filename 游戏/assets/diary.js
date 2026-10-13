@@ -9,7 +9,7 @@ const ITEMS = {
   "rec-axuan": { kind: "录音", title: "阿轩，返嚟食饭", time: "2014年8月15日 凌晨", body: "女人声从储物室门底那边来：「阿轩，返嚟食饭。」声线稳，像留过言。门缝下没有光。", key: "阿轩，返嚟食饭" },
   "note-dry": { kind: "记下", title: "鞋是干的", time: "2014年8月15日", body: "周问我脚湿不湿。我低头看：鞋是干的。", key: "鞋是干的" },
   "photo-car-out": { kind: "照片", title: "出门前的车", time: "2014年8月16日 14:30", body: "十五号早上，我把地上的车捡起来，放回茶几那圈晒痕里。敞篷。车头朝窗。茶几靠着储物室那面墙。出门前拍的。", img: pic(5, "证据-出门前的车"), key: "车头朝窗" },
-  "photo-tap-out": { kind: "照片", title: "出门前的水喉", time: "2014年8月16日 14:30", body: "拧紧。等了十秒，没有滴——八月三日修好之后一直这样。出门前拍的。", img: pic(5, "证据-出门前的水喉"), key: "没有滴" },
+  "photo-tap-out": { kind: "照片", title: "出门前的水喉", time: "2014年8月16日 14:30", body: "拧紧。等了十秒，没有滴。出门前拍的。", img: pic(5, "证据-出门前的水喉"), key: "没有滴" },
   "paper-16": { kind: "纸", title: "十六号晚", time: "2014年8月16日", body: "二十一点四十。我返到。车已经转。水已经滴。我未离开客厅。出门前两张相：车头朝窗，水喉没有滴。", key: "车已经转" },
   "paper-20": { kind: "纸", title: "离开两分钟", time: "2014年8月20日", body: "二十三点十七。坐在厅里望住两分钟，什么都不动。入厕所两分钟，出来门底先有湿脚印。我在厅里望住，佢唔动。", key: "入厕所两分钟" },
   "paper-norec": { kind: "纸", title: "没有录音的一夜", time: "2014年8月23日", body: "手机留在茶几。录音键是我自己按掉的。我去洗脸。门缝看得见厅。回来车在地上，头朝储物室。录音键仍然关着。这夜没有声音可以交。", key: "录音键是我自己按掉的" },
@@ -17,7 +17,7 @@ const ITEMS = {
   "note-meiwater": { kind: "电话", title: "表姐听到水声", time: "2014年8月27日 夜", body: "我拧紧了水喉。表姐在电话那头仍然听到滴水。她听到的是水，不是阿轩。", key: "仍然听到滴水" },
   "paper-30": { kind: "纸", title: "带去第三次的对照", time: "2014年8月27日", body: "", key: "头两个礼拜" },
   "obj-referral": { kind: "信封", title: "抽屉缝", time: "2014年8月30日", body: "抽屉缝里一个折好的信封，封口朝里。回形针卡住一角，只露出两个字：……转介。其余压在节拍器底下。", img: pic(10, "示意-抽屉缝"), key: "……转介" },
-  "note-zhoutue": { kind: "记下", title: "我没讲", time: "2014年8月31日 夜", body: "周说：下星期六又有人上嚟？我煮糖水。我没有同他讲过。", key: "我没有同他讲过" },
+  "note-zhoutue": { kind: "记下", title: "我没讲", time: "2014年8月31日 夜", body: "周说：下星期六有人上来？我煮糖水。我没有同他讲过——连我自己都不知道。", key: "我没有同他讲过" },
   "obj-zhoucal": { kind: "物件", title: "周的月历", time: "2014年8月31日 夜", body: "前座门边，银行送的月历。周先生的字：\n8/1　后座入伙\n8/3　换胶圈\n8/10　租。问电话——冇。\n8/16　入（用笔涂掉了）\n8/23　六　出\n8/30　六　出\n翻到九月，只写了一格：\n9/6　六　医生", img: pic(11, "证据-周的月历"), key: "9/6　六　医生" },
   "paper-06": { kind: "纸", title: "带去第四次的补充", time: "2014年9月5日", body: "", key: "九月" },
   "photo-back": { kind: "照片", title: "全家福背面", time: "2014年9月6日 夜", body: "相框翻过来，背面一行铅笔字：\n丽芬　阿轩　十二乡村屋门口　二〇一二年春", img: pic(13, "证据-全家福背面"), key: "十二乡村屋门口　二〇一二年春" },
@@ -592,7 +592,8 @@ function ensureCompareMaterials() {
       S.tonight[id] = true;
     }
   });
-  const must = ["note-dry", "rec-water", "paper-16", "paper-20", "photo-sill", "photo-print"];
+  const must = ["note-dry", "rec-water", "paper-16", "paper-20", "photo-print"];
+  if (flag("photoSill")) must.push("photo-sill");
   if (noted("voice") || hasEvidence("rec-axuan") || (S.tonight && S.tonight.storage)) must.push("rec-axuan");
   if (hasEvidence("paper-norec") || S.level >= 9) must.push("paper-norec");
   if (hasEvidence("note-meiwater")) must.push("note-meiwater");
@@ -603,7 +604,8 @@ function ensureCompareMaterials() {
       S.tonight[id] = true;
     });
     S.tonight.print = true;
-    seedItems(["note-dry", "rec-water", "rec-axuan", "paper-16", "paper-20", "paper-norec", "photo-sill", "photo-print"]
+    seedItems(["note-dry", "rec-water", "rec-axuan", "paper-16", "paper-20", "paper-norec", "photo-print"]
+      .concat(flag("photoSill") ? ["photo-sill"] : [])
       .filter((id) => !hasEvidence(id)));
   }
 }

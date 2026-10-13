@@ -109,7 +109,6 @@ const initial = () => ({
   favs: [],
   modal: null,
   flags: {},
-  slateOff: {},
   notes: [],
   evidence: [],
   remark: "我需要一个能住的地方。",

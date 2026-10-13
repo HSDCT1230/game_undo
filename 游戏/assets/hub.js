@@ -112,7 +112,7 @@ function hubActions(d, p) {
   });
   const hint = levelHint();
   if (hint) box.append(el("p", { class: "hub-hint" }, [hint]));
-  else if (levelAdvance()) box.append(el("p", { class: "hub-hint ready" }, ["可以往下了。"]));
+  else if (levelAdvance()) box.append(el("p", { class: "hub-hint ready" }, ["要做的都做完了。"]));
   return box;
 }
 

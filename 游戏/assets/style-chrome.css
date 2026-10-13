@@ -612,51 +612,16 @@ a:hover {
   text-shadow: 0 1px #174779;
 }
 
-.desk.has-slate .laptop {
-  flex: 1 1 auto;
+/* 网页、搜索页、两周日历也用右边那张便条写任务提示：桌面给便条让出右侧，手机竖屏让出底部 */
+#stage:has(> .task-note) > .desk {
+  padding-right: 288px;
 }
-
-.slate {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: max-content;
-  max-width: min(520px, calc(100% - 24px));
-  margin: 8px auto 0;
-  padding: 4px 4px 4px 8px;
-  background: #fff8dc;
-  border: 1px solid #c4b07a;
-  box-shadow: 1px 2px 0 rgba(0, 0, 0, .18);
-  color: #3c3424;
+@media (max-width: 720px) {
+  #stage:has(> .task-note) > .desk {
+    padding-right: 0;
+    padding-bottom: calc(var(--fork-h, 0px) + 4px);
+  }
 }
-.slate-k {
-  flex: none;
-  padding: 0 5px;
-  background: #c9a24a;
-  color: #fff;
-  font-size: 11px;
-  line-height: 18px;
-  letter-spacing: 0.12em;
-}
-.slate p {
-  margin: 0;
-  font-size: 13px;
-  line-height: 1.4;
-}
-.slate-ok {
-  flex: none;
-  width: 22px;
-  height: 22px;
-  padding: 0;
-  border: none;
-  background: transparent;
-  color: #8a7a58;
-  font: inherit;
-  font-size: 15px;
-  line-height: 1;
-  cursor: pointer;
-}
-.slate-ok:hover { color: #3c3424; }
 
 .modal .sheet.prompt h3 {
   color: #666;
@@ -1291,35 +1256,40 @@ a:hover {
   font-weight: 400;
 }
 button.phone-act {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 10px;
-  width: auto;
-  max-width: 100%;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  max-width: 320px;
   margin: 0;
-  padding: 6px 16px 6px 6px;
-  border: 0;
-  border-radius: 999px;
-  background: #16202a;
-  color: #e8f3ea;
-  font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
+  padding: 9px 10px 9px 16px;
+  border: 1px solid #1f2731;
+  background: #0c1117;
+  color: #e6ebf0;
+  font-family: "Helvetica Neue", "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
   font-size: 14px;
   line-height: 1.3;
   text-align: left;
-  box-shadow: none;
+  box-shadow: 0 6px 16px rgba(0,0,0,.35);
   cursor: pointer;
+}
+button.phone-act .phone-act-label {
+  font-size: 16px;
+  font-weight: 600;
 }
 button.phone-act .phone-act-ico {
   display: grid;
   place-items: center;
   flex: 0 0 auto;
-  width: 34px;
-  height: 34px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
-  background: #2f9e5d;
-  font-size: 16px;
+  background: #2fae5a;
+  color: #fff;
   line-height: 1;
 }
+.phone-act-ico svg { display: block; }
 button.phone-act.hangup .phone-act-ico {
   background: #b64034;
   transform: rotate(135deg);
@@ -1330,12 +1300,13 @@ button.phone-act .phone-act-copy {
   min-width: 0;
 }
 button.phone-act .phone-act-hint {
-  color: #8b98a6;
-  font-size: 11px;
+  margin-top: 2px;
+  color: #7b8590;
+  font-size: 12px;
   font-weight: 400;
 }
-button.phone-act:hover { background: #1e2c38; }
-button.phone-act:hover .phone-act-ico { background: #3cb56d; }
+button.phone-act:hover { background: #121a23; border-color: #2c3742; }
+button.phone-act:hover .phone-act-ico { background: #3cc26a; }
 button.phone-act.hangup:hover .phone-act-ico { background: #d05548; }
 button.phone-act.done {
   opacity: 0.55;
@@ -1351,6 +1322,7 @@ button.phone-act.done {
 .talk.phone .phone-ops {
   align-items: center;
 }
+.talk.msg .phone-ops { margin-top: 16px; }
 .scene-actions > button.phone-act,
 .sheet .phone-ops > button.phone-act {
   width: auto;
@@ -1395,7 +1367,8 @@ button.phone-act.done {
   line-height: var(--lh-say-phone);
   white-space: pre-wrap;
 }
-.talk.phone .talk-text.stage-dir {
+.talk.phone .talk-text.stage-dir,
+.talk.msg .talk-text.stage-dir {
   font-family: "LXGW WenKai", "KaiTi", "楷体", "STKaiti", serif;
   letter-spacing: 0.04em;
 }
@@ -1467,18 +1440,300 @@ button.phone-act.done {
   font-size: 11px;
   letter-spacing: 0.18em;
 }
-.phone-mail-tip {
-  margin: 0 2px 10px;
-  color: #c4b496;
-  font-size: 12px;
+/* 邮件：锁屏通知 → 收件箱 → 读信，仿 2014 年 iOS 7 的暗色版 */
+.mail-phone {
+  font-family: "Helvetica Neue", "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+  color: #e6ebf0;
+  text-align: left;
+}
+.mail-status {
+  flex-shrink: 0;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 5px 12px 3px;
+  color: #c9d1d9;
+  font-size: 11px;
+}
+.mail-status .mail-batt { justify-self: end; }
+.mail-status .mail-batt::after {
+  content: "";
+  display: inline-block;
+  width: 18px;
+  height: 8px;
+  margin-left: 4px;
+  vertical-align: -1px;
+  border: 1px solid currentColor;
+  border-radius: 2px;
+  background: linear-gradient(90deg, currentColor 64%, transparent 64%) content-box;
+  padding: 1px;
+}
+.mail-phone.lock {
+  background:
+    linear-gradient(rgba(6, 9, 13, .35), rgba(6, 9, 13, .7)),
+    radial-gradient(circle at 30% 30%, #3a3f46, #14181d 70%);
+}
+.mail-lock {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 26px 12px 14px;
+}
+.mail-lock-time {
+  margin: 0;
+  font-size: 64px;
+  font-weight: 200;
+  line-height: 1;
+  letter-spacing: 0.02em;
+}
+.mail-lock-date {
+  margin: 8px 0 34px;
+  font-size: 14px;
+  font-weight: 300;
+  color: #d5dbe1;
+}
+.mail-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 10px;
+  background: rgba(20, 24, 30, .72);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.mail-note:hover { background: rgba(32, 38, 46, .82); }
+.mail-note-icon {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  background:
+    linear-gradient(155deg, transparent 46%, rgba(255,255,255,.9) 47%, rgba(255,255,255,.9) 53%, transparent 54%) center 9px / 18px 10px no-repeat,
+    linear-gradient(25deg, transparent 46%, rgba(255,255,255,.9) 47%, rgba(255,255,255,.9) 53%, transparent 54%) center 9px / 18px 10px no-repeat,
+    linear-gradient(#fff, #fff) center / 18px 12px no-repeat,
+    linear-gradient(#2a8ef0, #1a6fd6);
+}
+.mail-note-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.mail-note-text b {
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mail-note-text span { font-size: 13px; }
+.mail-note-text small { color: #a7b0ba; font-size: 12px; }
+.mail-note-when { flex-shrink: 0; color: #8d97a1; font-size: 11px; }
+.mail-slide {
+  margin-top: auto;
+  padding: 10px 18px;
+  border: 0;
+  background: none;
+  color: #cfd6dd;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 300;
+  cursor: pointer;
+}
+.mail-slide::before { content: "›  "; }
+.mail-slide:hover { color: #fff; }
+.mail-bar {
+  flex-shrink: 0;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 8px 10px 9px;
+  border-bottom: 1px solid #1f2731;
+  font-size: 15px;
+}
+.mail-bar b { font-weight: 600; }
+.mail-back {
+  justify-self: start;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #8fb4d9;
+  font: inherit;
+  cursor: pointer;
+}
+span.mail-back { cursor: default; }
+.mail-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+}
+.mail-row {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 10px 14px 11px 26px;
+  border: 0;
+  border-bottom: 1px solid #1a222b;
+  background: none;
+  color: #9aa4ae;
+  font: inherit;
+  text-align: left;
+}
+button.mail-row { cursor: pointer; }
+button.mail-row:hover { background: #121a23; }
+.mail-row > span { display: block; }
+.mail-dot {
+  position: absolute;
+  left: 10px;
+  top: 16px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.mail-row.unread .mail-dot { background: #c99a52; }
+.mail-row-top {
+  display: flex !important;
+  justify-content: space-between;
+  gap: 10px;
+}
+.mail-row-top b {
+  overflow: hidden;
+  color: #d4dbe2;
+  font-size: 15px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mail-row.unread .mail-row-top b { color: #f2f5f8; font-weight: 600; }
+.mail-row-top small { flex-shrink: 0; color: #7b8590; font-size: 12px; }
+.mail-row-subj { margin-top: 2px; color: #c2cad2; font-size: 14px; }
+.mail-row.unread .mail-row-subj { color: #e6ebf0; }
+.mail-row-text {
+  display: -webkit-box !important;
+  margin-top: 2px;
+  overflow: hidden;
+  color: #7b8590;
+  font-size: 13px;
+  line-height: 1.4;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.mail-clip {
+  display: inline-block;
+  width: 7px;
+  height: 12px;
+  margin-left: 6px;
+  vertical-align: -1px;
+  border: 1.5px solid #7b8590;
+  border-radius: 4px;
+  transform: rotate(35deg);
+}
+.mail-updated {
+  flex-shrink: 0;
+  margin: 0;
+  padding: 7px 0 4px;
+  color: #6c7681;
+  font-size: 11px;
+  text-align: center;
+}
+.mail-read {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding: 10px 16px 16px;
+}
+.mail-read .mail-head {
+  margin: 0;
+  padding: 6px 0;
   line-height: 1.5;
+  border-bottom: 1px solid #1a222b;
+  color: #c9d1d9;
+  font-size: 13px;
+  word-break: break-all;
 }
-.phone-row.mail-new {
-  border-color: #c4a06a;
-  background: rgba(196, 160, 106, 0.12);
+.mail-head span { margin-right: 8px; color: #6f7a85; }
+.mail-subj {
+  margin: 12px 0 2px;
+  color: #f2f5f8;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0;
 }
-.phone-row.mail-new .phone-row-name { color: #f3eadc; }
-.phone-row.mail-new small { color: #e2c48a; }
+.mail-date { margin: 0 0 14px; color: #6f7a85; font-size: 12px; }
+.mail-read .mail-text {
+  margin: 0 0 18px;
+  color: #e6ebf0;
+  font-size: 15px;
+  line-height: 1.6;
+}
+.mail-atts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.mail-att {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px;
+  border: 1px solid #1f2731;
+  border-radius: 6px;
+  background: #111820;
+  color: #c9d1d9;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.mail-att:hover { border-color: #3a4756; }
+.mail-att.seen { color: #7b8590; }
+.mail-att-img {
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-radius: 3px;
+  background: #1a222b;
+}
+.mail-att-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.mail-att-name { font-size: 12px; word-break: break-all; }
+.mail-att small { color: #6f7a85; font-size: 11px; }
+.mail-chin {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+  padding: 8px 0 10px;
+  background: #07090c;
+}
+.mail-phone .mail-home {
+  width: 38px;
+  height: 38px;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+.mail-home::before {
+  content: "";
+  display: block;
+  width: 34px;
+  height: 34px;
+  margin: auto;
+  box-sizing: border-box;
+  border: 2px solid #2c333b;
+  border-radius: 50%;
+}
+.mail-home:hover::before { border-color: #56606b; }
 .phone-row {
   display: flex;
   align-items: baseline;
@@ -1853,43 +2108,6 @@ button.phone-act.done {
   flex: 1 1 auto;
   min-height: 0;
   max-height: none;
-}
-.search-desk .slate {
-  flex: 0 0 auto;
-  align-self: center;
-  margin-top: 6px;
-}
-.search-desk .search-dock.scene-actions.fork {
-  position: relative;
-  z-index: 1;
-  top: auto;
-  right: auto;
-  bottom: auto;
-  left: auto;
-  flex: 0 0 auto;
-  width: min(1040px, 100%);
-  max-width: 1040px;
-  margin: 8px auto 0;
-  padding: 10px 20px 12px 36px;
-  transform: none;
-  flex-direction: row;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px 18px;
-}
-.search-desk .search-dock.scene-actions.fork::before {
-  top: -18px;
-  left: 28px;
-}
-.search-desk .search-dock .hub-hint {
-  flex: 1 1 100%;
-  margin: 0 0 2px;
-  color: #6a5344;
-}
-.search-desk .search-dock > button {
-  flex: 1 1 12rem;
-  width: auto;
-  min-width: 12rem;
 }
 #playbar {
   position: relative;
@@ -4885,7 +5103,6 @@ button.phone-act.done {
 .ask-btn { border-color: #74b8e6; }
 
 .clinic-seg { color: #c4b496; font-size: var(--type-ui); }
-.cal-hint { margin: 6px 0; color: #c4b496; font-size: var(--type-ui); }
 .rec-panel { display: flex; gap: 8px; align-items: center; margin: 8px 0; }
 
 /* 录音：场景底栏便条，不要居中白纸盒 */
@@ -4903,23 +5120,6 @@ button.phone-act.done {
   padding-right: 4px;
   font-size: 15px;
   line-height: 1.45;
-}
-
-/* 带路过场：你看／他看（暗底旁白，暖褐与冷蓝分开） */
-.talk.face .talk-text.stage-dir.gaze-you,
-.talk.face .talk-text.stage-dir.gaze-him {
-  max-width: 34rem;
-  padding: 0 0 0 14px;
-  border-left: 3px solid;
-  text-align: left;
-}
-.talk.face .talk-text.stage-dir.gaze-you {
-  border-color: #c4a06a;
-  color: #f3eadc;
-}
-.talk.face .talk-text.stage-dir.gaze-him {
-  border-color: #74b8e6;
-  color: #9fd0f0;
 }
 
 /* 开场卡、结束卡 */
@@ -5772,13 +5972,17 @@ img.map-photo {
   margin: 0;
   border: 0;
   background: #000;
+  overflow: hidden;
 }
+.cut-plate .img-mark { display: none; }
 .cut-plate img {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
+  /* 竖屏裁切时跟着 --origin，别把「一滴水」右侧水龙头裁掉 */
+  object-position: var(--origin, 50% 50%);
   transform-origin: var(--origin, 50% 50%);
 }
 .cut-frame.push img { animation: cut-push var(--dur, 7s) linear both paused; }
@@ -6118,8 +6322,6 @@ html.screen-on body::after {
   }
   #stage > .scene-actions.fork .hub-hint,
   #stage > .scene-actions.fork .clinic-seg { font-size: 14px; }
-  .search-desk .search-dock.scene-actions.fork > button { min-width: 0; min-height: 32px; }
-
   .room.scene-fit > .room-note,
   .clinic.scene-fit > .room-note {
     right: 16px;
@@ -6163,8 +6365,6 @@ html.screen-on body::after {
   .chat-close { width: 34px; height: 30px; }
   .window-x { min-width: 34px; min-height: 28px; margin: -6px -4px -6px 4px; font-size: 16px; line-height: 28px; }
   #map-close { min-height: 32px; }
-  .slate-ok { width: 34px; height: 34px; }
-
   .post-meta, .post-actions, .post-new, .post-reply-time, .rent small,
   .phone-status, .sms-status, .phone-fakekeys, .sms-time,
   .chat-contact span, .chat-choices::before, .chat-status, .bubble-meta { font-size: 11px; }
