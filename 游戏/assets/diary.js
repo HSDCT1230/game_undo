@@ -1,28 +1,30 @@
 /* ---------- 日记簿：她自己的纸、四条、屋里的样子，和几种「拿出来」 ---------- */
 
 const ITEMS = {
-  "obj-keytag": { kind: "物件", title: "钥匙牌", time: "2014年8月1日", body: "钥匙圈上绑着一块硬纸牌，周先生的字：\n大门　铁闸　天台（挂门内小钩）\n水喉坏咗拍门。唔使自己整。\n天台晾衫用。", img: pic(2, "证据-钥匙牌"), key: "水喉坏咗拍门" },
+  "obj-keytag": { kind: "物件", title: "钥匙牌", time: "2014年8月1日", body: "钥匙圈上硬纸牌，周先生的字：\n大门　铁闸　天台（挂门内小钩）\n水喉坏咗拍门。唔使自己整。\n天台晾衫用。", img: pic(2, "证据-钥匙牌"), key: "水喉坏咗拍门" },
   "rec-water": { kind: "录音", title: "只有水", time: "2014年8月13日 夜", body: "录音里只有水。没有人声。", key: "只有水" },
-  "letter-red": { kind: "信封", title: "红圈", time: "2014年8月14日 傍晚", body: "新闻纸一角。红笔圈的弧。他的拇指挡住圈里的字。", img: pic(4, "证据-红圈信封"), key: "红笔圈" },
-  "photo-sill": { kind: "照片", title: "窗台童码", time: "2014年8月15日 凌晨", body: "把自己的鞋并上去比过：小两号。今晚没下雨。水是新的。搬进来时那圈是干的。", img: pic(4, "证据-窗台童码"), key: "小两号" },
+  "letter-red": { kind: "信封", title: "红圈", time: "2014年8月14日 傍晚", body: "新闻纸一角。红笔圈。他的拇指挡住圈里的字。", img: pic(4, "证据-红圈信封"), key: "红笔圈" },
+  "photo-sill": { kind: "照片", title: "窗台童码", time: "2014年8月15日 凌晨", body: "鞋并上去比：小两号。今晚没下雨。水是新的。搬进来时那圈是干的。", img: pic(4, "证据-窗台童码"), key: "小两号" },
   "photo-print": { kind: "照片", title: "门底湿脚印", time: "2014年8月15日 凌晨", body: "门底湿脚印，到一半停住。", img: pic(4, "证据-门底湿脚印"), key: "门底湿脚印" },
-  "rec-axuan": { kind: "录音", title: "阿轩，返嚟食饭", time: "2014年8月15日 凌晨", body: "女人声从储物室门底那边来：「阿轩，返嚟食饭。」声线稳，像留过言。门缝下没有光。", key: "阿轩，返嚟食饭" },
+  "rec-axuan": { kind: "录音", title: "阿轩，返嚟食饭", time: "2014年8月15日 凌晨", body: "女人声从储物室门底来：「阿轩，返嚟食饭。」声线稳。门缝下没有光。", key: "阿轩，返嚟食饭" },
   "note-dry": { kind: "记下", title: "鞋是干的", time: "2014年8月15日", body: "周问我脚湿不湿。我低头看：鞋是干的。", key: "鞋是干的" },
-  "photo-car-out": { kind: "照片", title: "出门前的车", time: "2014年8月16日 14:30", body: "十五号早上，我把地上的车捡起来，放回茶几那圈晒痕里。敞篷。车头朝窗。茶几靠着储物室那面墙。出门前拍的。", img: pic(5, "证据-出门前的车"), key: "车头朝窗" },
+  "photo-car-out": { kind: "照片", title: "出门前的车", time: "2014年8月16日 14:30", body: "十五号早上，车捡回茶几晒痕里。敞篷。车头朝窗。出门前拍的。", img: pic(5, "证据-出门前的车"), key: "车头朝窗" },
   "photo-tap-out": { kind: "照片", title: "出门前的水喉", time: "2014年8月16日 14:30", body: "拧紧。等了十秒，没有滴。出门前拍的。", img: pic(5, "证据-出门前的水喉"), key: "没有滴" },
   "paper-16": { kind: "纸", title: "十六号晚", time: "2014年8月16日", body: "二十一点四十。我返到。车已经转。水已经滴。我未离开客厅。出门前两张相：车头朝窗，水喉没有滴。", key: "车已经转" },
-  "paper-20": { kind: "纸", title: "离开两分钟", time: "2014年8月20日", body: "二十三点十七。坐在厅里望住两分钟，什么都不动。入厕所两分钟，出来门底先有湿脚印。我在厅里望住，佢唔动。", key: "入厕所两分钟" },
-  "paper-norec": { kind: "纸", title: "没有录音的一夜", time: "2014年8月23日", body: "手机留在茶几。录音键是我自己按掉的。我去洗脸。门缝看得见厅。回来车在地上，头朝储物室。录音键仍然关着。这夜没有声音可以交。", key: "录音键是我自己按掉的" },
+  "paper-20": { kind: "纸", title: "离开两分钟", time: "2014年8月20日", body: "二十三点十七。厅里望住两分钟，不动。入厕所两分钟，出来门底先有湿脚印。我在厅里望住，佢唔动。", key: "入厕所两分钟" },
+  "paper-norec": { kind: "纸", title: "没有录音的一夜", time: "2014年8月23日", body: "手机留在茶几。录音键是我自己按掉的。去洗脸。门缝看得见厅。回来车在地上，头朝储物室。录音键仍然关着。", key: "录音键是我自己按掉的" },
   "note-notsaid": { kind: "记下", title: "医生没这样讲", time: "2014年8月24日", body: "姐夫说：佢话你精神唔太好。阿明没有这样讲过。", key: "阿明没有这样讲过" },
-  "note-meiwater": { kind: "电话", title: "表姐听到水声", time: "2014年8月27日 夜", body: "我拧紧了水喉。表姐在电话那头仍然听到滴水。她听到的是水，不是阿轩。", key: "仍然听到滴水" },
-  "paper-30": { kind: "纸", title: "带去第三次的对照", time: "2014年8月27日", body: "", key: "头两个礼拜" },
-  "obj-referral": { kind: "信封", title: "抽屉缝", time: "2014年8月30日", body: "抽屉缝里一个折好的信封，封口朝里。回形针卡住一角，只露出两个字：……转介。其余压在节拍器底下。", img: pic(10, "示意-抽屉缝"), key: "……转介" },
-  "note-zhoutue": { kind: "记下", title: "我没讲", time: "2014年8月31日 夜", body: "周说：下星期六有人上来？我煮糖水。我没有同他讲过——连我自己都不知道。", key: "我没有同他讲过" },
+  "note-meiwater": { kind: "电话", title: "表姐听到水声", time: "2014年8月27日 夜", body: "我拧紧了水喉。表姐在电话那头仍然听到滴水。听到的是水，不是阿轩。", key: "仍然听到滴水" },
+  "paper-30": { kind: "纸", title: "第三次对照", time: "2014年8月27日", body: "", key: "头两个礼拜" },
+  "obj-referral": { kind: "信封", title: "抽屉缝", time: "2014年8月30日", body: "抽屉缝里折好的信封，封口朝里。回形针卡住一角，露出：……转介。其余压在节拍器底下。", img: pic(10, "示意-抽屉缝"), key: "……转介" },
+  "note-zhoutue": { kind: "记下", title: "我没讲", time: "2014年8月31日 夜", body: "周说：下星期六有人上来？我煮糖水。我没有同他讲过。", key: "我没有同他讲过" },
   "obj-zhoucal": { kind: "物件", title: "周的月历", time: "2014年8月31日 夜", body: "前座门边，银行送的月历。周先生的字：\n8/1　后座入伙\n8/3　换胶圈\n8/10　租。问电话——冇。\n8/16　入（用笔涂掉了）\n8/23　六　出\n8/30　六　出\n翻到九月，只写了一格：\n9/6　六　医生", img: pic(11, "证据-周的月历"), key: "9/6　六　医生" },
-  "paper-06": { kind: "纸", title: "带去第四次的补充", time: "2014年9月5日", body: "", key: "九月" },
-  "photo-back": { kind: "照片", title: "全家福背面", time: "2014年9月6日 夜", body: "相框翻过来，背面一行铅笔字：\n丽芬　阿轩　十二乡村屋门口　二〇一二年春", img: pic(13, "证据-全家福背面"), key: "十二乡村屋门口　二〇一二年春" },
-  "paper-ming": { kind: "纸", title: "他留下的一页", time: "2014年9月6日 夜", body: "压在玩具车下面，从他本子上撕下来的一页：\n9/6　21:52　荣汇街后座\n水喉：拧紧后约 3 秒再滴。人手可做到。\n车：头朝储物室门。\n走廊尽头——（这一行用力划掉了）\n不写「鬼」。", img: pic(13, "证据-笔记一页"), key: "不写「鬼」" },
-  "mail-dirt": { kind: "邮件", title: "你信紧的医生", time: "2014年9月7日", body: "二〇〇四年十一月，维港大学，一个女学生坠楼。新闻写男友罗某，自称有责任。名字涂掉，露出一个鱼。偷拍：有盖走廊，年轻的罗和一个长发女生，她望住他。没有全名，没有过程。", img: pic(14, "证据-你信紧的医生"), key: "名字涂掉，露出一个鱼" },
+  "paper-06": { kind: "纸", title: "第四次补充", time: "2014年9月5日", body: "", key: "九月" },
+  "photo-back": { kind: "照片", title: "全家福背面", time: "2014年9月6日 夜", body: "相框翻过来，背面铅笔字：\n丽芬　阿轩　十二乡村屋门口　二〇一二年春", img: pic(13, "证据-全家福背面"), key: "十二乡村屋门口　二〇一二年春" },
+  "paper-ming": { kind: "纸", title: "他留下的一页", time: "2014年9月6日 夜", body: "压在玩具车下面，从他本子撕下的一页：\n9/6　21:52　荣汇街后座\n水喉：拧紧后约 3 秒再滴。人手可做到。\n车：头朝储物室门。\n走廊尽头——（这一行用力划掉了）\n不写「鬼」。", img: pic(13, "证据-笔记一页"), key: "不写「鬼」" },
+  "mail-dirt": { kind: "邮件", title: "你信紧的医生", time: "2014年9月7日", body: "二〇〇四年十一月，维港大学，女学生坠楼。新闻写男友罗某，自称有责任。名字涂掉，露出一个鱼。偷拍：年轻的罗，旁边长发女生望住他。没有全名。", img: pic(14, "证据-你信紧的医生"), key: "名字涂掉，露出一个鱼" },
+  "fish-tag": { kind: "物件", title: "鱼牌", time: "2014年9月7日", body: "空抽屉底滑出一小块磨白塑料。鱼形。没有字。节拍器已经不在。", img: pic(14, "证据-鱼牌"), key: "没有字" },
+  "chen-wallet": { kind: "物件", title: "钱夹", time: "2014年9月7日", body: "走廊椅脚边黑色钱夹。透明套里表姐和陈家豪合照。夹层里的学生证发黄：年轻的罗医生。", img: pic(14, "证据-钱夹罗证件照"), key: "夹层里的学生证" },
   "rec-name": { kind: "录音", title: "章慧琪。你知", time: "2014年9月7日 夜", body: "先是阿轩，返嚟食饭。再低一句：章慧琪。你知。声从门底来。", key: "章慧琪。你知" },
 };
 
@@ -74,6 +76,8 @@ const ITEM_ABOUT = {
   "photo-back": ["周生"],
   "paper-ming": ["罗启明", "车", "水喉"],
   "mail-dirt": ["罗启明"],
+  "fish-tag": ["罗启明"],
+  "chen-wallet": ["表姐一家", "罗启明"],
   "rec-name": ["储物室门"],
 };
 
@@ -146,12 +150,12 @@ function fourRows() {
 
 function openFour() {
   showDiaryTool({
-    kind: "四条",
+    kind: "租房必需四条",
     build: (host) => {
       host.append(el("ul", { class: "four-list" }, fourRows()));
-      host.append(el("p", { class: "tool-note" }, [
-        S.known && S.known.rong ? "荣汇街 28 号：四条都过。" : "每个盘问一次，卡住边条，就划边条。",
-      ]));
+      if (S.known && S.known.rong) {
+        host.append(el("p", { class: "tool-note" }, ["荣汇街 28 号：四条都过。"]));
+      }
     },
   });
 }
@@ -162,8 +166,8 @@ const BASE = [
   { id: "car", name: "玩具车", mark: "玩具车", base: "车头朝窗。敞篷座位里没有灰。", tonight: "车头朝门，后来掉在地上朝储物室。" },
   { id: "tap", name: "厨房水龙头", mark: "关了还会滴一滴", base: "关了还会滴一滴。", tonight: "拧紧，三秒后又滴。" },
   { id: "storage", name: "储物室门", mark: "锁着，门底没有光", base: "锁着，门底没有光。", tonight: "门底有翻纸声。门缝下没有光。" },
-  { id: "sill", name: "主房窗台", mark: "一圈水印，是干的", base: "一圈水印，是干的。", tonight: "湿的童码。鞋并上去比过，小两号。" },
-  { id: "family", name: "全家福", mark: "挂得很正", base: "客厅墙上，挂得很正，相后两个纸箱。女人头发齐肩。", tonight: "" },
+  { id: "sill", name: "主房窗台", mark: "一圈水印，是干的", base: "一圈水印，是干的。", tonight: "湿的童码。鞋并上去比，小两号。" },
+  { id: "family", name: "全家福", mark: "挂得很正", base: "客厅墙上，挂得很正。相后两个纸箱。女人头发齐肩。", tonight: "" },
 ];
 const PRINT_ROW = { id: "print", name: "门底", base: "", tonight: "湿脚印，走到一半停住。" };
 
@@ -550,12 +554,12 @@ function clinicLogs() {
 /* ---------- 对照纸 ---------- */
 
 const COMPARE_ROWS = [
-  { id: "car", left: ["base:car"], right: ["tonight:car", "paper-16"], lt: "车头朝窗，放角落第二日仍在角落", rt: "车自己转，掉在地上朝储物室" },
+  { id: "car", left: ["base:car"], right: ["tonight:car", "paper-16"], lt: "车头朝窗，放角落第二日仍在", rt: "车自己转，掉在地上朝储物室" },
   { id: "tap", left: ["base:tap"], right: ["tonight:tap", "note-meiwater"], lt: "关了水喉滴一滴", rt: "拧紧三秒再滴" },
   { id: "rec", left: ["rec-water", "base:storage"], right: ["rec-axuan", "tonight:storage"], lt: "十三号录音只有水，门后很静", rt: "门底有声，录音有女人叫阿轩" },
   { id: "sill", left: ["base:sill"], right: ["photo-sill", "tonight:sill"], lt: "窗台水印是干的", rt: "湿童码，比我细两号" },
-  { id: "shoe", fixedLeft: "周没有问过我的鞋", right: ["note-dry"], rt: "周问我脚湿不湿，我的鞋是干的" },
-  { id: "time", fixedLeft: "—", right: ["paper-20", "paper-norec", "photo-print", "tonight:print"], rt: "离开两分钟先动；没有录音那晚车仍然走" },
+  { id: "shoe", fixedLeft: "周没有问过我的鞋", right: ["note-dry"], rt: "周问我脚湿不湿，鞋是干的" },
+  { id: "time", fixedLeft: "—", right: ["paper-20", "paper-norec", "photo-print", "tonight:print"], rt: "离开两分钟先动；没录音那晚车仍然走" },
 ];
 
 function compareAllowed() {
@@ -763,7 +767,7 @@ function openCompare(onDone) {
 /* ---------- 补充纸：九月头一个礼拜 ---------- */
 
 const WEEK_DAYS = [
-  ["09-01", "车又转。早上我摆返车头朝窗，出门买饭，十分钟，返来车头朝门。"],
+  ["09-01", "车又转。早上摆返车头朝窗，出门买饭，十分钟，返来车头朝门。"],
   ["09-02", "水又滴。拧紧，数到三，又滴。"],
   ["09-04", "冇录音。车仍然自己动，跌落地，车头朝储物室。我冇再执。"],
 ];
@@ -778,7 +782,7 @@ function openWeekCal(onDone) {
   showDiaryTool({
     kind: "九月头一个礼拜",
     build: (host, redraw) => {
-      host.append(el("p", { class: "tool-note" }, ["每天写一行。照作业：车几转、我在哪、水隔多久。"]));
+      host.append(el("p", { class: "tool-note" }, ["每天写一行。车几转、我在哪、水隔多久。"]));
       const rows = el("div", { class: "tool-rows" });
       WEEK_DAYS.forEach(([d, t]) => {
         const done = S.cal11[d];

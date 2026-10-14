@@ -266,7 +266,7 @@ const MAIL_DIRT = {
   title: "你信紧嗰个医生",
   key: "名字涂掉，露出一个鱼",
   time: "2014年9月7日",
-  body: "二〇〇四年十一月，维港大学，一个女学生坠楼。新闻写男友罗某，自称有责任。名字涂掉，露出一个鱼。偷拍：有盖走廊，年轻的罗和一个长发女生，她望住他。没有全名，没有过程。",
+  body: "二〇〇四年十一月，维港大学，女学生坠楼。新闻写男友罗某，自称有责任。名字涂掉，露出一个鱼。偷拍：年轻的罗，旁边长发女生望住他。没有全名。",
   img: pic(14, "证据-你信紧的医生"),
 };
 
@@ -456,7 +456,9 @@ function missAttach(n, back) {
 }
 
 function missMailKeep() {
-  note("dirt", "二〇〇四年十一月，维港大学，女学生坠楼。新闻写男友罗某。名字涂掉，露出一个鱼。偷拍里年轻的他，旁边一个女生望住他。");
+  note("dirt", "二〇〇四年十一月，维港大学，女学生坠楼。新闻写男友罗某。名字涂掉，露出一个鱼。偷拍里年轻的他，旁边女生望住他。");
+  // 两个附件都看过＝证物已到手；门关靠 ev("mail-dirt")，不能只靠点下划线（手机上容易漏）
+  if (!hasEvidence(MAIL_DIRT.id)) fileEvidence(MAIL_DIRT);
   keepThen(MAIL_DIRT, () => hubTalk([
     line("", "你等了他四个星期六。你说过，高兴是因为他来。现在有人寄来一则旧闻，还有一张旧相：读书那时，真的死过一个女生。相里她望着他。你现在也是这样望他。"),
     line("", "诊室里只有饮水机咕噜一声。你把手机反过来扣在桌上。"),
@@ -476,7 +478,7 @@ function missShow() {
             line("罗启明", "十一月系佢跌落去嗰个月。我唔纪念。黑笔涂唔干净，剩低一个「鱼」字。我心入面叫佢鱼。全名我唔讲。", { zh: "十一月是她掉下来的那个月。我不纪念。黑笔涂不干净，剩一个「鱼」字。我心里叫她鱼。全名我不讲。" }),
             line("章慧琪", "你……要否认？", { zh: "你……要否认吗？" }),
             line("罗启明", "否认要有另一个故仔。我冇。所以我信咗十年——系我害咗鱼。鱼先会企喺走廊。", { zh: "否认得有另一个说法。我没有。所以我信了十年——是我害了鱼。鱼才会站在走廊。" }),
-            line("罗启明", "有人希望你唔好再信我。松开都可以。你先安全。", { zh: "有人希望你别再信我。松开也可以。你先安全。", note: ["dirtreact", "他手抖。十一月是她坠楼的那个月。他信了十年，是自己害了鱼。全名他不讲。"] }),
+            line("罗启明", "有人希望你唔好再信我。松开都可以。你先安全。", { zh: "有人希望你别再信我。松开也可以。你先安全。", note: ["dirtreact", "他手抖。十一月是她坠楼那个月。他信了十年是自己害了鱼。全名他不讲。"] }),
           ],
         },
         {
@@ -502,19 +504,85 @@ function missOpenNews() {
   draw();
 }
 
+function missHasFish() {
+  return ev("fish-tag");
+}
+
+function missHasWallet() {
+  return ev("chen-wallet");
+}
+
+// 见过陈、离开过走廊再回来，且没拾鱼牌：钱夹只在这一次出现
+function missWalletReady() {
+  return !!(S.miss && S.miss.chen && S.miss.leftCorr && !missHasFish() && !missHasWallet());
+}
+
+function missDrawer() {
+  S.miss = S.miss || {};
+  if (missHasWallet()) {
+    showModal("抽屉", "空的。节拍器不在。没有别的掉出来。", "", null, backToHub);
+    return;
+  }
+  if (!S.miss.drawer1) {
+    S.miss.drawer1 = true;
+    note("metro-gone", "空抽屉。节拍器不见了。");
+    showModal("空抽屉", "拉开。里面空的。铜色节拍器不在了。", "你合上。", "scene", backToHub);
+    return;
+  }
+  if (!missHasFish()) {
+    withClue(pic(14, "证据-鱼牌"), () => showModal(
+      "空抽屉",
+      "再拉开。抽屉底滑出一小块磨白的塑料，鱼的形状，没有字。",
+      "节拍器还是不在。",
+      "scene",
+      () => keepThen(item("fish-tag"), backToHub)
+    ));
+    return;
+  }
+  showModal("抽屉", "鱼牌已经在日记簿里。抽屉还是空的。", "", null, backToHub);
+}
+
+function missAskFish() {
+  hubTalk([
+    line("章慧琪", "抽屉……节拍器唔喺度。我再拉一次，跌咗块鱼出嚟。无字。", { zh: "抽屉……节拍器不在。我再拉一次，掉出一块鱼。没有字。" }),
+    line("", "他端着水，看了一眼你掌心，没有接。"),
+    line("罗启明", "旧嘢。而家唔用。你放返去。", { zh: "旧东西。现在不用。你放回去。" }),
+    line("章慧琪", "你……", { zh: "你……" }),
+    line("", "后半句你咽回去了。他已经把杯子放下，去看电脑，不再看你的手。", {
+      flag: "askedFishLuo",
+      note: ["fish-ask", "我问抽屉掉出来的鱼牌。他说旧东西，而家唔用。"],
+    }),
+  ], "澄心诊室", "face");
+}
+
+function missWallet() {
+  startTalk([
+    line("", "椅脚边一只黑色钱夹，拉链没拉严。陈家豪刚才站过这里。", { clue: pic(14, "示意-钱夹") }),
+    line("", "打开。透明套里一张合照：表姐陈美娟，旁边是他。两个人靠得很近。", { clue: pic(14, "证据-钱夹合照") }),
+    line("", "夹层里还有一张发黄的学生证照片。年轻的罗医生。证件上的字糊了，脸你认得。", { clue: pic(14, "证据-钱夹罗证件照") }),
+    { note: ["wallet-chen", "钱夹里表姐和他的合照。夹层还有发黄的罗医生学生证。"], goto: () => keepThen(item("chen-wallet"), backToHub) },
+  ], "澄心走廊", "face");
+}
+
 HUBS.miss = {
   time: "2014年9月7日 周日 16:20",
   places: [
     {
       id: "room", name: "诊室", map: "clinic-room", img: pic(14, "场景-诊室"),
-      line: () => (ev("mail-dirt")
-        ? (noted("twofiles") ? "他回来了。西贡同荣汇街，我都看过。" : "他回来了。手机还能开廿八屋，查这栋楼。")
+      line: () => (missDirtReady()
+        ? (noted("fish-cv") ? "履历和校报对不上。他倒的那杯水还在桌上。" : noted("twofiles") ? "他回来了。西贡同荣汇街，我都看过。" : "他回来了。手机还能开廿八屋。")
         : "他去倒水了。"),
       spots: () => [
         {
           title: "他的工作台", sub: () => (noted("stolen") ? "行程被删，本子不见。" : "日历、夹子。"), img: pic(14, "示意-他的工作台"),
           seen: () => noted("stolen"),
           go: () => (noted("stolen") ? showModal("工作台", "电脑日历被删了。夹子还在。本子不见了。") : missDesk()),
+        },
+        {
+          title: "空抽屉", sub: () => (missHasFish() ? "鱼牌已经在日记簿里。" : S.miss.drawer1 ? "节拍器不在。再拉一次。" : "缝开着。"), img: pic(14, "示意-空抽屉"),
+          show: () => !!S.miss.chen && !missHasWallet(),
+          seen: () => missHasFish(),
+          go: missDrawer,
         },
         {
           title: "手机震了", sub: "一封邮件。", img: pic(14, "示意-手机震了"),
@@ -535,33 +603,54 @@ HUBS.miss = {
         },
         {
           title: "廿八屋：这栋楼的旧闻", sub: () => (noted("twofiles") ? "两篇都翻过了。" : "站内新闻，还有没翻完的。"), img: pic(14, "示意-廿八屋旧闻"),
-          show: () => ev("mail-dirt"),
+          show: () => missDirtReady(),
           seen: () => noted("twofiles"),
           go: () => (noted("twofiles") ? showModal("旧闻", "两篇都翻完了。看完了，心里没有更清。") : missOpenNews()),
+        },
+        {
+          title: "网上：旧闻和履历", sub: () => (noted("fish-cv") ? "对不上。应该另有隐情。" : "校报，和他的公开履历。"), img: pic(14, "示意-罗履历"),
+          show: () => flag("askedFishLuo") && missHasFish(),
+          seen: () => noted("fish-cv"),
+          go: () => (noted("fish-cv") ? showModal("网上", "履历干净。校报那则旧闻对不上。应该另有隐情。") : missOpenNews()),
         },
       ],
     },
     {
       id: "corridor", name: "走廊", map: "clinic-wait", img: pic(14, "场景-诊所走廊"),
       show: () => noted("stolen"),
-      line: () => (S.miss.chen ? "走廊空了。" : "走廊有人。便装衬衫，像休班路过。"),
+      line: () => (S.miss.chen ? (missWalletReady() ? "他走了。椅脚边有东西。" : "走廊空了。") : "走廊有人。便装衬衫，像休班路过。"),
       spots: () => [
         {
           title: "陈家豪", sub: () => (S.miss.chen ? "说过了。" : "他看见你了。"), img: pic(14, "示意-陈家豪"), person: true,
           seen: () => !!S.miss.chen,
           go: () => (S.miss.chen ? showModal("走廊", "他下楼了。") : missChen()),
         },
+        {
+          title: "钱夹", sub: "椅脚边。拉链没拉严。", img: pic(14, "示意-钱夹"),
+          show: () => missWalletReady(),
+          seen: () => missHasWallet(),
+          go: missWallet,
+        },
       ],
     },
   ],
   actions: () => [
     {
+      mark: "问", label: "问他那块鱼",
+      show: () => missHasFish() && missDirtReady() && !flag("askedFishLuo") && !missHasWallet(),
+      go: missAskFish,
+    },
+    {
       mark: "给", label: "给他看",
-      show: () => ev("mail-dirt") && !flag("showedDirt") && !flag("hidDirt"),
+      show: () => missDirtReady() && !flag("showedDirt") && !flag("hidDirt"),
       go: missShow,
     },
   ],
 };
+
+function missDirtReady() {
+  return ev("mail-dirt") || !!(S.miss && S.miss.att1 && S.miss.att2);
+}
 
 function missHome() {
   setTime("2014年9月7日 周日 傍晚");
@@ -610,7 +699,7 @@ function callMing() {
     line("罗启明", "晏昼喺诊所，我谂唔起佢。返到呢条走廊，先算数。", { zh: "下午在诊所，我想不起她。回到这条走廊，才算数。" }),
     line("章慧琪", "你……惊乜嘢？", { zh: "你……怕什么？" }),
     line("罗启明", "我惊再听第二次。听过第二次，人就会企喺度。", { zh: "我怕再听第二遍。听过第二遍，人就会站在那儿。" }),
-    { note: ["fearreplay", "他说怕再听第二遍。像怕旧事回来。"], goto: goSearch },
+    { note: ["fearreplay", "他说怕再听第二遍。"], goto: goSearch },
   ], "拨出 罗启明", "phone", { contact: "罗启明", number: "澄心／私人", dialout: true });
 }
 
@@ -652,7 +741,7 @@ function drawSearch() {
         S.searchRoof = true;
         S.known = S.known || {};
         S.known.roof = true;
-        showModal("天台", "白天上去晾过一次衫。水箱、晾衣绳、矮女儿墙、对面厨房的油烟，白天风已经很大。水箱就在那里——夜里若有人从后面出来，你认得。阿明和周都说过，晚上不要上去。", "", "scene", drawSearch);
+        showModal("天台", "白天上去晾过一次衫。水箱、晾衣绳、矮女儿墙、对面厨房的油烟，白天风已经很大。阿明和周都说过，晚上不要上去。", "", "scene", drawSearch);
       },
       S.searchRoof ? "天台　想过了" : "想想天台的样子"
     ),
@@ -695,7 +784,9 @@ function mingReturn() {
     line("罗启明", "头先嗰句唔系同你讲。我知自己喺荣汇街。我知你系章慧琪。而家系九月七号。", { zh: "刚才那句不是跟你说的。我知道自己在荣汇街。我知道你是章慧琪。现在是九月七号。" }),
     line("章慧琪", "你头先……叫紧边个？", { zh: "你刚才……叫的是谁？" }),
     line("罗启明", "鱼。我唔应该叫出口。全名我唔讲。叫齐个名，画面会更长。你当我发咗一次旧病。我仲喺度。", { zh: "鱼。我不该叫出口。全名我不讲。叫全了，画面会更长。你当我发过一次旧病。我还在。" }),
-    { note: ["countbreath", "他对走廊尽头说了一句，然后自己数回来。他叫出了一个字：鱼。抽屉里那只鱼牌，他仍然不解释。"] },
+    { note: ["countbreath", ev("fish-tag")
+      ? "他对走廊尽头说了一句。自己数回来。叫出一个字：鱼。抽屉那块鱼牌，他仍不解释。"
+      : "他对走廊尽头说了一句。自己数回来。叫出一个字：鱼。"] },
     ...dirt,
   ], "荣汇街后座", "face");
 }
@@ -708,7 +799,7 @@ function mingReturnRest() {
     line("罗启明", "三秒，人手做得到。走廊尽头嗰个……唔系。嗰个系我嘅。", { zh: "三秒，人手做得到。走廊尽头那个……不是。那个是我的。" }),
     line("章慧琪", "你话……系你嘅问题。", { zh: "你说……是你的问题。" }),
     line("罗启明", "回流第一年，我上过一次高处。家豪抬我落嚟。所以我叫你唔好上天台。", { zh: "回流第一年，我上过一次高处。家豪把我抬下来。所以我叫你别上天台。" }),
-    { note: ["hisghost", "他把走廊尽头那个女人认成自己的事。回流第一年，有人从沿上抬过他。"], flag: "roofKeyAsked", who: "周", text: "医生又嚟呀。租客有福气。今晚风大，天台嗰把锁匙，我帮你收住啦？", zh: "医生又来了。租客有福气。今晚风大，天台那把钥匙，我替你收着吧？" },
+    { note: ["hisghost", "走廊尽头那个女人，他说是自己的事。回流第一年，有人从沿上抬过他。"], flag: "roofKeyAsked", who: "周", text: "医生又嚟呀。租客有福气。今晚风大，天台嗰把锁匙，我帮你收住啦？", zh: "医生又来了。租客有福气。今晚风大，天台那把钥匙，我替你收着吧？" },
     {
       prompt: "……",
       choices: [
@@ -741,11 +832,11 @@ function roofApproach() {
     line("", "周走后，走廊又安静下来。他没有立刻离开，看着走廊尽头。你看不见他在看什么，只看见他停在那里。他又数了一次呼吸，声音很低。"),
     line("章慧琪", "你……又见到佢？", { zh: "你……又看见她了？" }),
     line("罗启明", "诊室度谂唔起。返到呢度，佢又企喺度。", { zh: "诊室里想不起。回到这儿，她又站在那儿。" }),
-    { note: ["notforget", "他说诊室里想不起，回到走廊，她又站在那儿。"] },
+    { note: ["notforget", "诊室里想不起。回到走廊，她又站在那儿。"] },
     ...dirt,
     line("章慧琪", "你日头系咪嚟过？", { zh: "你白天……是不是来过？" }),
     line("罗启明", "我企喺楼梯口。冇撳门钟。冇问过你就嚟。唔应该。", { zh: "我站在楼梯口。没按门铃。没问过你就来了。不该。" }),
-    { note: ["day-admit", "他说白天站在楼梯口，没按门铃。没问过我就来，不该。"] },
+    { note: ["day-admit", "他说白天站在楼梯口，没按门铃。"] },
     flag("showedDirt")
       ? line("罗启明", "你而家咁望住我，同嗰张旧相一样。我惊……又将你收成病人。", { zh: "你现在这样望着我，跟那张旧相一样。我怕……又把你收成病人。" })
       : line("罗启明", "你而家咁望住我……以前有个人都系咁望。我惊……又将你收成病人。", { zh: "你现在这样望着我……以前也有个人这样望。我怕……又把你收成病人。" }),
@@ -796,27 +887,114 @@ function roofWait() {
   ], "荣汇街后座", "face");
 }
 
+// 第一章试玩三收束：由前期发现锁死，不是天台临时三选一。
+// dugLuoSecrets → 女主险坠被救（无伤）；foundChenCrush → 陈重伤；否则 → 罗重伤。
+// 陈伤只认钱夹；险坠只认鱼牌链。meiNoise／askedWhyFast 不再锁结局。
+function foundChenCrush() {
+  return ev("chen-wallet");
+}
+
+function dugLuoSecrets() {
+  return ev("fish-tag") && flag("askedFishLuo") && noted("fish-cv");
+}
+
+function resolveEndHurt() {
+  if (S.flags.endHurt === "ming" || S.flags.endHurt === "chen" || S.flags.endHurt === "zhang") {
+    return S.flags.endHurt;
+  }
+  const hurt = dugLuoSecrets() ? "zhang" : foundChenCrush() ? "chen" : "ming";
+  S.flags.endHurt = hurt;
+  return hurt;
+}
+
 function roofCallChen() {
+  const crush = foundChenCrush();
   startTalk([
     line("章慧琪", "家豪……阿明上咗天台。佢叫我唔好跟，叫我打俾你。我拉唔住佢。", { zh: "家豪……阿明上了天台。他叫我别跟，叫我打给你。我拉不住他。" }),
-    line("陈家豪", "我知佢喺边。我就到。你锁住门。唔好上去。", { zh: "我知道他在哪儿。我马上到。你锁好门。别上去。" }),
-    line("", "他先挂了线。", { note: ["chencall", "零点二十分打给家豪。他说知道阿明在哪儿，马上到，叫我锁门别上去。"] }),
+    crush
+      ? line("陈家豪", "我知佢喺边。我就到。你锁住门。唔好上去。", { zh: "我知道他在哪儿。我马上到。你锁好门。别上去。" })
+      : line("陈家豪", "……天台？你锁门先。我……睇下先。唔好自己冲。", { zh: "……天台？你先锁门。我……先看看。别自己冲。" }),
+    line("", "他先挂了线。", {
+      note: crush
+        ? ["chencall", "零点二十分打给家豪。他说知道阿明在哪儿，马上到。叫我锁门，别上去。"]
+        : ["chencall", "零点二十分打给家豪。他的声音慢了一拍。叫我锁门，说他先看看。"],
+    }),
     { goto: () => finishLevel(15) },
   ], "拨出 陈家豪", "phone", { contact: "陈家豪", number: "陈家豪", dialout: true });
 }
 
+function roofNightTailChen() {
+  return [
+    line("", "铁门被撞开——门闩被他肩撞开，不是用钥匙拧的。陈家豪站在门口，穿着便装衬衫，喘气很急，像从街底跑了六层没有电梯的楼梯上来。他两手空空，钥匙串在裤袋里响。天台上没有第三个人。"),
+    line("陈家豪", "阿明——你唔好再埋去——章慧琪，你行开！", { zh: "阿明——你别再靠近——章慧琪，你走开！" }),
+    line("", "他冲到沿边，伸手去扯阿明的手臂，要把人从墙外拉回来。不是推你。"),
+    line("", "阿明的鞋离地了半寸，又被你和家豪一起拽回一点。家豪的重心却过了。"),
+    line("", "他整个人翻出女儿墙。阿明跌回墙内侧，膝盖着地。"),
+    line("", "风声空了一拍。下面一声闷响——不是落到街面，是竹棚。旧楼外墙的棚架档了一下。竹竿碎、铁丝响。人卡在棚上，没有再往下。"),
+    line("", "你趴到沿边看。路灯下，陈趴在裂开的棚架上，一条腿别着，血从衬衫渗到竹篾。他还在动。他看着上面的阿明，没有看你。"),
+    line("陈家豪", "你……唔好跟佢走。你属于……", { zh: "你……别跟她走。你属于……" }),
+    line("章慧琪", "我叫白车——", { zh: "我叫救护车——" }),
+    line("陈家豪", "你行开。我唔系为你。", { zh: "你走开。我不是为你。" }),
+    line("", "头垂下去。阿明用力抓住你的手，抓得很紧。"),
+    { goto: ending },
+  ];
+}
+
+function roofNightTailMing() {
+  return [
+    line("", "你抓住他了。风很大。你想再用力——脚却钉在原地半秒。天台上只有你们两个。"),
+    line("", "半秒里阿明的鞋离了沿。他没有挣你的手，是他自己的重心先走了。"),
+    line("", "风声空了一拍。下面一声闷响——竹棚。人卡在棚上。"),
+    line("", "你趴到沿边看。路灯下，阿明趴在裂开的棚架上。他还在动。他看着上面的你。"),
+    line("章慧琪", "阿明——我叫白车——", { zh: "阿明——我叫救护车——" }),
+    line("", "铁门这时才被撞开。陈家豪冲进来，便装衬衫贴在背上。他看见沿外，整个人停住。"),
+    line("陈家豪", "……我嚟迟咗。", { zh: "……我来迟了。" }),
+    line("", "你还跪在沿边。日记簿压在肋骨上。"),
+    { goto: ending },
+  ];
+}
+
+function roofNightTailZhang() {
+  return [
+    line("", "你没有等。你想起信、那个字、空抽屉里掉出来的鱼牌、他讲过的白房——两手已经把阿明往内侧猛拉。"),
+    line("", "阿明跌回墙内侧。你脚下一空——风从裙边灌上来，身体已经翻出女儿墙。"),
+    line("", "你没有落到棚上。双手死抠住沿口外沿，整个人吊在墙外。脚晃着，碰不到棚架。日记簿压在胸口，没有掉。"),
+    line("", "（楼梯口。铁门里侧。家豪听见沿上传来一声闷响，又听见有人喊名字。他撞开门——先看见一双挂在沿外的手。）"),
+    line("", "（你。）"),
+    line("罗启明", "慧琪！攞稳——唔好松——", { zh: "慧琪！抓紧——别松——" }),
+    line("", "阿明趴在沿内，两手扣住你的腕。天台上没有别人。"),
+    line("", "铁门还开着。陈家豪冲到沿边，便装衬衫贴在背上，一把抓住你另一只臂肘，同阿明一起往上扯。"),
+    line("陈家豪", "我拉住你。你睇住我。唔好望落去。", { zh: "我拉住你。你看着我。别往下看。" }),
+    line("", "石沿擦过小臂。你被两人拖回墙内侧，膝盖磕在水泥上，喘不过气——没有血。月亮还是圆的。"),
+    line("罗启明", "你有冇整亲？", { zh: "你有没有伤到？" }),
+    line("章慧琪", "……冇。日记簿……仲喺。", { zh: "……没有。日记簿……还在。" }),
+    line("", "风很大。三个人还跪在沿边。"),
+    { goto: ending },
+  ];
+}
+
 function roofNight() {
   setTime("2014年9月8日 周一 00:41");
+  const hurt = resolveEndHurt();
+  const waitLine = foundChenCrush()
+    ? "家豪说过：你锁住门，唔好上去。他还没有到。"
+    : "你打过给家豪。他的声音慢了一拍。他还没有到。";
+  const palm = ev("fish-tag")
+    ? "他一只手扶着墙，另一只手握着，掌心在路灯余光里露出一块磨白的鱼形牌子的边缘。"
+    : "他一只手扶着墙，另一只手握着，没有摊开。";
+  const roofNote = ev("fish-tag")
+    ? "他在沿上对空气说话。掌心露出鱼牌的边。我叫他的名字，他先确认自己在天台、我是谁，才回来。"
+    : "他在沿上对空气说话。我叫他的名字，他先确认自己在天台、我是谁，才回来。";
   startTalk([
     line("", "后座所有的灯都灭了。储物室的门响了一声，从里面来的，像有人用肩膀撞门。玩具车滑到门边。"),
     line("", "有人喊了一句：上天台。声音像丽芬，却像在下命令，不像叫儿子吃饭。"),
-    line("", "家豪说过：你锁住门，唔好上去。他还没有到。"),
+    line("", waitLine),
     { act: "开门，跑上后楼梯", who: "", text: "门把手是冰的。", flag: "ranUp" },
-    line("", "你打开门。走廊里只有从天台楼梯吹来的风。你往上跑。周的前座门开了一条缝，里面很黑。"),
+    line("", "你打开门。走廊里只有从天台楼梯吹来的风。你往上跑。周的前座门开了一条缝，里面很黑。他没有出来。"),
     line("", flag("gaveRoofKey")
       ? "天台铁门大开。锁头挂在门环上，插着一把钥匙——就是你给周那把。你冲出去，身后的铁门被风甩上，门闩落下。"
       : "天台铁门虚掩。阿明拿上去的钥匙还插在锁头上。你冲出去，身后的铁门被风甩上，门闩落下。"),
-    line("", "天台上风很大。水箱、晾衣绳打着金属杆。对面还有一盏路灯。阿明已经站在女儿墙上，一只鞋在墙沿外面。他一只手扶着墙，另一只手握着，掌心在路灯余光里露出一块磨白的鱼形牌子的边缘。他没有摊开手给你看。他不是在等你。他对着空气说话，像走廊尽头那个人走到了墙沿上。"),
+    line("", "天台上风很大。水箱、晾衣绳打着金属杆。对面还有一盏路灯。没有别人。阿明已经站在女儿墙上，一只鞋在墙沿外面。" + palm + "他没有摊开手给你看。他不是在等你。他对着空气说话，像走廊尽头那个人走到了墙沿上。"),
     line("", "月亮很圆，很白。今天是中秋。表姐叫过你中秋返去食饭。这一夜，你在天台上，女儿墙被月亮照成一条白边。"),
     line("罗启明", "你企咗十年。我唔想你再企。我估错一次。我唔想再估错。", { zh: "你站了十年。我不想你再站。我估错一次。我不想再估错。" }),
     line("", "他侧过耳，像在等回答。只有风声。"),
@@ -837,34 +1015,17 @@ function roofNight() {
       ? line("罗启明", "今晚你冇叫我走。我记得。", { zh: "今晚你没叫我走。我记得。" })
       : line("罗启明", "你叫我走。我行到门口，行唔出去。", { zh: "你让我走。我走到门口，走不出去。" }),
     line("罗启明", "你唔好跟上嚟。你一伸手，我会以为你拣咗我。", { zh: "你别跟上来。你一伸手，我会以为你选中我。" }),
-    { note: ["rooftop", "他在沿上对空气说话。掌心露出鱼牌的边，抽屉里那块已经不在。我叫他的名字，他先确认自己在天台、我是谁，才回来。"] },
-    line("周", (noted("twofiles") ? "你查得比我想象中快。" : "") + "你啲录音收得几齐。你同差人讲见鬼，佢哋锁你。你同佢哋讲我做戏，你有证据咩？",
-      { zh: (noted("twofiles") ? "你查得比我想象中快。" : "") + "你录音收得挺齐。你跟警察说见鬼，他们关你。你跟他们说我演戏，你有证据吗？" }),
-    line("章慧琪", "系你叫我上嚟嘅……", { zh: "是你叫我上来的……" }),
-    line("周", "风大。旧楼成日有人跌。跌落去就静晒，好似佢哋咁。你唔使自己查。静……我帮你。", { zh: "风大。旧楼常有人跌。跌下去就安静了，像她们。你不用自己查。安静……我帮你。" }),
-    line("", "他伸手拉住你的小臂，力往墙沿那边拉，姿势却像是在扶你。"),
+    { note: ["rooftop", roofNote] },
+    line("", "风灌进领口。天台上仍然只有你们两个。前座那条门缝还在楼下。"),
     line("", "阿明的鞋又往外挪了一步。你还有一只手是空的。"),
     { act: "抓住他的手腕", who: "", text: "他说过：你伸手，我会以为你选中我。", flag: "grabbed" },
     line("", flag("keptMing")
       ? "你另一只手抓住了他的手腕。抓到了。他没有挣，像早知道你会伸手。"
       : "你另一只手抓住了他的手腕。他挣了一下，才停住。抓到了。"),
     line("", flag("called999")
-      ? "你想起后楼梯口被他扳开的手指，阿乐挂断的两声电话、表姐眼里的药、差人问的「有没有人伤」。这一次你没有松手。"
-      : "你想起后楼梯口被他扳开的手指，阿乐挂断的两声电话、表姐眼里的药。这一次你没有松手。"),
-    line("", "铁门被撞开——门闩被他肩撞开，不是用钥匙拧的。陈家豪站在门口，穿着便装衬衫，喘气很急，像从街底跑了六层没有电梯的楼梯上来。他两手空空，钥匙串在裤袋里响。"),
-    line("陈家豪", "阿明——你唔好再埋去——章慧琪，你行开！", { zh: "阿明——你别再靠近——章慧琪，你走开！" }),
-    line("周", "又一个。礼拜六喺楼下接你嗰个。", { zh: "又来一个。星期六在楼下接你的那个。" }),
-    line("", "三件事在同一秒钟发生：周拉着你的手臂往墙沿方向拉。阿明的鞋离地了。家豪用身体撞向周，不是用拳头——要把人从沿边撞开。"),
-    line("", "周的肩膀撞在水箱上。两个人的重心一齐往女儿墙外偏。"),
-    line("", "阿明跌回墙内侧，膝盖着地。周快步下楼梯，没有回头。"),
-    line("", "陈没有撞在内侧水泥上。他整个人翻出女儿墙。"),
-    line("", "风声空了一拍。下面一声闷响——不是落到街面，是竹棚。旧楼外墙的棚架档了一下。竹竿碎、铁丝响。人卡在棚上，没有再往下。"),
-    line("", "你趴到沿边看。路灯下，陈趴在裂开的棚架上，一条腿别着，血从衬衫渗到竹篾。他还在动。他看着上面的阿明，没有看你。"),
-    line("陈家豪", "你……唔好跟佢走。你属于……", { zh: "你……别跟她走。你属于……" }),
-    line("章慧琪", "我叫白车——", { zh: "我叫救护车——" }),
-    line("陈家豪", "你行开。我唔系为你。", { zh: "你走开。我不是为你。" }),
-    line("", "头垂下去。阿明用力抓住你的手，抓得很紧。"),
-    { goto: ending },
+      ? "你想起后楼梯口被他扳开的手指，阿乐挂断的两声电话、表姐眼里的药、差人问的「有没有人伤」。"
+      : "你想起后楼梯口被他扳开的手指，阿乐挂断的两声电话、表姐眼里的药。"),
+    ...(hurt === "zhang" ? roofNightTailZhang() : hurt === "ming" ? roofNightTailMing() : roofNightTailChen()),
   ], "天台", "face");
 }
 
@@ -873,19 +1034,37 @@ function ending() {
   S.talk = null;
   S.mode = "end";
   clearStage();
-  try { (typeof clearStore === "function" ? clearStore() : localStorage.removeItem(SAVE_KEY)); } catch (e) { /* 无 */ }
+  try { (typeof clearStore === "function" ? clearStore() : localStorage.removeItem(SAVE_KEY)); } catch (e) { /* 忽略 */ }
   markCleared();
+  const hurt = resolveEndHurt();
   const kept = (S.evidence || []).map((e) => e.kind + "　" + e.title);
   const noise = Object.entries(S.skipAll || {}).filter(([id]) => !hasEvidence(id)).map(([, t]) => t);
-  const { desk, go } = captionShell(pic(16, "场景-结局-陈倒下"), 0.4);
+  const endPic = hurt === "ming" ? pic(16, "场景-结局-陈倒下") : hurt === "zhang" ? pic(16, "场景-结局-陈倒下") : pic(16, "场景-结局-陈倒下");
+  const openLine = hurt === "ming"
+    ? "救护车声在很远的地方。棚架上是阿明。"
+    : hurt === "zhang"
+      ? "风很大。你还跪在沿内侧。掌心没有血。"
+      : "救护车声在很远的地方。";
+  const bodyLine = hurt === "ming"
+    ? "你当时不知道他怎样，日记簿还在你身上。"
+    : hurt === "zhang"
+      ? "日记簿还在你胸口。阿明和家豪的手还扣在你腕上。"
+      : "你当时不知道他怎样，日记簿还在你身上。";
+  const hurtLine = hurt === "ming"
+    ? "天台上，来迟的是家豪。摔下去的是阿明。"
+    : hurt === "zhang"
+      ? "天台上，你先拉了他。掉出去的是你。拉回来的，是阿明和家豪。"
+      : "天台上，家豪想把他从沿上扯开。摔下去的是家豪。";
+  const { desk, go } = captionShell(endPic, 0.4);
   desk.classList.add("caption-end");
   const at = (node, d) => {
     if (node && node.style) node.style.setProperty("--d", d + "s");
     return node;
   };
   desk.append(el("div", { class: "caption-text" }, [
-    at(el("p", { class: "caption-line" }, ["救护车声在很远的地方。"]), 0.6),
-    at(el("p", { class: "caption-line" }, ["你当时不知道他怎样，日记簿还在你身上。"]), 1.8),
+    at(el("p", { class: "caption-line" }, [openLine]), 0.6),
+    at(el("p", { class: "caption-line" }, [bodyLine]), 1.8),
+    at(el("p", { class: "caption-line" }, [hurtLine]), 2.4),
     at(el("p", { class: "caption-next" }, ["日记簿里留下的（" + kept.length + "）"]), 3.2),
     at(kept.length ? el("ul", { class: "caption-kept" + (kept.length > 8 ? " two-col" : "") }, kept.map((t) => el("li", {}, [t]))) : el("p", { class: "caption-next" }, ["什么都没有留下。"]), 3.6),
     noise.length ? at(el("p", { class: "caption-next" }, ["看见了，没有留下（" + noise.length + "）"]), 4.4) : "",
@@ -904,8 +1083,8 @@ function ending() {
   renderPlaybar();
 }
 
-// 第二章没做：只放 2-1 楼梯的开篇旁白，停在他撞门
-const CH2_TEASER = [
+// 第二章没做：陈伤线保留 2-1 楼梯预告；另两线只放短预告，不假装已实装
+const CH2_TEASER_CHEN = [
   { lines: ["第二章　陈家豪"], small: "2014年9月8日　00:33　荣汇街 28 号　后楼梯" },
   { lines: ["六层，没有电梯。", "每层转角一盏黄灯。坏了一盏，就暗一格。"] },
   { lines: ["他撑着铁栏喘气。便装衬衫贴在背上。", "今晚休班，没有带枪。"] },
@@ -917,6 +1096,21 @@ const CH2_TEASER = [
   { say: ["周系周。阿明系阿明。两件事我分得开。", "周是周。阿明是阿明。两件事我分得开。"], after: "他分不开。" },
   { lines: ["铁门在头顶。风灌下来。", "门后有人在说话，断断续续，像在应一个不在的人。"] },
   { lines: ["他撞门——"], small: "然后，倒回八月十五日。那通转介电话打出去之前。" },
+];
+
+const CH2_TEASER_MING = [
+  { lines: ["第二章　预告"], small: "2014年9月8日　天台之下" },
+  { lines: ["家豪站在沿边。", "阿明在棚架上，还在动。"] },
+  { lines: ["电话里那半拍，他把慌听成了普通的慌。", "他本来可以更快。"] },
+  { lines: ["第二章　未开放"], small: "罗启明重伤线。倒叙未写。" },
+];
+
+const CH2_TEASER_ZHANG = [
+  { lines: ["第二章　预告"], small: "2014年9月8日　天台　女儿墙内侧" },
+  { lines: ["你还在喘。小臂火辣，没有破皮。", "日记簿压在肋骨上，页角皱了，没有血。"] },
+  { lines: ["阿明坐在你旁边，眼镜歪了，还抓着你的手腕。", "家豪站着，便装衬衫被风吹开一角。天台上没有别人。"] },
+  { lines: ["三个人都还在天台上。", "没有人掉进棚架。"] },
+  { lines: ["第二章　未开放"], small: "险坠被救线。倒叙未写。" },
 ];
 
 function teaserSay(yue, zh) {
@@ -932,8 +1126,10 @@ function chapter2Teaser(i) {
   S.talk = null;
   S.mode = "end";
   clearStage();
-  const page = CH2_TEASER[i];
-  const last = i >= CH2_TEASER.length - 1;
+  const hurt = S.flags.endHurt || "chen";
+  const pages = hurt === "ming" ? CH2_TEASER_MING : hurt === "zhang" ? CH2_TEASER_ZHANG : CH2_TEASER_CHEN;
+  const page = pages[i];
+  const last = i >= pages.length - 1;
   const { desk, go } = captionShell(pic(16, "场景-天台"), 0.22);
   desk.classList.add("caption-teaser");
   const kids = [];
@@ -950,3 +1146,14 @@ function chapter2Teaser(i) {
   stage.append(desk);
   renderPlaybar();
 }
+
+// 第14关：见过陈之后离开走廊，再回来才出现钱夹
+(function () {
+  const orig = hubGo;
+  hubGo = function (id) {
+    if (S.hub && S.hub.id === "miss" && S.miss && S.hub.at === "corridor" && id !== "corridor" && S.miss.chen) {
+      S.miss.leftCorr = true;
+    }
+    orig(id);
+  };
+})();

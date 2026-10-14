@@ -23,7 +23,7 @@ const LEVELS = [
     goal: "上廿八屋，找到能马上搬进去的那一间。",
     tasks: [
       { text: "把求助帖顶上去", need: true, done: () => flag("postedHelp"), hint: "帖子沉下去了，顶上去。" },
-      { text: "找到一间四条都过得去的房", need: true, done: () => !!(S.known && S.known.rong), hint: "拿四条对着盘看。卡住哪条，就划哪条。" },
+      { text: "找到一间四条都过得去的房", need: true, done: () => !!(S.known && S.known.rong), hint: "打开日记簿找到四项条件，找到合适的房源。" },
       { text: "把「元朗 天水围」删掉，自己搜", done: () => flag("ownSearch") },
       { text: "看看墙簿", after: "墙簿上藤先生的广告", done: () => flag("sawLinAd") },
       { text: "看自己的帖有没有人回", done: () => flag("sawOwnPost") },
@@ -42,7 +42,7 @@ const LEVELS = [
       flag("ownSearch", true);
       S.known.rong = true;
       S.four = { pay: ["荃湾两房"], guar: ["荃湾两房"], now: ["大角咀套房"] };
-      seedNotes([["bbs-self", "藤先生回过我的求助帖，丢了个荣汇街的盘连结。"]]);
+      seedNotes([["bbs-self", "藤先生回了我的求助帖。丢了个荣汇街的盘连结。"]]);
     },
   },
   {
@@ -83,9 +83,9 @@ const LEVELS = [
       seedItems(["rec-water"]);
       seedNotes([
         ["move-car", "车头朝窗。敞篷座位里没有灰。"],
-        ["move-tap", "关上之后还会滴。周说修过。"],
-        ["tap-fixed", "水龙头修好了。真的不滴了。"],
-        ["car-still", "车放到角落，第二天还在；你放回茶几，车头朝窗。"],
+        ["move-tap", "关上还会滴。周说修过。"],
+        ["tap-fixed", "水龙头修好了。不滴了。"],
+        ["car-still", "车放到角落，第二天还在。放回茶几，车头朝窗。"],
       ]);
     },
   },
@@ -107,7 +107,7 @@ const LEVELS = [
       S.pairs = { car: true, tap: true, storage: true };
       flag("photoSill", true);
       seedItems(["photo-sill", "photo-print", "rec-axuan"]);
-      seedNotes([["car-move", "车头朝了门。昨晚放的时候朝窗。"], ["voice", "女人声「阿轩，返嚟食饭。」从储物室门底那边来。"], ["print", "门底下伸出一小截湿脚印，到一半停住。"]]);
+      seedNotes([["car-move", "车头朝门。昨晚放的时候朝窗。"], ["voice", "女人声「阿轩，返嚟食饭。」从储物室门底来。"], ["print", "门底湿脚印，到一半停住。"]]);
     },
   },
   {
@@ -132,7 +132,7 @@ const LEVELS = [
       flag("clinicAddr", true);
       S.chatLogs.mei16 = { lines: [["she", "……"]], step: 99, closed: true };
       seedItems(["note-dry", "photo-car-out", "photo-tap-out"]);
-      seedNotes([["wet", "周开口就问我脚湿不湿。我没同他讲过脚印。"]]);
+      seedNotes([["wet", "周问我脚湿不湿。我没同他讲过脚印。"]]);
     },
   },
   {
@@ -149,7 +149,7 @@ const LEVELS = [
     gives: () => {
       S.handed = { ok6: true };
       S.homework = { n: 6, body: HOMEWORK[6] };
-      seedNotes([["linWait", "上一个病人。瘦，戴细框眼镜。笑很客气。五官记不住。"]]);
+      seedNotes([["linWait", "上一个病人。瘦，细框眼镜。笑很客气。五官记不住。"]]);
     },
   },
   {
@@ -186,7 +186,7 @@ const LEVELS = [
       S.handed = Object.assign(S.handed || {}, { ok8: true });
       S.sorted = true;
       S.homework = { n: 8, body: HOMEWORK[8] };
-      seedNotes([["clinic2", "第二次。他信我写的时间。叫我有一夜不开录音。"], ["bento", "楼下便当。姐夫叫我快回去，又低声叫他不要上门。像怕他真的会去。"]]);
+      seedNotes([["clinic2", "第二次。他信我写的时间。叫我有一夜不开录音。"], ["bento", "楼下便当。姐夫叫我快回去，又低声叫他不要上门。"]]);
     },
   },
   {
@@ -244,7 +244,7 @@ const LEVELS = [
     gives: () => {
       S.cal11 = { "09-01": true, "09-02": true, "09-04": true };
       seedItems(["note-zhoutue", "paper-06"]);
-      seedNotes([["offhours", "他先问纸，然后叫我不要再打。一周一次。"]]);
+      seedNotes([["offhours", "他先问纸，叫我不要再打。一周一次。"]]);
     },
   },
   {
@@ -253,7 +253,7 @@ const LEVELS = [
     goal: "他得亲自来看，不然说不清。",
     tasks: [
       { text: "前台看一眼", after: "前台，阿文刚走", need: true, done: () => S.visitSeen && S.visitSeen[4], hint: "" },
-      { text: "再看一次抽屉", after: "抽屉：鱼牌不见了", need: true, done: () => !!(S.clinicLooked && S.clinicLooked.drawer4), hint: "抽屉。上次那块白色的东西。" },
+      { text: "再看一次抽屉", after: "抽屉：节拍器还在", need: true, done: () => !!(S.clinicLooked && S.clinicLooked.drawer4), hint: "抽屉。节拍器还在不在。" },
       { text: "问他", need: true, done: () => flag("clinicAvoid"), hint: "姐夫那句，今日要问。" },
       { text: "把你搜集的东西给他看", need: true, done: () => !!(S.handed && S.handed.ok12), hint: "补充纸交给他。" },
       { text: "偷看预约表", done: () => !!(S.clinicLooked && S.clinicLooked.sched) },
@@ -291,16 +291,19 @@ const LEVELS = [
     tasks: [
       { text: "看一眼他的工作台", after: "他去倒水时，看工作台", need: true, done: () => noted("stolen"), hint: "桌上的东西，我还没看清。" },
       { text: "去走廊", after: "走廊碰到陈家豪", need: true, show: () => noted("stolen"), done: () => !!(S.miss && S.miss.chen), hint: "走廊那边，我还没去。" },
-      { text: "手机响了，看完", show: () => !!(S.miss && S.miss.chen), after: "打开邮件，两个附件都看", need: true, count: () => (S.miss && (S.miss.att1 || S.miss.att2) ? [cnt(["att1", "att2"], S.miss), 2] : null), done: () => ev("mail-dirt"), hint: "" },
-      { text: "把那封信给他看", after: "给他看", show: () => ev("mail-dirt"), done: () => flag("showedDirt") },
-      { text: "翻廿八屋站内旧闻", show: () => ev("mail-dirt"), done: () => noted("twofiles") },
-      { text: "回家，听周一句，看门口", after: "楼梯口周一句；铁闸差一格；门底干水印", need: true, show: () => ev("mail-dirt"), done: () => noted("day-trace"), hint: "回家。" },
+      { text: "手机响了，看完", show: () => !!(S.miss && S.miss.chen), after: "打开邮件，两个附件都看", need: true, count: () => (S.miss && (S.miss.att1 || S.miss.att2) ? [cnt(["att1", "att2"], S.miss), 2] : null), done: () => typeof missDirtReady === "function" ? missDirtReady() : ev("mail-dirt"), hint: "" },
+      { text: "把那封信给他看", after: "给他看", show: () => typeof missDirtReady === "function" ? missDirtReady() : ev("mail-dirt"), done: () => flag("showedDirt") },
+      { text: "空抽屉再拉一次", after: "空抽屉掉出鱼牌", show: () => !!(S.miss && S.miss.chen) && !ev("chen-wallet"), done: () => ev("fish-tag") },
+      { text: "问他那块鱼，再上网对履历", after: "问过。履历和校报对不上", show: () => ev("fish-tag"), done: () => flag("askedFishLuo") && noted("fish-cv") },
+      { text: "再出走廊，看椅脚边", after: "钱夹：合照，夹层是他的学生证", show: () => !!(S.miss && S.miss.leftCorr) && !ev("fish-tag"), done: () => ev("chen-wallet") },
+      { text: "翻廿八屋站内旧闻", show: () => typeof missDirtReady === "function" ? missDirtReady() : ev("mail-dirt"), done: () => noted("twofiles") },
+      { text: "回家，听周一句，看门口", after: "楼梯口周一句；铁闸差一格；门底干水印", show: () => typeof missDirtReady === "function" ? missDirtReady() : ev("mail-dirt"), done: () => noted("day-trace") },
     ],
     advance: {
       when: "9月7日　傍晚",
       where: "荣汇街楼梯口",
       fn: () => (noted("day-trace") ? finishLevel(14) : missHome()),
-      ready: () => noted("stolen") && !!(S.miss && S.miss.chen) && ev("mail-dirt"),
+      ready: () => noted("stolen") && !!(S.miss && S.miss.chen) && (typeof missDirtReady === "function" ? missDirtReady() : ev("mail-dirt")),
     },
     next: "当晚　后座",
     start: () => missAppt(),
@@ -341,7 +344,7 @@ const LEVELS = [
       seedNotes([
         ["namecall", "鬼叫我的名字。它说我知。"],
         ["countbreath", "他叫出了一个字：鱼。"],
-        ["day-admit", "他说白天站在楼梯口，没按门铃。没问过我就来，不该。"],
+        ["day-admit", "他说白天站在楼梯口，没按门铃。"],
       ]);
     },
   },
@@ -385,7 +388,7 @@ const SEGS = {
     { key: "c", name: "陈家豪来电", go: () => { flag("knockedZhou", true); seedItems(["note-dry"]); S.chatLogs.mei16 = { lines: [["she", "……"]], step: 99, closed: true }; S.hub = { id: "dawn", at: "hall" }; howardCall(); } },
   ],
   6: [
-    { key: "b", name: "诊室（候诊已过）", go: () => { S.visitSeen = { 1: true }; S.clinicLooked = {}; seedNotes([["linWait", "上一个病人。瘦，戴细框眼镜。笑很客气。五官记不住。"]]); enterClinic(1); } },
+    { key: "b", name: "诊室（候诊已过）", go: () => { S.visitSeen = { 1: true }; S.clinicLooked = {}; seedNotes([["linWait", "上一个病人。瘦，细框眼镜。笑很客气。五官记不住。"]]); enterClinic(1); } },
     { key: "c", name: "坐下谈，把搜集的给他看", go: () => { S.visitSeen = { 1: true }; S.clinic = { visit: 1, seg: 3 }; clinicTalk(); } },
   ],
   7: [
@@ -409,8 +412,8 @@ const SEGS = {
   ],
   10: [],
   11: [
-    { key: "b", name: "打过电话之后", go: () => { seedNotes([["offhours", "他先问纸，然后叫我不要再打。一周一次。"]]); enterHub("week", "hall"); } },
-    { key: "c", name: "一周日历", go: () => { seedNotes([["offhours", "他先问纸，然后叫我不要再打。一周一次。"]]); enterHub("week", "hall"); openWeekCal(() => keepThen(item("paper-06"), backToHub)); } },
+    { key: "b", name: "打过电话之后", go: () => { seedNotes([["offhours", "他先问纸，叫我不要再打。一周一次。"]]); enterHub("week", "hall"); } },
+    { key: "c", name: "一周日历", go: () => { seedNotes([["offhours", "他先问纸，叫我不要再打。一周一次。"]]); enterHub("week", "hall"); openWeekCal(() => keepThen(item("paper-06"), backToHub)); } },
   ],
   12: [
     { key: "b", name: "坐下谈，问他", go: () => { S.visitSeen = { 4: true }; S.clinicLooked = { drawer4: true }; S.clinic = { visit: 4, seg: 0 }; clinic4Talk(); } },
@@ -420,6 +423,8 @@ const SEGS = {
   ],
   14: [
     { key: "b", name: "邮件", go: () => { S.miss = { desk: true, chen: "quiet" }; seedNotes([["stolen", "上门行程被删了。现场笔记不见。"]]); enterHub("miss", "room"); } },
+    { key: "c", name: "二次走廊·钱夹", go: () => { S.miss = { desk: true, chen: "quiet", leftCorr: true, att1: true, att2: true }; seedNotes([["stolen", "上门行程被删了。现场笔记不见。"]]); seedItems(["mail-dirt"]); enterHub("miss", "corridor"); } },
+    { key: "d", name: "空抽屉·鱼牌", go: () => { S.miss = { desk: true, chen: "quiet", drawer1: true, att1: true, att2: true, mail: true }; seedNotes([["stolen", "上门行程被删了。现场笔记不见。"], ["metro-gone", "空抽屉。节拍器不见了。"]]); seedItems(["mail-dirt"]); enterHub("miss", "room"); } },
   ],
   15: [
     { key: "b", name: "等阿明，翻新闻", go: () => { seg15(); goSearch(); } },
@@ -428,7 +433,12 @@ const SEGS = {
     { key: "e", name: "屋里等", go: () => { seg15(); seg15b(); roofWait(); } },
   ],
   16: [
-    { key: "b", name: "结算卡", go: () => { LEVELS[16].gives(); ending(); } },
+    { key: "b", name: "结算·陈重伤", go: () => { LEVELS[16].gives(); S.flags.endHurt = "chen"; ending(); } },
+    { key: "c", name: "结算·罗重伤", go: () => { LEVELS[16].gives(); S.flags.endHurt = "ming"; ending(); } },
+    { key: "d", name: "结算·女主险坠", go: () => { LEVELS[16].gives(); S.flags.endHurt = "zhang"; ending(); } },
+    { key: "e", name: "天台夜·按发现重算", go: () => { LEVELS[16].gives(); delete S.flags.endHurt; roofNight(); } },
+    { key: "f", name: "天台·钱夹线", go: () => { LEVELS[16].gives(); seedItems(["chen-wallet"]); delete S.flags.endHurt; roofNight(); } },
+    { key: "g", name: "天台·鱼牌线", go: () => { LEVELS[16].gives(); seedItems(["fish-tag"]); flag("askedFishLuo", true); seedNotes([["fish-cv", "履历干净，校报对不上。另有隐情。"]]); delete S.flags.endHurt; roofNight(); } },
   ],
 };
 
@@ -571,7 +581,7 @@ function freshBlocks() {
 
 function paperPages() {
   const pages = [];
-  if (S.level <= 2 || Object.keys(S.four || {}).length) pages.push(["四条", openFour]);
+  if (S.level <= 2 || Object.keys(S.four || {}).length) pages.push(["租房必需四条", openFour]);
   if (S.level >= 3) pages.push([S.level <= 3 ? "屋里的样子" : "搬进来那晚", openBase]);
   if (S.level === 4 && nightOn()) pages.push(["摆在一起", () => openPairs(() => afterModalClose())]);
   if (S.level === 9 && ev("paper-norec") && ev("note-meiwater")) {

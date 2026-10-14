@@ -129,7 +129,7 @@ function askZhouView() {
         {
           label: "墙上那张相，像西贡乡村屋？",
           flag: "askedMudslide",
-          note: ["tian", "周说是天灾。他说「他们话」。他没主动讲家人名字。"],
+          note: ["tian", "周说是天灾。他说「他们话」。家人名字他不讲。"],
           then: [
             { goto: () => { asked(); stepPast(); } },
             line("章慧琪", "背景好似乡下。……西贡嗰边？", { zh: "背景像乡下。……西贡那边？" }),
@@ -195,7 +195,7 @@ function afterTour() {
         },
         {
           label: "你怎么知道我会住惯？",
-          note: ["nai", "周留意我看门锁、看水渍、看他的手。"],
+          note: ["nai", "周留意我看门锁、水渍、他的手。"],
           then: [
             line("周", "你望门锁，望水渍，又望我只手。好少租客睇咁多。睇得咁仔细嘅人，住得耐。", { zh: "你看门锁，看水渍，又看我的手。租客很少看这么多。看得细的人，住得久。" }),
             line("周", "天台嗰把都俾埋你。晾衫用。上面大把位，你中意几点上都得。", { zh: "天台那把也给你。晾衣服用。上面地方多，你爱几点上去都行。" }),
@@ -255,7 +255,7 @@ function drawMoveIn() {
     }, pic(3, "示意-大门与铁闸"), moveInAct("door")),
     hot("全家福", S.base.family ? "记下了。" : "客厅墙上。相后靠着纸箱。", () => {
       markMoveIn("family");
-      note("move-family", "周说这是家里人。名字他不讲。相挂得很整齐。");
+      note("move-family", "周说是家里人。名字他不讲。相挂得很正。");
       baseSheet("family", "客厅墙上，正对茶几。三个人。男人笑得很用力，女人缺一颗牙、头发齐肩，小男孩看向镜头外面。相框擦得很干净，没有灰。挂得很正，相后两个纸箱。周先生说不要动。", () => drawMoveIn());
     }, pic(3, "示意-全家福"), !!S.base.family),
     hot("玩具车", S.base.car ? "记下了。" : "车头朝窗。敞篷座位里没有灰。", () => {
@@ -265,7 +265,7 @@ function drawMoveIn() {
     }, pic(3, "示意-玩具车"), !!S.base.car),
     hot("厨房水龙头", S.base.tap ? "记下了。" : "关上之后还会滴一滴。", () => {
       markMoveIn("tap");
-      note("move-tap", "关上之后还会滴。周说修过。");
+      note("move-tap", "关上还会滴。周说修过。");
       sfx("drip");
       baseSheet("tap", "拧开，水流一顿一顿的，带着铁管味。关上，等了几秒，滴答一声——关了还会滴一滴。周先生说修过，还在滴。", () => drawMoveIn());
     }, pic(3, "示意-厨房水龙头"), !!S.base.tap),
@@ -456,11 +456,11 @@ function openCalDay(id, text) {
     startChat("0808");
     return;
   }
-  if (id === "08-12") note("car-still", "车放到角落，第二天还在；你放回茶几，车头朝窗。");
-  if (id === "08-11") note("gate-tick", "铁闸那声「咔」，比前几天多响一下。回头看，什么也没有。");
+  if (id === "08-12") note("car-still", "车放到角落，第二天还在。放回茶几，车头朝窗。");
+  if (id === "08-11") note("gate-tick", "铁闸多响一下。回头，什么也没有。");
   if (id === "08-03") {
     S.base = S.base || {};
-    if (S.base.tap) note("tap-fixed", "水龙头修好了。真的不滴了。");
+    if (S.base.tap) note("tap-fixed", "水龙头修好了。不滴了。");
   }
   if (id === "08-13") {
     const man = pic(3, "示意-日历-0813-对街的人");
@@ -672,14 +672,14 @@ function doorTalk() {
               kind: "信封",
               title: "红圈",
               time: "2014年8月14日 傍晚",
-              body: "新闻纸一角。红笔圈的弧。他的拇指挡住圈里的字。",
+              body: "新闻纸一角。红笔圈。他的拇指挡住圈里的字。",
               img: pic(4, "证据-红圈信封"),
             }
           ),
         },
         {
           label: "发生什么事？",
-          note: ["takeback", "他前几日还好好。今日傍晚要收回。手抖，信封朝里。他说重建，又说未定。"],
+          note: ["takeback", "今日傍晚要收回。手抖，信封朝里。他说重建，又说未定。"],
           then: [
             line("周", "冇。重建……未定。有人……你唔好问。", { zh: "没有。重建……还没定。有人……你别问。" }),
             { goto: nightStart },
@@ -743,13 +743,13 @@ function fireNightEvents() {
   if (m === 79 && !n.fired.car) {
     n.fired.car = true;
     n.car = "地";
-    note("car-move", "车头朝了门。昨晚放的时候朝窗。");
+    note("car-move", "车头朝门。昨晚放的时候朝窗。");
     changed = true;
   }
   if (m === 91 && !n.fired.voice) {
     n.fired.voice = true;
     if (n.recording) {
-      note("voice", "女人声「阿轩，返嚟食饭。」从储物室门底那边来。");
+      note("voice", "女人声「阿轩，返嚟食饭。」从储物室门底来。");
       if (flag("askedMudslide")) note("voice2", "同一声叠了一下。");
     }
     changed = true;
@@ -757,7 +757,7 @@ function fireNightEvents() {
   if (m === 101 && !n.fired.print) {
     n.fired.print = true;
     n.print = true;
-    note("print", "门底下伸出一小截湿脚印，到一半停住。");
+    note("print", "门底湿脚印，到一半停住。");
     changed = true;
   }
   if (changed && !S.modal && S.mode === "night") drawNight();
@@ -985,7 +985,7 @@ function sillMenu() {
     ["拍照", "photo", () => {
       flag("photoSill", true);
       markTonight("sill");
-      note("sill", "窗台童码。把自己的鞋并上去比过：小两号。今晚没下雨。");
+      note("sill", "窗台童码。鞋并上去比：小两号。今晚没下雨。");
       showModal("照片：窗台童码", "把自己的鞋并上去比过：小两号。水是新的。今晚没下雨。搬进来时那圈是干的。", "", "memo", () => drawNight(), sillItem());
     }],
     ["不理", "skip", () => showModal("窗台水印", "水是新的。今晚没下雨。干印变湿了。", "", null, () => drawNight())],
@@ -1103,7 +1103,7 @@ function leaveNightToMei() {
   setTime("2014年8月15日 周五 05:40");
   startTalk([
     line("", "天快亮了。隔着墙，前座有人在说话，压得很低，只有他一个人的声音，像在讲电话。"),
-    line("", "你只听清一个字：「吓。」之后就没有了。", { note: ["whisper", "前座一个人说话。他说吓。"] }),
+    line("", "你只听清一个字：「吓。」之后就没有了。", { note: ["whisper", "前座有人说话。他说吓。"] }),
     { goto: () => finishLevel(4) },
   ], "后座", "face");
 }
@@ -1118,7 +1118,7 @@ function passFrontDoor() {
     line("周", "噢。楼梯啱啱拖完地，我以为你踩过。", { zh: "噢。楼梯刚拖完，我以为你踩过。" }),
     line("章慧琪", "……你咁早拖地？", { zh: "……你这么早拖地？" }),
     line("周", "瞓唔着。旧楼返潮。", { zh: "睡不着。旧楼返潮。" }),
-    { note: ["wet", "周开口就问我脚湿不湿。我没同他讲过脚印。"] },
+    { note: ["wet", "周问我脚湿不湿。我没同他讲过脚印。"] },
     line("", "你低头看。鞋子是干的。他关上门。"),
     { goto: () => keepThen(item("note-dry"), stepPast) },
   ], "4 楼前座门口", "face");
@@ -1140,7 +1140,7 @@ function knockZhou() {
         : "响？是水管。明天白天帮你看。怕就开灯，开电视。别到处走，尤其别上天台，黑。" }),
     line("周", "你对脚湿咗？", { zh: "你脚湿了？" }),
     line("章慧琪", "冇。……我对脚系干嘅。", { zh: "没有。……我脚是干的。" }),
-    { note: ["wet", "周开口就问我脚湿不湿。我没同他讲过脚印。"] },
+    { note: ["wet", "周问我脚湿不湿。我没同他讲过脚印。"] },
     line("", late ? "他过了几秒才开门。睡衣领口是湿的。他关上门。你低头看，鞋是干的。" : "他开门很慢，像刚睡醒。他关上门。你低头看，鞋是干的。"),
     { goto: () => keepThen(item("note-dry"), stepPast) },
     {
@@ -1163,14 +1163,14 @@ function waitDawn() {
   const unseenPrint = !nightAct("sawPrint");
   if (!n.fired.car) {
     n.car = "地";
-    note("car-move", "车头朝了门。昨晚放的时候朝窗。");
+    note("car-move", "车头朝门。昨晚放的时候朝窗。");
   }
   if (missedVoice) {
-    note("voice", "女人声「阿轩，返嚟食饭。」从储物室门底那边来。");
+    note("voice", "女人声「阿轩，返嚟食饭。」从储物室门底来。");
   }
   if (missedPrint) {
     n.print = true;
-    note("print", "门底下伸出一小截湿脚印，到一半停住。");
+    note("print", "门底湿脚印，到一半停住。");
   }
   n.fired = { light: true, car: true, voice: true, print: true };
   n.min = 101;
@@ -1580,7 +1580,7 @@ function howardCall() {
         {
           label: "「不太好」是什么意思",
           flag: "askedWorry",
-          note: ["worry", "陈：阿明接不上昨日。别让他知道是我说的。他说「我担心就算」。"],
+          note: ["worry", "陈说阿明接不上昨日。叫我别让他知道。他说「我担心就算」。"],
           then: [
             line("陈家豪", "失眠，健忘，有时接唔上琴日。你唔好同佢讲系我讲嘅。佢唔钟意人担心佢。我担心就算。", { zh: "失眠，健忘，有时候接不上昨天。你别跟他说是我说的。他不喜欢别人担心他。我担心就行。" }),
             ...howardClose(),
@@ -1602,7 +1602,7 @@ function howardCall() {
 function howardClose() {
   return [
     line("陈家豪", "准时去见佢就得。旧楼啲嘢，自己查越查越惊。你安心去。", { zh: "准时去见他就是了。旧楼那些事，自己查越查越怕。你安心去。" }),
-    { note: ["dontlook", "陈叫我准时去见阿明。叫我别自己乱查。"], who: "陈家豪", text: "我收线喇。等阵发地址俾你。同一部手机。", zh: "我挂了。等会儿把地址发你。还是这部手机。" },
+    { note: ["dontlook", "陈叫我准时见阿明。别自己乱查。"], who: "陈家豪", text: "我收线喇。等阵发地址俾你。同一部手机。", zh: "我挂了。等会儿把地址发你。还是这部手机。" },
     { goto: howardSms },
   ];
 }

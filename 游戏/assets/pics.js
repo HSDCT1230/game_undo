@@ -1,5 +1,5 @@
 const PIC_ROOT = "../图/游戏/";
-const PIC_VER = "20261013-att2tall";
+const PIC_VER = "20261014-idfix";
 
 const PIC_LV = [
   "",
@@ -55,7 +55,6 @@ function lvPic(name) {
 // 日记簿里有的证物（ITEMS 带 img）不写在这里，直接用日记簿的标题和时间。
 // 名称不许带连字符、数字编号和策划用语（全检会查）；新加 示意-／证据- 图要补一行。
 const PIC_CAP = {
-  0: { time: "", "示意-全家福": "全家福" },
   2: {
     time: "2014年8月1日 下午",
     "示意-尽头锁着的门": "尽头锁着的门",
@@ -123,7 +122,6 @@ const PIC_CAP = {
     "示意-电脑发帖": ["廿八屋发帖", "2014年8月24日"],
     "示意-水龙头": ["水龙头", "2014年8月27日 夜"],
   },
-  10: { time: "2014年8月30日", "示意-抽屉": "抽屉" },
   11: {
     time: "2014年8月31日 夜",
     "示意-玩具车又转了": "玩具车又转了",
@@ -153,6 +151,10 @@ const PIC_CAP = {
     "示意-楼梯口周": ["楼梯口的周", "2014年9月7日 傍晚"],
     "示意-铁闸差一格": ["铁闸差一格", "2014年9月7日 傍晚"],
     "示意-门底干水印": ["储物室门底的干水印", "2014年9月7日 傍晚"],
+    "示意-空抽屉": "空抽屉",
+    "示意-钱夹": "钱夹",
+    "示意-罗履历": "罗的履历",
+    "证据-钱夹合照": "钱夹里的合照",
   },
 };
 
@@ -166,7 +168,7 @@ function picCap(id) {
   const slash = id.lastIndexOf("/");
   const dir = id.slice(0, slash);
   const name = id.slice(slash + 1);
-  const n = dir === "00-通用" ? 0 : PIC_LV.indexOf(dir);
+  const n = PIC_LV.indexOf(dir);
   const lv = PIC_CAP[n];
   const v = lv && lv[name];
   if (!v) return null;

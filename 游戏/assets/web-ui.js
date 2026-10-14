@@ -109,11 +109,19 @@ function newsCaseOpen() {
 
 function newsIds(limit) {
   let ids = Object.keys(NEWS).sort((a, b) => NEWS[b].date.localeCompare(NEWS[a].date));
+  // 鱼牌链才露出校报旧闻和罗的公开履历；没问过他，列表里不放
+  if (typeof flag !== "function" || !flag("askedFishLuo")) {
+    ids = ids.filter((id) => id !== "kimon" && id !== "yu04");
+  }
   // 后半段要自己翻到西贡／市建局：仍夹在普通港闻里，但别沉到滚很久才见
   if (newsCaseOpen()) {
     const pin = ["urb", "mud"].filter((id) => ids.includes(id));
     const rest = ids.filter((id) => !pin.includes(id));
     ids = rest.slice(0, 2).concat(pin, rest.slice(2));
+  }
+  if (typeof flag === "function" && flag("askedFishLuo")) {
+    const pin = ["yu04", "kimon"].filter((id) => ids.includes(id));
+    ids = pin.concat(ids.filter((id) => !pin.includes(id)));
   }
   return limit ? ids.slice(0, limit) : ids;
 }
@@ -1367,7 +1375,7 @@ function viewThread() {
   const replies = threadReplies(tid);
   if (S.forumId === "helpzhang") {
     flag("sawOwnPost", true);
-    note("bbs-self", "藤先生回过我的求助帖，丢了个荣汇街的盘连结。");
+    note("bbs-self", "藤先生回了我的求助帖。丢了个荣汇街的盘连结。");
     if (flag("sawLinAd")) note("same-name", "墙上和帖里是同一个名字。");
   }
   if (S.forumId === "wk1") {
@@ -1436,11 +1444,16 @@ function applyNewsNotes(id) {
   const kept = {
     mud: ["web-zhou", "2012年9月。妻儿遇难。周说是天意。土木署：雨后斜坡失稳。"],
     urb: ["web-ura", "荣汇街在研究名单。业主将获补偿。"],
+    kimon: ["kimon-bio", "网上履历：罗启明，维港大学医科，二〇〇五年毕业。没有二〇〇四年。没有十一月。"],
+    yu04: ["yu-old", "校报旧闻：二〇〇四年十一月，女学生坠楼。名字涂掉，露出一个鱼。男友姓罗。"],
   }[id];
   if (!kept) return;
   note(kept[0], kept[1]);
   if (hasEvidence("news-mud") && hasEvidence("news-urb")) {
-    note("twofiles", "两篇都看完了。看完更乱。");
+    note("twofiles", "两篇都看完。更乱。");
+  }
+  if (hasEvidence("news-kimon") && hasEvidence("news-yu04")) {
+    note("fish-cv", "履历干净，校报对不上。十一月那件事另有隐情。");
   }
 }
 
@@ -1466,7 +1479,8 @@ function viewNewsItem() {
   const n = NEWS[id] || NEWS.urb;
   S.newsSeen = S.newsSeen || {};
   S.newsSeen[id] = true;
-  const canKeep = (id === "mud" || id === "urb") && S.level >= 14;
+  const canKeep = ((id === "mud" || id === "urb") && S.level >= 14)
+    || ((id === "kimon" || id === "yu04") && typeof flag === "function" && flag("askedFishLuo"));
   return houseShell([
     el("h2", { class: "sec-h" }, [n.title]),
     el("p", { class: "mail-meta" }, [n.date + "　来源：本站编辑部／公开文件节录"]),
@@ -1555,8 +1569,7 @@ function viewPost() {
   const hp = THREADS.helpzhang;
   if (!postedHelp()) {
     return houseShell([
-      el("h2", { class: "sec-h" }, ["我的帖子　顶帖"]),
-      el("p", { class: "hint" }, ["帖子刊登满七日，可免费顶上版面一次。"]),
+      el("h2", { class: "sec-h" }, ["我的帖子"]),
       el("p", { class: "mail-meta" }, ["版块：" + hp.board + "　署名：阿琪V　刊登：" + hp.time]),
       el("div", { class: "post-draft" }, [
         el("h3", { style: "margin:0 0 8px;font-size:15px;color:#1f4f96" }, [hp.title]),
@@ -1943,7 +1956,7 @@ function linAdButton() {
       const seen = flag("sawLinAd");
       flag("sawLinAd", true);
       if (st === "back" && seen) note("wall-ad-back", "藤先生那格广告又出现了。字一样。");
-      else if (st === "blip" && noted("wall-ad-gone")) note("wall-ad-blip", "藤先生那格广告今天又在，字一样。之前不见了好一阵。");
+      else if (st === "blip" && noted("wall-ad-gone")) note("wall-ad-blip", "藤先生那格广告今天又在，字一样。之前不见了一阵。");
       else note("lin", "有人在网上等人聊。藤先生。");
       if (flag("sawOwnPost")) note("same-name", "墙上和帖里是同一个名字。");
       goWeb("ad");
