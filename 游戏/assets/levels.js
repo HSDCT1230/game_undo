@@ -20,7 +20,8 @@ const LEVELS = [
   {
     part: 1, title: "廿八屋", date: "7月31日 夜", place: "她的电脑",
     clock: "2014年7月31日 周四 23:14",
-    goal: "上廿八屋，找到能马上搬进去的那一间。",
+    goal: "上廿八屋，今晚就搵到可以搬入去嘅房。",
+    goalZh: "上廿八屋，今晚就找到能搬进去的房间。",
     tasks: [
       { text: "把求助帖顶上去", need: true, done: () => flag("postedHelp"), hint: "帖子沉下去了，顶上去。" },
       { text: "找到一间四条都过得去的房", need: true, done: () => !!(S.known && S.known.rong), hint: "打开日记簿找到四项条件，找到合适的房源。" },
@@ -40,6 +41,7 @@ const LEVELS = [
       flag("postedHelp", true);
       flag("searched", true);
       flag("ownSearch", true);
+      S.helpSearches = 3;
       S.known.rong = true;
       S.four = { pay: ["荃湾两房"], guar: ["荃湾两房"], now: ["大角咀套房"] };
       seedNotes([["bbs-self", "藤先生回了我的求助帖。丢了个荣汇街的盘连结。"]]);
@@ -74,8 +76,8 @@ const LEVELS = [
       { text: "日历上，夜里那卷录音", after: "08-13 的录音「只有水」", need: true, show: () => !!S.calOpen, done: () => ev("rec-water"), hint: "有一夜水管响，我开了录音。" },
       { text: "日历上别的日子", show: () => !!S.calOpen, count: () => [cnt(["08-01", "08-02", "08-03", "08-04", "08-05", "08-06", "08-07", "08-08", "08-09", "08-10", "08-11", "08-12", "08-13"], S.calSeen), 13], done: () => cnt(["08-01", "08-02", "08-03", "08-04", "08-05", "08-06", "08-07", "08-08", "08-09", "08-10", "08-11", "08-12", "08-13"], S.calSeen) >= 13 },
     ],
-    advance: { when: "8月14日　傍晚", where: "荣汇街后座", fn: () => twoWeekCalm(), modes: ["cal"] },
-    next: "8月14日 傍晚　有人敲门",
+    advance: { when: "8月14日　夜", where: "荣汇街后座", fn: () => twoWeekCalm(), modes: ["cal"] },
+    next: "8月14日 夜　后座",
     start: () => moveInStart(),
     gives: () => {
       S.base = { car: true, tap: true, storage: true, sill: true, family: true };
@@ -90,8 +92,8 @@ const LEVELS = [
     },
   },
   {
-    part: 2, title: "异样", date: "8月14日 傍晚～8月15日 凌晨", place: "后座（夜）",
-    clock: "2014年8月14日 周四 傍晚",
+    part: 2, title: "异样", date: "8月14日 夜～8月15日 凌晨", place: "后座（夜）",
+    clock: "2014年8月14日 周四 夜",
     goal: "今晚，留意这间屋。",
     tasks: [
       { text: "夜里再看一遍这间屋", after: "三组不一样的，摆在一起", need: true, count: () => (nightOn() ? [pairCount(), 3] : null), done: () => pairCount() >= 3, hint: () => (nightOn() ? "先在屋里找出跟搬进来那晚不一样的东西，再点「摆在一起」。" : "") },
@@ -101,7 +103,7 @@ const LEVELS = [
       { text: "敲周生的门", show: nightOn, done: () => flag("knockedZhou") },
     ],
     next: "天亮　前座门口",
-    start: () => startChange(),
+    start: () => nightStart(),
     gives: () => {
       S.tonight = { car: true, tap: true, storage: true, sill: true, print: true };
       S.pairs = { car: true, tap: true, storage: true };
@@ -119,12 +121,12 @@ const LEVELS = [
       { text: "倾偈表姐", need: true, done: () => !!(S.chatLogs && S.chatLogs.mei16 && S.chatLogs.mei16.closed), hint: "表姐一直在等我回。" },
       { text: "接陈家豪电话", need: true, show: () => !!(S.chatLogs && S.chatLogs.mei16 && S.chatLogs.mei16.closed), done: () => flag("howardCalled"), hint: "表姐说姐夫会打来。" },
       { text: "拿到诊所地址", need: true, show: () => flag("howardCalled"), done: () => flag("clinicAddr"), hint: "地址他说会发到手机。" },
-      { text: "给玩具车和水龙头各拍一张", need: true, show: () => !!(S.chatLogs && S.chatLogs.mei16 && S.chatLogs.mei16.closed), count: () => [cnt(["photo-car-out", "photo-tap-out"], { "photo-car-out": ev("photo-car-out"), "photo-tap-out": ev("photo-tap-out") }), 2], done: () => ev("photo-car-out") && ev("photo-tap-out"), hint: "车同水喉，先拍好。" },
+      { text: "给玩具车和水龙头各拍一张", need: true, show: () => !!(S.chatLogs && S.chatLogs.mei16 && S.chatLogs.mei16.closed), count: () => [cnt(["photo-car-out", "photo-tap-out"], { "photo-car-out": ev("photo-car-out"), "photo-tap-out": ev("photo-tap-out") }), 2], done: () => ev("photo-car-out") && ev("photo-tap-out"), hint: "用自己的拍立得。车同水喉各按一次快门，夹进日记簿。" },
       { text: "电话里，追问姐夫一句", after: "问陈「不太好」是什么意思", show: () => flag("howardCalled"), done: () => flag("askedWorry") },
       { text: "问姐夫为什么这么急", after: "问陈为什么这么快", show: () => flag("howardCalled"), done: () => flag("askedWhyFast") },
     ],
-    advance: { when: "8月16日　16:00", where: "湾仔澄心诊所", fn: () => finishLevel(5) },
-    next: "8月16日 16:00　湾仔澄心诊所",
+    advance: { when: "8月16日　出门前", where: "荣汇街后座门口", fn: () => finishLevel(5) },
+    next: "8月16日 出门前　后座门口",
     start: () => enterHub("dawn", flag("knockedZhou") ? "hall" : "front"),
     gives: () => {
       flag("knockedZhou", true);
@@ -136,20 +138,25 @@ const LEVELS = [
     },
   },
   {
-    part: 2, title: "澄心初诊", date: "8月16日 16:00", place: "澄心候诊、诊室",
-    clock: "2014年8月16日 周六 16:00",
+    part: 2, title: "澄心初诊", date: "8月16日 出门前～16:00", place: "后座门口、澄心候诊、诊室",
+    clock: "2014年8月16日 周六 15:40",
     goal: "终于有人肯听，把屋里的事说清楚。",
     tasks: [
-      { text: "候诊，看上一个出来的人", after: "候诊，那个倒拿杂志的人", need: true, done: () => noted("linWait"), hint: "候诊那个人。" },
-      { text: "诊室里看三样：执照、抽屉、电脑一角", need: true, count: () => [cnt(["lic", "drawer", "list"], S.clinicLooked), 3], done: () => cnt(["lic", "drawer", "list"], S.clinicLooked) >= 3, hint: "这间房，我还没看清楚。" },
-      { text: "把你搜集的东西给他看", need: true, done: () => !!(S.handed && S.handed.ok6), hint: "讲到屋的时候，把最要紧的给他看。" },
+      { text: "记下门口收回，收好红圈信封", need: true, done: () => noted("takeback") && ev("letter-red"), hint: "楼梯口那一幕，信封角。记进日记簿再出门。" },
+      { text: "候诊，看上一个出来的人", after: "候诊，那个倒拿杂志的人", need: true, show: () => noted("takeback") && ev("letter-red"), done: () => noted("linWait"), hint: "候诊那个人。" },
+      { text: "诊室里看三样：执照、抽屉、电脑一角", need: true, show: () => noted("takeback") && ev("letter-red"), count: () => [cnt(["lic", "drawer", "list"], S.clinicLooked), 3], done: () => cnt(["lic", "drawer", "list"], S.clinicLooked) >= 3, hint: "这间房，我还没看清楚。" },
+      { text: "把你搜集的东西给他看", need: true, show: () => noted("takeback") && ev("letter-red"), done: () => !!(S.handed && S.handed.ok6), hint: "讲到屋的时候，把最要紧的给他看。" },
     ],
     next: "8月16日 21:40　后座",
-    start: () => goClinic(),
+    start: () => startTakeback(),
     gives: () => {
       S.handed = { ok6: true };
       S.homework = { n: 6, body: HOMEWORK[6] };
-      seedNotes([["linWait", "上一个病人。瘦，细框眼镜。笑很客气。五官记不住。"]]);
+      seedNotes([
+        ["linWait", "上一个病人。瘦，细框眼镜。笑很客气。五官记不住。"],
+        ["takeback", "出门赴诊前，周说要收回。手抖，信封朝里。他说重建，又说未定。"],
+      ]);
+      seedItems(["letter-red"]);
     },
   },
   {
@@ -159,7 +166,7 @@ const LEVELS = [
     tasks: [
       { text: "拿出门前那两张相，写「十六号晚」", need: true, done: () => ev("paper-16"), hint: "出门前那两张相，拿出来。" },
       { text: "试两次：盯住两分钟，离开两分钟", after: "8月20日试了两次：盯两分钟，离开两分钟", need: true, show: () => ev("paper-16"), count: () => [cnt(["watch", "bath"], S.tries), 2], done: () => ev("paper-20"), hint: () => (ev("paper-16") ? "望住它两分钟；再离开两分钟，两次都要试。" : "") },
-      { text: "发第一帖", need: true, done: () => flag("serial1"), hint: "讨论区，把这一周写上去。" },
+      { text: "发第一帖", need: true, done: () => flag("serial1"), hint: "厅里点「电脑：发一帖」，看完草稿再按「发布」。不按就不算发出去。" },
       { text: "周在门口，听他说完", after: "周在门口说「两分钟」", show: () => !!S.tries.bath, done: () => noted("zhouTwo") },
       { text: "门口那锅汤", after: "阿乐的短讯，门口的凉汤", show: () => !!S.tries.bath, done: () => flag("lokSoup") },
     ],
@@ -198,7 +205,7 @@ const LEVELS = [
       { text: "星期日去美娟家", after: "去美娟家吃饭", need: true, done: () => ev("note-notsaid"), hint: "星期日，去美娟家。" },
       { text: "回后座，过几晚", after: "8月27日表姐来电，她听到水声", need: true, show: () => ev("note-notsaid"), done: () => ev("note-meiwater"), hint: () => (ev("note-notsaid") ? "水龙头又在滴。" : "") },
       { text: "做对照纸：头两个礼拜，十五号之后", need: true, done: () => ev("paper-30"), hint: "对照纸还没写好。至少四行，哪边先不一样。" },
-      { text: "发第二帖", need: true, done: () => flag("serial2"), hint: "讨论区，第二帖。" },
+      { text: "发第二帖", need: true, done: () => flag("serial2"), hint: "厅里点「电脑：发一帖」，看完草稿再按「发布」。不按就不算发出去。" },
     ],
     advance: { when: "8月30日　16:00", where: "湾仔澄心诊所", fn: () => finishLevel(9) },
     next: "8月30日 16:00　澄心",
@@ -235,7 +242,7 @@ const LEVELS = [
       { text: "8月31日夜车又转，打给他", need: true, done: () => noted("offhours"), hint: "车又转了，我想打给他。" },
       { text: "去楼梯口看看", after: "周说星期六有人来", need: true, show: () => noted("offhours"), done: () => ev("note-zhoutue"), hint: "楼梯口，我还没去。" },
       { text: "日历点开三天，收成补充纸", need: true, show: () => noted("offhours"), count: () => [cnt(["09-01", "09-02", "09-04"], S.cal11), 3], done: () => ev("paper-06"), hint: "九月头。点开三天就够。" },
-      { text: "发第三帖", need: true, done: () => flag("serial3"), hint: "讨论区，第三帖。" },
+      { text: "发第三帖", need: true, done: () => flag("serial3"), hint: "厅里点「电脑：发一帖」，看完草稿再按「发布」。不按就不算发出去。" },
       { text: "表姐来电", show: () => noted("offhours"), done: () => flag("meiTue") },
     ],
     advance: { when: "9月6日　16:00", where: "湾仔澄心诊所", fn: () => finishLevel(11) },
@@ -388,8 +395,10 @@ const SEGS = {
     { key: "c", name: "陈家豪来电", go: () => { flag("knockedZhou", true); seedItems(["note-dry"]); S.chatLogs.mei16 = { lines: [["she", "……"]], step: 99, closed: true }; S.hub = { id: "dawn", at: "hall" }; howardCall(); } },
   ],
   6: [
-    { key: "b", name: "诊室（候诊已过）", go: () => { S.visitSeen = { 1: true }; S.clinicLooked = {}; seedNotes([["linWait", "上一个病人。瘦，细框眼镜。笑很客气。五官记不住。"]]); enterClinic(1); } },
-    { key: "c", name: "坐下谈，把搜集的给他看", go: () => { S.visitSeen = { 1: true }; S.clinic = { visit: 1, seg: 3 }; clinicTalk(); } },
+    { key: "b", name: "出门撞见周（收回）", go: () => startTakeback() },
+    { key: "c", name: "并板收红圈", go: () => { seedNotes([["takeback", "出门赴诊前，周说要收回。手抖，信封朝里。他说重建，又说未定。"]]); afterTakeback(); } },
+    { key: "d", name: "诊室（候诊已过）", go: () => { S.visitSeen = { 1: true }; S.clinicLooked = {}; seedNotes([["linWait", "上一个病人。瘦，细框眼镜。笑很客气。五官记不住。"], ["takeback", "出门赴诊前，周说要收回。手抖，信封朝里。他说重建，又说未定。"]]); seedItems(["letter-red"]); enterClinic(1); } },
+    { key: "e", name: "坐下谈，把搜集的给他看", go: () => { S.visitSeen = { 1: true }; seedNotes([["takeback", "出门赴诊前，周说要收回。手抖，信封朝里。他说重建，又说未定。"]]); seedItems(["letter-red"]); S.clinic = { visit: 1, seg: 3 }; clinicTalk(); } },
   ],
   7: [
     { key: "b", name: "回到屋里", go: () => { seedItems(["paper-16"]); enterHub("home16", "hall"); } },
@@ -413,7 +422,7 @@ const SEGS = {
   10: [],
   11: [
     { key: "b", name: "打过电话之后", go: () => { seedNotes([["offhours", "他先问纸，叫我不要再打。一周一次。"]]); enterHub("week", "hall"); } },
-    { key: "c", name: "一周日历", go: () => { seedNotes([["offhours", "他先问纸，叫我不要再打。一周一次。"]]); enterHub("week", "hall"); openWeekCal(() => keepThen(item("paper-06"), backToHub)); } },
+    { key: "c", name: "一周日历", go: () => { seedNotes([["offhours", "他先问纸，叫我不要再打。一周一次。"]]); enterHub("week", "hall"); openWeekCal(() => keepMust(item("paper-06"), backToHub)); } },
   ],
   12: [
     { key: "b", name: "坐下谈，问他", go: () => { S.visitSeen = { 4: true }; S.clinicLooked = { drawer4: true }; S.clinic = { visit: 4, seg: 0 }; clinic4Talk(); } },
@@ -433,8 +442,8 @@ const SEGS = {
     { key: "e", name: "屋里等", go: () => { seg15(); seg15b(); roofWait(); } },
   ],
   16: [
-    { key: "b", name: "结算·陈重伤", go: () => { LEVELS[16].gives(); S.flags.endHurt = "chen"; ending(); } },
-    { key: "c", name: "结算·罗重伤", go: () => { LEVELS[16].gives(); S.flags.endHurt = "ming"; ending(); } },
+    { key: "b", name: "结算·陈轻伤", go: () => { LEVELS[16].gives(); S.flags.endHurt = "chen"; ending(); } },
+    { key: "c", name: "结算·罗轻伤", go: () => { LEVELS[16].gives(); S.flags.endHurt = "ming"; ending(); } },
     { key: "d", name: "结算·女主险坠", go: () => { LEVELS[16].gives(); S.flags.endHurt = "zhang"; ending(); } },
     { key: "e", name: "天台夜·按发现重算", go: () => { LEVELS[16].gives(); delete S.flags.endHurt; roofNight(); } },
     { key: "f", name: "天台·钱夹线", go: () => { LEVELS[16].gives(); seedItems(["chen-wallet"]); delete S.flags.endHurt; roofNight(); } },
@@ -749,6 +758,12 @@ function drawCard() {
   }
 }
 
+/** 续玩／选关品牌底：竖屏用竖版，横屏用宽版（无字钥匙＋车水印）。 */
+function resumePlate() {
+  const portrait = typeof matchMedia === "function" && matchMedia("(orientation: portrait), (max-aspect-ratio: 3/4)").matches;
+  return portrait ? "00-通用/场景-续玩底-竖" : "00-通用/场景-续玩底-宽";
+}
+
 function captionShell(bg, lum) {
   const desk = el("div", { class: "desk caption-card" });
   if (bg) {
@@ -777,9 +792,13 @@ function captionShell(bg, lum) {
 function drawCaption(c, L) {
   c = c || {};
   const kept = Array.isArray(c.kept) ? c.kept : [];
-  const { desk, go, leave } = captionShell(cardBg(c.n), CARD_LUM[cardBgName(c.n)]);
+  const resume = c.type === "resume";
+  const { desk, go, leave } = captionShell(
+    resume ? resumePlate() : cardBg(c.n),
+    resume ? 0.92 : CARD_LUM[cardBgName(c.n)]
+  );
   const kids = [];
-  if (c.type === "resume") {
+  if (resume) {
     desk.classList.add("resume-card");
     kids.push(...resumeCaption(c, L, go, leave));
   } else if (c.type === "start") {
@@ -789,7 +808,7 @@ function drawCaption(c, L) {
     kids.push(
       prev && kept.length ? el("ul", { class: "caption-kept" }, kept.map((t) => el("li", {}, [t]))) : "",
       prev && prev.next ? el("p", { class: "caption-next" }, [prev.next]) : "",
-      el("p", { class: "caption-line" }, [(L && L.goal) || "继续。"]),
+      el("p", { class: "caption-line" }, [levelGoalText(L) || (typeof toHkTrad === "function" ? toHkTrad("继续。") : "继续。")]),
       el("div", { class: "caption-acts" }, [go("嗯……", startLevelNow)])
     );
   } else {
@@ -809,17 +828,15 @@ function drawCaption(c, L) {
 /* ---------- 新游戏开场：耳机提示 → 黑屋里一行行打出心声，最后一行就是这一关要做的 → 电脑屏幕亮起，直接进廿八屋 ----------
    不打标题、不写第几关、不再弹第 1 关字幕卡（标题留到第一章结尾）。心声只写她此刻知道的事——
    她此刻知道什么：分了手、没有自己的地方、散工、现金、口头、被当有问题、不想坐别人家沙发。
-   语气是书面中文（和 story-*.js 的 showModal／note 心声同一种），不是广东话口语——口语只留人物对白。
    基调偏暖：她说的是疼，不是怨；表姐爱她，只是也把她当病人。她只是要一间自己的门。
-   她此刻不知道什么：荣汇街、周、藤先生、这间屋出过事。开场一个字都不许提前。 */
+   她此刻不知道什么：荣汇街、周、藤先生、这间屋出过事。开场一个字都不许提前。
+   开场心声默认粤语（香港繁体）；切普通话时用第二行。 */
 const OPENING_SAY = [
-  "五月分了手。",
-  "短租、日租、朋友家的沙发，一样一样试。",
-  "散工。收现金，口头讲定，没有粮单。",
-  "试到七月尾，也不好意思再开口借住。",
-  "阿乐当我有病；表姐嘴上不说，眼神是一样的。",
-  "她留了沙发。可我不想再坐别人家的沙发。",
-  "想找一间能马上搬进去的房。",
+  ["五月分手，短租、日租、朋友屋企个沙发，试到七月尾。", "五月分手了，短租、日租、朋友家的沙发，试到七月尾。"],
+  ["做散工，现金出粮：冇粮单，冇担保人。", "做散工，现金出粮：没有粮单，没有担保人。"],
+  ["正经租盘，我一条都过唔到。", "正经租盘，我一条都过不了。"],
+  ["阿乐当我有病。表姐冇讲咩，眼神却系一样。", "阿乐当我有病。表姐没说什么，眼神却是一样的。"],
+  ["佢留咗沙发给我，但係我唔想住。", "她留了沙发给我，但我不想住。"],
 ];
 const OPENING_TYPE_MS = 75;
 const OPENING_HOLD_MS = 2000;
@@ -832,6 +849,17 @@ function openingLater(fn, ms) {
 function openingClear() {
   openingTimers.forEach(clearTimeout);
   openingTimers = [];
+}
+
+function openingLineText(pair) {
+  if (Array.isArray(pair)) return typeof T === "function" ? T(pair[0], pair[1]) : pair[0];
+  return typeof T === "function" ? T(pair, pair) : pair;
+}
+
+function levelGoalText(lv) {
+  if (!lv) return "";
+  if (lv.goalZh != null && typeof T === "function") return T(lv.goal, lv.goalZh);
+  return typeof toHkTrad === "function" ? toHkTrad(lv.goal || "") : (lv.goal || "");
 }
 
 // 开场一旦开始就不许跳：盖一层透明罩吃掉所有点击，键盘也拦下（浏览器自己的组合键放行）。
@@ -864,7 +892,8 @@ function playOpening() {
   stage.append(desk);
   renderPlaybar();
 
-  const rows = OPENING_SAY.map((text) => ({ text })).concat([{ text: LEVELS[1].goal, goal: true }]);
+  const rows = OPENING_SAY.map((pair) => ({ text: openingLineText(pair) }))
+    .concat([{ text: levelGoalText(LEVELS[1]), goal: true }]);
   const lineEl = (r, text) => el("p", { class: "opening-line" + (r.goal ? " goal" : "") }, [text]);
   // gate → typing → hold → leaving；只有 gate 要点（解锁声音），之后一路播完，屏幕通电、日期淡掉才放手
   let phase = "gate";
@@ -924,7 +953,7 @@ function playOpening() {
   });
   // 已经点过（重来）声音早解锁了，不再问
   if (sfxReady) return begin();
-  lines.append(el("p", { class: "opening-gate" }, ["戴上耳机，点一下"]));
+  lines.append(el("p", { class: "opening-gate" }, [typeof T === "function" ? T("戴上耳机，点一下", "戴上耳机，点一下") : "戴上耳机，点一下"]));
 }
 
 // 整个画面像笔记本背光通电：从黑里冷灰发虚地浮上来，约 1.8 秒回到正常
@@ -960,7 +989,7 @@ function typeClock(done) {
 }
 
 // 屏幕通电后，正中先浮一下「7月31日」，淡掉。接住开场白那句「试到七月尾」——
-// 免得心声停在「想找一间能马上搬进去的房」，画面却一下落到七月底的那一夜。
+// 免得心声停在「她留了沙发给我，但我不想住」，画面却一下落到七月底的那一夜。
 function bootDate() {
   if (typeMotionOff()) return; // 关动效时不闪，右上角钟仍在
   if (document.querySelector(".boot-date")) return;
@@ -972,6 +1001,9 @@ function bootDate() {
 
 function startLevelNow() {
   roomTone(false);
+  const app = document.getElementById("app");
+  if (app) app.classList.remove("opening-dark");
+  openingLock(false);
   const n = S.card && S.card.n;
   S.card = null;
   if (!LEVELS[n] || typeof LEVELS[n].start !== "function") return;
@@ -1275,8 +1307,11 @@ function resumeCaption(c, L, go, leave) {
   const btn = (cls, label, fn, aria) => el("button", { type: "button", class: cls, "aria-label": aria || null, onclick: fn }, [label]);
 
   const home = () => show([
-    el("h1", { class: "resume-title" }, ["暗度"]),
-    el("p", { class: "resume-sub" }, ["第一章"]),
+    el("h1", { class: "resume-title" }, [
+      el("span", { class: "resume-brand" }, ["暗度"]),
+      el("span", { class: "resume-undo", "aria-hidden": "true" }, "undo".split("").map((ch) => el("span", {}, [ch]))),
+    ]),
+    el("p", { class: "resume-sub" }, ["第一章：章慧琪"]),
     el("div", { class: "resume-where", role: "group", "aria-label": "存档" }, [
       el("span", { class: "resume-ribbon", "aria-hidden": "true" }),
       el("p", { class: "resume-when" }, [shortDay(savedTime)]),

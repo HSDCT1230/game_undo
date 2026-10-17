@@ -100,17 +100,31 @@ function phoneButton(label, onclick, opt) {
   ]);
 }
 
+function yueFace(s) {
+  return typeof toHkTrad === "function" ? toHkTrad(s == null ? "" : String(s)) : (s == null ? "" : String(s));
+}
+
+/** 对白／旁白共用：与 T() 同逻辑——zh 用普通话原文；粤语／粤＋普用粤语侧并转香港繁体；绝不并排。 */
+function faceLine(text, zh) {
+  const mode = typeof langMode === "string" ? langMode : "both";
+  if (mode === "zh") {
+    const z = zh != null && zh !== "" ? String(zh) : String(text || "");
+    return z.trim().replace(/^[（(](.*)[）)]$/, "$1");
+  }
+  return yueFace(text || "");
+}
+
 function choiceBox(b, className) {
   if (phoneOnly(b)) {
     const ch = el("div", { class: "phone-ops" + (b.choices.some((c) => c.hangup) ? " phone-ops-hang" : "") });
     b.choices.forEach((c) => {
-      ch.append(phoneButton(c.label, () => applyChoice(c), { hint: c.hint, hangup: c.hangup }));
+      ch.append(phoneButton(yueFace(c.label), () => applyChoice(c), { hint: c.hint ? yueFace(c.hint) : c.hint, hangup: c.hangup }));
     });
     return ch;
   }
   const ch = el("div", { class: "choices " + (className || "") });
   b.choices.forEach((c) => {
-    ch.append(el("button", { type: "button", onclick: () => applyChoice(c) }, [c.label]));
+    ch.append(el("button", { type: "button", onclick: () => applyChoice(c) }, [yueFace(c.label)]));
   });
   return ch;
 }
@@ -230,16 +244,10 @@ function speakerOf(b) {
   return b.who || "现场";
 }
 
-/** 粤语主句 + 可选下行括号普通话（只给角色话用；旁白／选项不走这里） */
+/** 对白正文：与 faceLine 同一套三模式（粤＋普／粤语／普通话），不并排。 */
 function talkBody(text, zh, className) {
   const box = el("div", { class: "talk-body" });
-  const mode = typeof langMode === "string" ? langMode : "both";
-  const zhMain = mode === "zh" && zh ? String(zh).trim().replace(/^[（(](.*)[）)]$/, "$1") : "";
-  box.append(el("div", { class: "talk-text" + (className ? " " + className : "") }, [zhMain || text || ""]));
-  if (zh && mode === "both") {
-    const shown = /^[（(].*[）)]$/.test(String(zh).trim()) ? String(zh).trim() : "(" + zh + ")";
-    box.append(el("div", { class: "talk-zh" }, [shown]));
-  }
+  box.append(el("div", { class: "talk-text" + (className ? " " + className : "") }, [faceLine(text, zh)]));
   return box;
 }
 
@@ -443,10 +451,9 @@ function drawFace(b) {
 
   if (prompt) {
     const cls = (stageDir ? "stage-dir" : tone) + (awen ? " awen-line" : "");
-    // 旁白不加普通话行；角色话读 b.zh
-    // 旁白走 narr-in 淡入，不打字
+    // 旁白／选项提示／角色话：同一套三模式；旁白淡入不打字
     if (stageDir || choosing) {
-      body.append(el("div", { class: "talk-text " + cls }, [prompt]));
+      body.append(el("div", { class: "talk-text " + cls }, [faceLine(prompt, b.zh || b.promptZh)]));
     } else {
       body.append(typeBody(talkBody(prompt, b.zh, cls)));
     }
@@ -491,29 +498,29 @@ function drawPhone(b) {
   const narr = b.choices ? cue : !b.who;
   const tone = whoClass(b.choices ? "章慧琪" : (b.who || speaker));
   const phoneLine = narr
-    ? el("div", { class: "talk-text stage-dir" }, [b.choices ? b.prompt : (b.text || "")])
+    ? el("div", { class: "talk-text stage-dir" }, [faceLine(b.choices ? b.prompt : (b.text || ""), b.zh || b.promptZh)])
     : b.choices
       ? el("div", { class: "talk-text " + tone }, ["……"])
       : typeBody(talkBody(b.text || "", b.zh, tone));
   if (narr && !b.choices) typeLater(phoneLine);
   const script = el("div", { class: "phone-script" }, [
-    narr ? "" : el("div", { class: "phone-line-who " + tone }, [b.choices ? "你说" : b.who]),
+    narr ? "" : el("div", { class: "phone-line-who " + tone }, [b.choices ? yueFace("你说") : b.who]),
     phoneLine,
   ]);
   const keys = b.choices
     ? choiceBox(b, "phone-choices")
-    : el("div", { class: "phone-pad" }, [nextBtn(b, t.eavesdrop ? "再贴过去听" : "听下句")]);
+    : el("div", { class: "phone-pad" }, [nextBtn(b, t.eavesdrop ? yueFace("再贴过去听") : yueFace("听下句"))]);
   box.append(el("div", { class: "phone-frame" }, [
-    el("div", { class: "phone-status" }, ["中国移动　通话　" + clockHm()]),
+    el("div", { class: "phone-status" }, [yueFace("中国移动　通话　") + clockHm()]),
     el("div", { class: "phone-incall" }, [
-      el("div", { class: "phone-tag" }, [tag]),
+      el("div", { class: "phone-tag" }, [yueFace(tag)]),
       portraitSlot(WHO_IMG[t.contact] ? t.contact : (WHO_IMG[t.number] ? t.number : speaker)),
       el("div", { class: "phone-who " + whoClass(t.contact) }, [t.contact || S.talk.loc]),
-      el("div", { class: "phone-num" }, [t.eavesdrop ? "听筒凑近门底" : (t.number || "手机")]),
-      el("div", { class: "phone-timer" }, [t.eavesdrop ? "听不清" : fmtCall()]),
+      el("div", { class: "phone-num" }, [t.eavesdrop ? yueFace("听筒凑近门底") : (t.number || yueFace("手机"))]),
+      el("div", { class: "phone-timer" }, [t.eavesdrop ? yueFace("听不清") : fmtCall()]),
       script,
       keys,
-      el("div", { class: "phone-fakekeys", "aria-hidden": "true" }, ["静音", "免提", "键盘"]),
+      el("div", { class: "phone-fakekeys", "aria-hidden": "true" }, [yueFace("静音"), yueFace("免提"), yueFace("键盘")]),
     ]),
   ]));
   return box;
@@ -532,25 +539,19 @@ function drawSms(b) {
     const tone = whoClass(mine ? "章慧琪" : (x.who || t.contact || ""));
     const pop = grew && n === log.length - 1 ? turnIn(mine ? "me" : "them") : "";
     const bubble = el("div", { class: "sms-bubble " + tone });
-    const mode = typeof langMode === "string" ? langMode : "both";
-    const zhMain = mode === "zh" && x.zh ? String(x.zh).trim().replace(/^[（(](.*)[）)]$/, "$1") : "";
-    bubble.append(el("div", { class: "talk-text" }, [zhMain || x.text || ""]));
-    if (x.zh && mode === "both") {
-      const shown = /^[（(].*[）)]$/.test(String(x.zh).trim()) ? String(x.zh).trim() : "(" + x.zh + ")";
-      bubble.append(el("div", { class: "talk-zh" }, [shown]));
-    }
+    bubble.append(el("div", { class: "talk-text" }, [faceLine(x.text, x.zh)]));
     thread.append(el("div", { class: "sms-row " + (mine ? "me" : "them") + pop }, [
       bubble,
       el("div", { class: "sms-time" }, [clockHm()]),
     ]));
   });
   const who = t.contact || t.number || "未知号码";
-  const sub = t.number && t.number !== who ? t.number : "短讯";
+  const sub = t.number && t.number !== who ? t.number : yueFace("短讯");
   const box = el("div", { class: "talk sms", "aria-live": "polite" });
   const bgId = talkBgId();
   if (bgId) box.append(imgSlot(bgId, "talk-bg", t.loc || "短讯"));
   box.append(el("div", { class: "sms-frame" }, [
-    el("div", { class: "sms-status" }, ["中国移动　信息　" + clockHm()]),
+    el("div", { class: "sms-status" }, [yueFace("中国移动　信息　") + clockHm()]),
     el("div", { class: "sms-bar" }, [
       el("strong", { class: whoClass(who) }, [who]),
       el("span", {}, [sub]),
@@ -558,11 +559,11 @@ function drawSms(b) {
     thread,
     b.choices
       ? el("div", { class: "sms-compose" + (phoneOnly(b) ? " is-phone-op" : "") }, [
-        phoneOnly(b) && b.prompt ? el("div", { class: "sms-hint" }, [b.prompt]) : "",
-        !phoneOnly(b) && b.compose ? el("div", { class: "sms-hint" }, ["发短讯（70字内）"]) : "",
+        phoneOnly(b) && b.prompt ? el("div", { class: "sms-hint" }, [faceLine(b.prompt, b.promptZh || b.zh)]) : "",
+        !phoneOnly(b) && b.compose ? el("div", { class: "sms-hint" }, [yueFace("发短讯（70字内）")]) : "",
         choiceBox(b, "sms-choices"),
       ])
-      : el("div", { class: "sms-compose" }, [nextBtn(b, (t.beats[t.i + 1] && t.beats[t.i + 1].choices) ? "看完" : "下一条")]),
+      : el("div", { class: "sms-compose" }, [nextBtn(b, (t.beats[t.i + 1] && t.beats[t.i + 1].choices) ? yueFace("看完") : yueFace("下一条"))]),
   ]));
   return box;
 }
@@ -573,12 +574,12 @@ function drawMsg(b) {
   const bgId = talkBgId();
   if (bgId) box.append(imgSlot(bgId, "talk-bg", t.loc || "留言"));
   box.append(el("div", { class: "msg-frame" }, [
-    el("div", { class: "msg-tag" }, ["语音留言"]),
-    el("div", { class: "msg-from " + whoClass(t.contact) }, [t.contact || "未知来源"]),
-    el("div", { class: "msg-num" }, [t.number || "语音留言"]),
+    el("div", { class: "msg-tag" }, [yueFace("语音留言")]),
+    el("div", { class: "msg-from " + whoClass(t.contact) }, [t.contact || yueFace("未知来源")]),
+    el("div", { class: "msg-num" }, [t.number || yueFace("语音留言")]),
     el("div", { class: "msg-wave", "aria-hidden": "true" }, ["▶　00:07 / 00:11"]),
     msgBody(b, whoClass(t.contact)),
-    b.choices ? choiceBox(b, "msg-choices") : el("div", { class: "talk-actions" }, [nextBtn(b, "听完")]),
+    b.choices ? choiceBox(b, "msg-choices") : el("div", { class: "talk-actions" }, [nextBtn(b, yueFace("听完"))]),
   ]));
   return box;
 }
@@ -586,13 +587,12 @@ function drawMsg(b) {
 function msgBody(b, cls) {
   if (b.choices || !b.who) {
     const cue = b.choices ? (b.prompt && b.prompt !== "……" ? b.prompt : "") : (b.text || "");
-    const plain = el("div", { class: "talk-text " + (cue ? "stage-dir" : cls) }, [cue || "……"]);
+    const plain = el("div", { class: "talk-text " + (cue ? "stage-dir" : cls) }, [cue ? faceLine(cue, b.zh || b.promptZh) : "……"]);
     if (!b.choices) typeLater(plain);
     return plain;
   }
-  const zhOnly = langMode === "zh" && b.zh;
   const quote = (s) => "「" + String(s || "").trim().replace(/^[（(](.*)[）)]$/, "$1") + "」";
-  return typeBody(talkBody(quote(zhOnly ? b.zh : b.text), zhOnly ? "" : b.zh, cls));
+  return typeBody(talkBody(quote(b.text), b.zh ? quote(b.zh) : "", cls));
 }
 
 function line(who, text, extra) {

@@ -155,7 +155,6 @@ function askZhouView() {
             line("周", "怕过。后尾发觉，怕嘅人先走。剩低嘅人要还债……要还生活。", { zh: "怕过。后来发现，怕的人先走。留下来的人得还债……还生活。" }),
           ],
         },
-        { label: "先不问。", then: [] },
       ],
     },
   ], "荣汇街 28 号 4 楼");
@@ -188,9 +187,9 @@ function afterTour() {
         {
           label: "这把？",
           then: [
-            line("周", "天台。晾衫。上面大把位，你中意几点上都得。", { zh: "天台。晾衣服。上面地方多，你爱几点上去都行。" }),
+            line("周", "天台。晾衫。上面大把位，日头上得。夜晚唔好上天台，风大。", { zh: "天台。晾衣服。上面地方多，白天可以上。晚上别上天台，风大。" }),
             line("章慧琪", "我今晚搬。", { zh: "我今晚搬。" }),
-            { goto: () => keepThen(item("obj-keytag"), () => finishLevel(2)) },
+            { goto: () => keepMust(item("obj-keytag"), () => finishLevel(2)) },
           ],
         },
         {
@@ -198,8 +197,8 @@ function afterTour() {
           note: ["nai", "周留意我看门锁、水渍、他的手。"],
           then: [
             line("周", "你望门锁，望水渍，又望我只手。好少租客睇咁多。睇得咁仔细嘅人，住得耐。", { zh: "你看门锁，看水渍，又看我的手。租客很少看这么多。看得细的人，住得久。" }),
-            line("周", "天台嗰把都俾埋你。晾衫用。上面大把位，你中意几点上都得。", { zh: "天台那把也给你。晾衣服用。上面地方多，你爱几点上去都行。" }),
-            { goto: () => keepThen(item("obj-keytag"), () => finishLevel(2)) },
+            line("周", "天台嗰把都俾埋你。晾衫用。上面大把位，日头上得。夜晚唔好上天台，风大。", { zh: "天台那把也给你。晾衣服用。上面地方多，白天可以上。晚上别上天台，风大。" }),
+            { goto: () => keepMust(item("obj-keytag"), () => finishLevel(2)) },
           ],
         },
       ],
@@ -470,7 +469,7 @@ function openCalDay(id, text) {
       showBoard("八月十三日", "2014年8月13日", [
         { img: man, title: "傍晚　对街的人", body: "骑楼底下，鸭舌帽压得低。他看的是这栋楼。" },
         { img: rec, title: "夜里　录音", item: item("rec-water") },
-      ], () => drawCalendar());
+      ], () => drawCalendar(), { must: true });
     };
     if (flag("saw0813")) {
       board();
@@ -639,62 +638,71 @@ function drawCut(c) {
   requestAnimationFrame(() => requestAnimationFrame(next));
 }
 
-// 日常结束：傍晚的厅，周背光站在门口，信封角露一截红圈
-function startChange() {
+// 赴诊出门前：周背光站在门口，信封角露一截红圈（过场图仍用 04 夹里那两张）
+function startTakeback() {
   playCut([
-    { img: pic(4, "场景-过场-八月十四傍晚"), ms: 6000, push: true, origin: "52% 40%", cap: "08-14　傍晚" },
+    { img: pic(4, "场景-过场-八月十四傍晚"), ms: 6000, push: true, origin: "52% 40%", cap: "08-16　出门前" },
     { img: pic(4, "场景-过场-信封角"), ms: 3200, push: true, origin: "45% 50%" },
   ], doorTalk);
 }
 
+// 门口收回：笔记 + 红圈并板收进日记簿，记齐才去诊所（跳过会再弹）
+function afterTakeback() {
+  note("takeback", "出门赴诊前，周说要收回。手抖，信封朝里。他说重建，又说未定。");
+  showBoard("出门前　八月十六日", "2014年8月16日 出门前", [
+    {
+      img: pic(4, "场景-过场-八月十四傍晚"),
+      title: "楼梯口",
+      body: "他说要收回自住。又说当我冇讲。手抖，信封朝里。",
+    },
+    {
+      img: pic(4, "证据-红圈信封"),
+      title: "红圈",
+      item: item("letter-red"),
+    },
+  ], () => goClinic(), { must: true });
+}
+
 function doorTalk() {
   S.modal = null;
-  setTime("2014年8月14日 周四 傍晚");
+  setTime("2014年8月16日 周六 15:40");
   startTalk([
-    line("", "他衬衫皱，领口却是干的。手背青筋。信封角朝里，像怕你看见。"),
+    line("", "你锁好门要出门。楼梯口撞见他。衬衫皱，领口却是干的。手背青筋。信封角朝里，像怕你看见。"),
     line("周", "章小姐。后座……我想收回自住。定金我退你。周租都退。你再住两日，走得唔得？", { zh: "章小姐。后座……我想收回来自己住。定金退你，周租也退。你再住两天，走得开吗？" }),
     line("章慧琪", "我冇地方去。……我啱啱先当咗呢度系屋企。", { zh: "我没地方去。……我才刚把这儿当成家。" }),
     line("周", "……算。当我冇讲。水喉有问题我再睇。", { zh: "……算了。当我没说。水管有问题我再来看。" }),
     line("", "信封角从指缝露出来，上面有一截红圈，字看不清。他的手抖了一下，又把信夹紧。"),
     {
-      prompt: "他已经转身。",
+      prompt: "他已经转身。你还要约四点的诊。",
       choices: [
         {
           label: "看信封。",
           then: () => showModal(
             "信封",
             "新闻纸一角。红笔圈住的字被他拇指挡住，只看见圈的弧。圈里的字看不清。",
-            "2014年8月14日 傍晚",
+            "2014年8月16日 出门前",
             "memo",
             () => drawTalk(),
-            {
-              id: "letter-red",
-              kind: "信封",
-              title: "红圈",
-              time: "2014年8月14日 傍晚",
-              body: "新闻纸一角。红笔圈。他的拇指挡住圈里的字。",
-              img: pic(4, "证据-红圈信封"),
-            }
+            item("letter-red")
           ),
         },
         {
           label: "发生什么事？",
-          note: ["takeback", "今日傍晚要收回。手抖，信封朝里。他说重建，又说未定。"],
           then: [
             line("周", "冇。重建……未定。有人……你唔好问。", { zh: "没有。重建……还没定。有人……你别问。" }),
-            { goto: nightStart },
+            { goto: afterTakeback },
           ],
         },
         {
           label: "我可以晚一点走。",
           then: [
             line("周", "唔使你答应。你住你嘅。", { zh: "不用你答应。你住你的。" }),
-            { goto: nightStart },
+            { goto: afterTakeback },
           ],
         },
         {
-          label: "不追。关门。",
-          then: [{ goto: nightStart }],
+          label: "不追。先记下这一幕。",
+          then: [{ goto: afterTakeback }],
         },
       ],
     },
@@ -776,7 +784,7 @@ function printItem() {
 }
 
 function openPrint(onClose) {
-  showModal("照片：门底湿脚印", "门底下伸出一小截湿脚印，走到一半就停下了。", "", "memo", onClose || (() => drawNight()), printItem());
+  shootPolaroid(printItem(), onClose || (() => drawNight()));
 }
 
 function sillItem() {
@@ -964,13 +972,51 @@ function sillLine(which) {
   return "你没有再碰。水还在。";
 }
 
+function sillPhoto() {
+  flag("photoSill", true);
+  markTonight("sill");
+  note("sill", "窗台童码。鞋并上去比：小两号。今晚没下雨。");
+  shootPolaroid(sillItem(), () => drawNight());
+}
+
 function sillMenu() {
   const done = nightAct("sill");
   if (done === "photo") {
-    showModal("照片：窗台童码", "把自己的鞋并上去比过：小两号。水是新的。今晚没下雨。搬进来时那圈是干的。", "", "memo", () => drawNight(), sillItem());
+    shootPolaroid(sillItem(), () => drawNight());
     return;
   }
-  if (done) {
+  // 擦掉也算看见异样（进摆在一起）；同一位置又有一圈，可再拍
+  if (done === "wipe") {
+    const clue = CLUE_IMG;
+    closeModal();
+    const ch = el("div", { class: "choices" });
+    ch.append(el("button", {
+      type: "button",
+      onclick: () => {
+        markNight("sill", "photo");
+        closeModal();
+        withClue(clue, sillPhoto);
+      },
+    }, ["拍照"]));
+    ch.append(el("button", {
+      type: "button",
+      onclick: () => {
+        closeModal();
+        showModal("窗台水印", sillLine("wipe"), "", null, () => drawNight());
+      },
+    }, ["先这样"]));
+    const sheet = el("div", { class: "sheet" }, [
+      el("h3", {}, ["窗台水印"]),
+      clueSlot(clue, "窗台水印"),
+      el("p", { class: "talk-text" }, ["擦掉了。同一位置又有一圈。"]),
+      ch,
+    ]);
+    S.modal = el("div", { class: "modal", id: "game-modal" }, [sheet]);
+    stage.append(S.modal);
+    return;
+  }
+  // 不理：旁支，可再开一次补擦／拍（不锁死）
+  if (done && done !== "skip") {
     showModal("窗台水印", sillLine(done));
     return;
   }
@@ -980,14 +1026,11 @@ function sillMenu() {
   [
     ["擦掉", "wipe", () => {
       flag("wipedSill", true);
-      showModal("窗台水印", "擦掉了。水印还是新的。", "", null, () => drawNight());
-    }],
-    ["拍照", "photo", () => {
-      flag("photoSill", true);
       markTonight("sill");
-      note("sill", "窗台童码。鞋并上去比：小两号。今晚没下雨。");
-      showModal("照片：窗台童码", "把自己的鞋并上去比过：小两号。水是新的。今晚没下雨。搬进来时那圈是干的。", "", "memo", () => drawNight(), sillItem());
+      note("sill", "窗台童码。擦掉了，同一位置又有一圈。今晚没下雨。");
+      showModal("窗台水印", "擦掉了。水印还是新的。同一位置又有一圈。", "", null, () => drawNight());
     }],
+    ["拍照", "photo", sillPhoto],
     ["不理", "skip", () => showModal("窗台水印", "水是新的。今晚没下雨。干印变湿了。", "", null, () => drawNight())],
   ].forEach(([label, key, then]) => {
     ch.append(el("button", {
@@ -1120,7 +1163,7 @@ function passFrontDoor() {
     line("周", "瞓唔着。旧楼返潮。", { zh: "睡不着。旧楼返潮。" }),
     { note: ["wet", "周问我脚湿不湿。我没同他讲过脚印。"] },
     line("", "你低头看。鞋子是干的。他关上门。"),
-    { goto: () => keepThen(item("note-dry"), stepPast) },
+    { goto: () => keepMust(item("note-dry"), stepPast) },
   ], "4 楼前座门口", "face");
 }
 
@@ -1142,7 +1185,7 @@ function knockZhou() {
     line("章慧琪", "冇。……我对脚系干嘅。", { zh: "没有。……我脚是干的。" }),
     { note: ["wet", "周问我脚湿不湿。我没同他讲过脚印。"] },
     line("", late ? "他过了几秒才开门。睡衣领口是湿的。他关上门。你低头看，鞋是干的。" : "他开门很慢，像刚睡醒。他关上门。你低头看，鞋是干的。"),
-    { goto: () => keepThen(item("note-dry"), stepPast) },
+    { goto: () => keepMust(item("note-dry"), stepPast) },
     {
       prompt: "……",
       choices: [
@@ -1154,6 +1197,12 @@ function knockZhou() {
 }
 
 function waitDawn() {
+  // 过关前只拦＋提示，不硬弹证物窗（怪异）
+  if (pairCount() < 3) {
+    tip("先把不一样的摆在一起。", { nearBar: true });
+    if (S.mode === "night") drawNight();
+    return;
+  }
   stopNightClock();
   const n = S.night;
   n.fired = n.fired || {};
@@ -1165,6 +1214,7 @@ function waitDawn() {
     n.car = "地";
     note("car-move", "车头朝门。昨晚放的时候朝窗。");
   }
+  // 时钟追到天亮：屋里状态到位，漏看的让自己点，不连环弹窗
   if (missedVoice) {
     note("voice", "女人声「阿轩，返嚟食饭。」从储物室门底来。");
   }
@@ -1174,17 +1224,21 @@ function waitDawn() {
   }
   n.fired = { light: true, car: true, voice: true, print: true };
   n.min = 101;
+  n.phase = "leave";
   setTime(nightClockText());
-  const go = () => leaveNightToMei();
-  const offerPrint = () => {
-    if (!(missedPrint || unseenPrint)) return go();
-    markNight("sawPrint");
-    openPrint(go);
-  };
-  if (missedVoice || unseenVoice) {
-    markNight("heardAxuan");
-    openAxuan(offerPrint);
-  } else offerPrint();
+  if (missedVoice || unseenVoice || missedPrint || unseenPrint) {
+    tip(
+      missedPrint || unseenPrint
+        ? "门底那边，天亮前再看一眼。"
+        : "储物室那边，天亮前再看一眼。",
+      { nearBar: true }
+    );
+    S.talk = null;
+    S.mode = "night";
+    drawNight();
+    return;
+  }
+  leaveNightToMei();
 }
 
 function persistChat() {
@@ -1229,7 +1283,7 @@ const CHAT_MEI16 = [
   { me: ["咁你想点。"] },
   { she: "我想你同能听的人讲。家豪大学识嘅朋友，读医嗰个。年夜饭佢喝醉，成晚讲呢个人。你问过边个阿明，记得未？" },
   { me: ["就系姐夫成日攞佢做借口嗰个。"] },
-  { she: "系。我见过一次，家豪去医院接佢收工。人斯文，唔会一开口就话你疯。我叫家豪问下得唔得——你唔想去，当我冇讲。" },
+  { she: "系。我见过一次，家豪去医院接佢收工。佢成日食烟，恤衫都系味——人斯文，唔会一开口就话你疯。我叫家豪问下得唔得——你唔想去，当我冇讲。" },
 ];
 
 function chatClock(i, pack) {
@@ -1296,7 +1350,7 @@ HUBS.dawn = {
           go: () => {
             if (!flag("knockedZhou")) return passFrontDoor();
             if (!ev("note-dry")) {
-              keepThen(item("note-dry"), backToHub);
+              keepMust(item("note-dry"), backToHub);
               return;
             }
             showModal("前座门口", "门关着。十五号天亮前，他问过我的鞋。");
@@ -1327,13 +1381,13 @@ HUBS.dawn = {
           title: "拍一张：玩具车", sub: () => (flag("clinicAddr") ? "出门前。" : "先拍好。"), img: pic(5, "示意-拍玩具车"),
           show: () => !!(S.chatLogs.mei16 && S.chatLogs.mei16.closed),
           seen: () => ev("photo-car-out"),
-          go: () => keepThen(item("photo-car-out"), backToHub),
+          go: () => shootPolaroid(item("photo-car-out"), backToHub),
         },
         {
           title: "拍一张：水龙头", sub: () => (flag("clinicAddr") ? "出门前，拧紧。" : "先拍好，拧紧。"), img: pic(5, "示意-拍水龙头"),
           show: () => !!(S.chatLogs.mei16 && S.chatLogs.mei16.closed),
           seen: () => ev("photo-tap-out"),
-          go: () => keepThen(item("photo-tap-out"), backToHub),
+          go: () => shootPolaroid(item("photo-tap-out"), backToHub),
         },
       ],
     },
@@ -1569,7 +1623,7 @@ function howardCall() {
     line("章慧琪", "就系……你成日攞佢做借口嗰个？", { zh: "就是……你老拿他当借口那个？" }),
     line("陈家豪", "系。佢肯听。我介绍，佢会收。你同佢讲真话。佢听完会揽晒上身。所以你……准时到就得。楼下嗰间面档，佢有时会唔记得食。", { zh: "是。他肯听。我介绍，他会收。你跟他说真话。他听完就全往自己身上揽。所以你……准时到就行。楼下那家面档，他有时候会忘了吃。" }),
     line("章慧琪", "佢……点㗎？", { zh: "他……人怎么样？" }),
-    line("陈家豪", "专业。用心。佢本人精神有时唔太好。过劳。你当我冇讲。睇病人一流。", { zh: "专业。用心。他本人精神有时不太好。过劳。你就当我没说。看病一流。" }),
+    line("陈家豪", "专业。用心。佢本人精神有时唔太好。以前出过车祸，之后有时会懵。你当我冇讲。睇病人一流。", { zh: "专业。用心。他本人精神有时不太好。以前出过车祸，之后有时会懵。你就当我没说。看病一流。" }),
     {
       prompt: "听筒里静了半拍。",
       choices: [
@@ -1580,9 +1634,9 @@ function howardCall() {
         {
           label: "「不太好」是什么意思",
           flag: "askedWorry",
-          note: ["worry", "陈说阿明接不上昨日。叫我别让他知道。他说「我担心就算」。"],
+          note: ["worry", "陈说阿明以前出过车祸，之后会懵、接不上昨日。叫我别让他知道。"],
           then: [
-            line("陈家豪", "失眠，健忘，有时接唔上琴日。你唔好同佢讲系我讲嘅。佢唔钟意人担心佢。我担心就算。", { zh: "失眠，健忘，有时候接不上昨天。你别跟他说是我说的。他不喜欢别人担心他。我担心就行。" }),
+            line("陈家豪", "失眠，健忘，有时接唔上琴日——车祸之后就咁。你唔好同佢讲系我讲嘅。佢唔钟意人担心佢。我担心就算。", { zh: "失眠，健忘，有时候接不上昨天——车祸之后就这样。你别跟他说是我说的。他不喜欢别人担心他。我担心就行。" }),
             ...howardClose(),
           ],
         },

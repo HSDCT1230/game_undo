@@ -168,7 +168,8 @@ function dayOf(t) {
   return m ? { key: Number(m[1]) * 100 + Number(m[2]), label: m[1] + "月" + m[2] + "日" } : { key: 0, label: "更早记下的" };
 }
 
-// 「收集的」：证物和笔记按日子排；纸归「我写的」。这一关以前的日子收成一行，点开才列
+// 「收集的」：证物和笔记按日子排；纸归「我写的」。
+// 本关之前的收成「历史收集」挂在最新一条后面；展开后同一页内滚动，不翻页
 function timelineBlocks() {
   const days = new Map();
   const at = (t) => {
@@ -182,7 +183,13 @@ function timelineBlocks() {
   const L = typeof levelNow === "function" ? levelNow() : null;
   const start = L && L.clock ? dayOf(L.clock).key : 0;
   const old = start ? keys.filter((k) => k < start) : [];
+  const cur = keys.filter((k) => !old.includes(k));
   const out = [];
+  const dayChunk = (k) => {
+    const d = days.get(k);
+    return [diarySubHead(d.label), ...d.rows];
+  };
+  cur.forEach((k) => out.push(...dayChunk(k)));
   if (old.length) {
     const n = old.reduce((s, k) => s + days.get(k).rows.length, 0);
     const span = days.get(old[0]).label + (old.length > 1 ? "～" + days.get(old[old.length - 1]).label : "");
@@ -192,21 +199,20 @@ function timelineBlocks() {
       "aria-expanded": S.diaryOld ? "true" : "false",
       onclick: () => {
         S.diaryOld = !S.diaryOld;
-        S.diaryPage = 0;
         sfx("paper");
         renderDiaryIndex();
       },
     }, [
-      el("span", { class: "diary-fold-name" }, ["以前的日子　" + span]),
+      el("span", { class: "diary-fold-name" }, ["历史收集　" + span]),
       el("span", { class: "diary-count" }, [String(n)]),
       el("span", { class: "diary-fold-go", "aria-hidden": "true" }, [S.diaryOld ? "收起 ▴" : "展开 ▾"]),
     ]));
+    if (S.diaryOld) {
+      const hist = el("div", { class: "diary-hist", role: "region", "aria-label": "历史收集" });
+      old.forEach((k) => hist.append(...dayChunk(k)));
+      out.push(hist);
+    }
   }
-  keys.forEach((k) => {
-    if (old.includes(k) && !S.diaryOld) return;
-    const d = days.get(k);
-    out.push(diarySubHead(d.label), ...d.rows);
-  });
   return out;
 }
 
@@ -410,7 +416,9 @@ function dismissDiaryLeaf() {
   const onClose = leaf && leaf.onClose;
   const fromIndex = leaf && leaf.fromIndex;
   const clueModal = leaf && leaf.clueModal;
-  if (leaf && leaf.canFile && leaf.item && !(leaf.isFiled ? leaf.isFiled() : hasEvidence(leaf.item.id))) noteSkip(leaf.item);
+  const filed = leaf && leaf.item && (leaf.isFiled ? leaf.isFiled() : hasEvidence(leaf.item.id));
+  // 必做：没记下不记 skip，交给 onClose 再弹；旁支：先不记才进 missed
+  if (leaf && leaf.canFile && leaf.item && !filed && !leaf.mustFile) noteSkip(leaf.item);
   S.diaryLeaf = null;
   if (clueModal) closeModal();
   if (fromIndex) {
@@ -479,6 +487,7 @@ function showClueModal(item, opts) {
     canFile,
     item,
     isFiled: opts.isFiled,
+    mustFile: !!opts.mustFile,
     fromIndex: !!opts.fromIndex,
     onClose: opts.onClose,
     clueModal: true,
@@ -536,7 +545,7 @@ function showClueModal(item, opts) {
     }, ["好"]));
   }
 
-  const sheet = el("div", { class: "sheet scene clue-sheet" }, kids);
+  const sheet = el("div", { class: "sheet scene clue-sheet" + (isPolaroid(item) ? " polaroid-leaf" : "") }, kids);
   S.modal = el("div", {
     class: "modal scene",
     id: "game-modal",
@@ -652,6 +661,68 @@ function tip(text, opt) {
   setTimeout(() => node.remove(), opt.ms || 3200);
 }
 
+/* 她自己的拍立得。相纸一盒八张。租盘图、旧相框、别人的偷拍不走这里。 */
+const POLAROID_IDS = ["photo-sill", "photo-print", "photo-car-out", "photo-tap-out"];
+const FILM_PACK = 8;
+
+function isPolaroid(it) {
+  return !!(it && POLAROID_IDS.includes(it.id));
+}
+
+function filmLeft() {
+  const used = (S.evidence || []).filter((e) => POLAROID_IDS.includes(e.id)).length;
+  return Math.max(0, FILM_PACK - used);
+}
+
+function shootPolaroid(it, next) {
+  if (!it) return;
+  if (hasEvidence(it.id)) {
+    showClueModal(it, { canFile: false, onClose: next });
+    return;
+  }
+  closeModal();
+  if (notesLayer && !notesLayer.hidden) notesLayer.hidden = true;
+  const frame = el("div", { class: "polaroid" }, [
+    el("div", { class: "polaroid-well" }, [it.img ? imgSlot(it.img, "polaroid-pic", it.title) : ""]),
+    el("p", { class: "polaroid-cap" }, [""]),
+  ]);
+  const film = el("p", { class: "fine polaroid-film" }, ["相纸还剩 " + filmLeft() + " 张"]);
+  const btn = el("button", { type: "button", class: "btn" }, ["按快门"]);
+  const sheet = el("div", { class: "sheet scene polaroid-sheet" }, [
+    el("h3", {}, ["拍立得"]),
+    el("p", { class: "fine" }, ["自己的相机。按下去要等一会儿，白边再写时间。"]),
+    frame,
+    film,
+    btn,
+  ]);
+  btn.addEventListener("click", () => {
+    if (frame.classList.contains("ready")) {
+      sfx("file");
+      fileEvidence(it);
+      renderNotes();
+      closeModal();
+      if (next) next();
+      return;
+    }
+    if (frame.classList.contains("developing")) return;
+    sfx("tick");
+    frame.classList.add("developing");
+    btn.disabled = true;
+    btn.textContent = "显影……";
+    setTimeout(() => {
+      frame.classList.remove("developing");
+      frame.classList.add("ready");
+      const cap = frame.querySelector(".polaroid-cap");
+      if (cap) cap.textContent = (it.time ? it.time + "　" : "") + (it.title || "");
+      film.textContent = "相纸还剩 " + Math.max(0, filmLeft() - 1) + " 张";
+      btn.disabled = false;
+      btn.textContent = "夹进日记簿";
+    }, 900);
+  });
+  S.modal = el("div", { class: "modal scene", id: "game-modal" }, [sheet]);
+  stage.append(S.modal);
+}
+
 function keepThen(item, next) {
   showClueModal(item, {
     onClose: () => {
@@ -660,18 +731,42 @@ function keepThen(item, next) {
   });
 }
 
+// 必做证物：点铅笔线记下才走下一步；合上未记则提示并再弹
+function keepMust(item, next) {
+  const show = () => showClueModal(item, {
+    mustFile: true,
+    onClose: () => {
+      if (!hasEvidence(item.id)) {
+        tip("先记进日记簿。", { nearBar: true });
+        show();
+        return;
+      }
+      if (next) next();
+    },
+  });
+  show();
+}
+
 /* 并列卡：同一天、同一趟的几样东西横排在一张卡上。故事按时间讲，线索并排摆。
-   cards: [{ img, title, body, item }]；有 item 的那张，正文铅笔线点一下记进日记簿 */
-function showBoard(title, time, cards, onClose) {
+   cards: [{ img, title, body, item }]；有 item 的那张，正文铅笔线点一下记进日记簿
+   opts.must：有 item 的卡必须先记下才关（必做） */
+function showBoard(title, time, cards, onClose, opts) {
+  opts = opts || {};
   closeModal();
   if (notesLayer && !notesLayer.hidden) notesLayer.hidden = true;
   if (typeof ensureStageBackdrop === "function") ensureStageBackdrop();
   if (mapLayer) mapLayer.hidden = true;
   const close = () => {
-    cards.forEach((c) => { if (c.item && !hasEvidence(c.item.id)) noteSkip(c.item); });
+    const missing = cards.filter((c) => c.item && !hasEvidence(c.item.id));
+    if (opts.must && missing.length) {
+      tip("先记进日记簿。", { nearBar: true });
+      showBoard(title, time, cards, onClose, opts);
+      return;
+    }
+    missing.forEach((c) => noteSkip(c.item));
     if (onClose) onClose();
   };
-  S.diaryLeaf = { clueModal: true, onClose: close };
+  S.diaryLeaf = { clueModal: true, onClose: close, mustFile: !!opts.must };
   const row = el("div", { class: "board-row n" + cards.length }, cards.map((c) => {
     const it = c.item;
     const filed = !!(it && hasEvidence(it.id));
@@ -679,7 +774,7 @@ function showBoard(title, time, cards, onClose) {
       sfx("file");
       fileEvidence(c.img && !it.img ? { ...it, img: c.img } : it);
       renderNotes();
-      showBoard(title, time, cards, onClose);
+      showBoard(title, time, cards, onClose, opts);
     };
     const body = c.body || (it && it.body) || "";
     return el("figure", { class: "board-card" }, [

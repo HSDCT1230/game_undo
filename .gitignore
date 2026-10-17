@@ -6,6 +6,11 @@ desktop.ini
 __pycache__/
 *.pyc
 
+# Secrets (never commit API keys)
+.env
+.env.local
+.env.*.local
+
 # Agent / local scratch at repo root
 _*.txt
 _*.json
@@ -24,3 +29,8 @@ _git_err.txt
 # Accidental editor backups
 *.restored
 *.bak
+
+# Ink 工具本地缓存（inklecate 二进制／编译产物／npm）
+tools/_bin/
+tools/node_modules/
+tools/package-lock.json

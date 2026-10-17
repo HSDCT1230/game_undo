@@ -3,7 +3,7 @@
 const ITEMS = {
   "obj-keytag": { kind: "物件", title: "钥匙牌", time: "2014年8月1日", body: "钥匙圈上硬纸牌，周先生的字：\n大门　铁闸　天台（挂门内小钩）\n水喉坏咗拍门。唔使自己整。\n天台晾衫用。", img: pic(2, "证据-钥匙牌"), key: "水喉坏咗拍门" },
   "rec-water": { kind: "录音", title: "只有水", time: "2014年8月13日 夜", body: "录音里只有水。没有人声。", key: "只有水" },
-  "letter-red": { kind: "信封", title: "红圈", time: "2014年8月14日 傍晚", body: "新闻纸一角。红笔圈。他的拇指挡住圈里的字。", img: pic(4, "证据-红圈信封"), key: "红笔圈" },
+  "letter-red": { kind: "信封", title: "红圈", time: "2014年8月16日 出门前", body: "新闻纸一角。红笔圈。他的拇指挡住圈里的字。", img: pic(4, "证据-红圈信封"), key: "红笔圈" },
   "photo-sill": { kind: "照片", title: "窗台童码", time: "2014年8月15日 凌晨", body: "鞋并上去比：小两号。今晚没下雨。水是新的。搬进来时那圈是干的。", img: pic(4, "证据-窗台童码"), key: "小两号" },
   "photo-print": { kind: "照片", title: "门底湿脚印", time: "2014年8月15日 凌晨", body: "门底湿脚印，到一半停住。", img: pic(4, "证据-门底湿脚印"), key: "门底湿脚印" },
   "rec-axuan": { kind: "录音", title: "阿轩，返嚟食饭", time: "2014年8月15日 凌晨", body: "女人声从储物室门底来：「阿轩，返嚟食饭。」声线稳。门缝下没有光。", key: "阿轩，返嚟食饭" },
@@ -84,7 +84,7 @@ const ITEM_ABOUT = {
 const itemAbout = (id) => ITEM_ABOUT[id] || [];
 
 // 笔记和已记下的证物讲同一件事时，目录只列证物
-const NOTE_IN_ITEM = { print: "photo-print", voice: "rec-axuan", sill: "photo-sill", dirt: "mail-dirt", namecall: "rec-name" };
+const NOTE_IN_ITEM = { print: "photo-print", voice: "rec-axuan", sill: "photo-sill", dirt: "mail-dirt", namecall: "rec-name", takeback: "letter-red" };
 
 // 第 3 关日历上点开的那几天，钟仍停在八月一日
 const NOTE_DAY = { "tap-fixed": "8月3日", "gate-tick": "8月11日", "car-still": "8月12日" };
@@ -119,10 +119,10 @@ function itemKin(id) {
 /* ---------- 四条 ---------- */
 
 const FOUR = [
-  { id: "pay", text: "冇粮单", hit: /粮单|在职证明|公司|面试|商业登记|上班族|从业员/ },
+  { id: "pay", text: "冇粮单", hit: /粮单|工资单|在职证明|公司|面试|商业登记|上班族|从业员/ },
   { id: "guar", text: "冇担保", hit: /担保/ },
-  { id: "now", text: "要即刻住", hit: /即日|一年|十个月|不在线|订金/ },
-  { id: "week", text: "每星期三千几", hit: /周租|口头|家庭户/ },
+  { id: "now", text: "要即刻住", hit: /即日|一年|十个月|订金|定金/ },
+  { id: "week", text: "每星期三千几", hit: /周租|按周|口头|家庭户/ },
 ];
 
 function strikeFour(text, where) {
@@ -194,7 +194,7 @@ function tonightText(id) {
 function baseSheet(id, body, onClose) {
   const row = BASE.find((b) => b.id === id);
   S.base = S.base || {};
-  showClueModal({
+  const show = () => showClueModal({
     id: "base-" + id,
     title: row.name,
     time: "2014年8月1日 夜",
@@ -203,12 +203,21 @@ function baseSheet(id, body, onClose) {
   }, {
     canFile: !S.base[id],
     isFiled: () => !!S.base[id],
+    mustFile: !S.base[id],
     keep: () => {
       S.base[id] = true;
       renderNotes();
     },
-    onClose,
+    onClose: () => {
+      if (!S.base[id]) {
+        tip("先记进日记簿。", { nearBar: true });
+        show();
+        return;
+      }
+      if (onClose) onClose();
+    },
   });
+  show();
 }
 
 function markTonight(id) {

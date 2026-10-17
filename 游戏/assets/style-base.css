@@ -207,13 +207,13 @@ body {
 }
 .logo {
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.04em;
   font-size: 20px;
 }
 .logo small {
   display: block;
   font-weight: 400;
-  letter-spacing: 0.2em;
+  letter-spacing: 0;
   font-size: 10px;
   opacity: .85;
 }
@@ -662,7 +662,7 @@ html:not(.dev-pics) .img-slot.missing .img-mark { color: transparent; background
   background: #fff;
   cursor: pointer;
 }
-.days button.seen { background: #e7f0e4; }
+.days button.seen { background: #f3ebe0; }
 
 .scene-fit {
   height: 100%;

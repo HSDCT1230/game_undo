@@ -7,8 +7,16 @@ function listingById(id) {
   return LISTINGS.find((l) => l.id === id) || LISTINGS.find((l) => l.id === "ssp");
 }
 
+function rentLabel(l) {
+  return (l.rent || "") + "／" + (l.per || "月");
+}
+
 function homeLatest() {
-  return ["yl", "tw", "tk"].map((id) => listingById(id));
+  return LISTINGS
+    .filter((l) => l.id !== "ssp" && l.date)
+    .slice()
+    .sort((a, b) => String(b.date).localeCompare(String(a.date)) || (b.views || 0) - (a.views || 0))
+    .slice(0, 3);
 }
 
 /* data -> web-data.js: NEWS */
@@ -64,9 +72,24 @@ function threadTime(id) {
   return isSerial(id) ? webStamp(serialAt(id)) : THREADS[id].time;
 }
 
+function helpRepliesOpen() {
+  return (S.helpSearches || 0) >= 3 || (typeof noted === "function" && noted("bbs-self"));
+}
+
+function countHelpSearch() {
+  if (!postedHelp() || helpRepliesOpen()) return false;
+  if (!(S.query || "").trim()) return false;
+  S.helpSearches = (S.helpSearches || 0) + 1;
+  return S.helpSearches === 3;
+}
+
 function threadReplies(id) {
   const t = THREADS[id];
-  const rows = t.replies || [];
+  let rows = t.replies || [];
+  if (id === "helpzhang" && !helpRepliesOpen()) {
+    const cut = rows.findIndex((r) => r.user === "藤先生");
+    if (cut >= 0) rows = rows.slice(0, cut);
+  }
   if (!isSerial(id)) return rows;
   const base = webDate(...t.time.split(" ")).getTime();
   const at = serialAt(id).getTime();
@@ -74,6 +97,25 @@ function threadReplies(id) {
     .map((r) => Object.assign({}, r, { at: new Date(at + webDate(...r.time.split(" ")).getTime() - base) }))
     .filter((r) => webPast(r.at))
     .map((r) => Object.assign(r, { time: webStamp(r.at) }));
+}
+
+function boardLabel(b) {
+  return T(b, ({ 求助: "求助", 租务: "租房", 地区: "地区", 杂谈: "闲聊" })[b] || b);
+}
+
+/** 列表热度：按回复数假造「第 N 頁」，像本地论坛一眼看出帖有多热闹。 */
+function forumPageMarks(replyCount) {
+  const pages = Math.max(1, Math.min(6, 1 + Math.ceil((replyCount || 0) / 2)));
+  let s = "";
+  for (let i = 1; i <= pages; i++) s += T("第", "第") + i + T("頁", "页");
+  return s;
+}
+
+function forumPreview(text, max) {
+  const raw = String(text || "").replace(/\s+/g, " ").trim();
+  if (!raw) return "";
+  const n = max || 36;
+  return raw.length > n ? raw.slice(0, n) + "…" : raw;
 }
 
 function serialWhen(id) {
@@ -140,7 +182,7 @@ function newsLink(id, mini) {
     },
   }, [
     el("span", { class: "fmeta" }, [n.date]),
-    el("span", { class: "ftitle" }, [n.title]),
+    el("span", { class: "ftitle" }, [Ty(n, "title")]),
   ]);
 }
 
@@ -202,20 +244,27 @@ function postedHelp() {
   return flag("postedHelp");
 }
 
+function isWallScreen(screen) {
+  const s = String(screen || "");
+  return s === "wall" || s === "ad" || s.indexOf("wall-") === 0;
+}
+
 function holdForPost(screen) {
+  const onWall = isWallScreen(S.screen);
   if (S.pendingPost) {
     if (screen === "post") return false;
-    showPrompt("有内容待发布。", "请先发布，再浏览其他页面。");
-    if (S.screen !== "post") {
+    showPrompt(W("needPost"), W("needPostBody"));
+    if (!onWall && S.screen !== "post") {
       S.screen = "post";
       S.tab = "house";
       draw();
     }
     return true;
   }
-  if (postedHelp() || screen === "post") return false;
-  showPrompt("求助帖还没顶。", "请先顶帖，再浏览其他页面。");
-  if (S.screen !== "post") {
+  // 墙簿是另一个站。未顶帖只拦住廿八屋，不把人从墙簿拽回去。
+  if (isWallScreen(screen) || postedHelp() || screen === "post") return false;
+  showPrompt(W("needBump"), W("needBumpBody"));
+  if (!onWall && S.screen !== "post") {
     S.screen = "post";
     S.tab = "house";
     draw();
@@ -228,14 +277,18 @@ function needPostFirst() {
 }
 
 function blockedLogout() {
-  showPrompt("登出失败。", "网页无回应，请稍后再试。");
+  showPrompt(T("登出失败。", "退出失败。"), T("网页无回应，请稍后再试。", "网页无响应，请稍后再试。"));
 }
 
 // 网页里的任务提示，和其他场景一样别在屏幕右边的便条上
 function currentSlate() {
   if (S.mode !== "web") return "";
-  if (S.pendingPost && S.screen === "post") return "检查无误后发布。";
+  if (S.pendingPost && S.screen === "post") return "看完草稿，按下面的「发布」。不按就不算发出去。";
   if (!postedHelp() && S.screen === "post") return "帖子沉下去了，顶上去，再自己搜。";
+  if (postedHelp() && !helpRepliesOpen() && S.level === 1) {
+    const n = S.helpSearches || 0;
+    return "搜索栏再搜 " + (3 - n) + " 次，任意关键字。藤和后面几层才会出现。";
+  }
   return !S.paused && typeof levelHint === "function" ? levelHint() : "";
 }
 
@@ -256,7 +309,7 @@ function publishHelpPost() {
   sfx("send");
   flag("postedHelp", true);
   clearSlate();
-  showPrompt("已顶帖。");
+  showPrompt(W("bumped"));
 }
 
 function districtSelected(d) {
@@ -325,6 +378,7 @@ function btnTab(label, id, on, scene) {
         return;
       }
       if (id === "wall") goWeb("wall");
+      else if (S.pendingPost || !postedHelp()) goWeb("post");
       else goWeb(flag("searched") ? "list" : "home");
     },
   }, [label]);
@@ -350,6 +404,7 @@ function snapWeb() {
     wallWho: S.wallWho,
     forumId: S.forumId,
     newsId: S.newsId,
+    adId: S.adId,
     query: S.query,
     listFilter: S.listFilter || "all",
   };
@@ -428,6 +483,20 @@ function leaveBrowserToRoom() {
 }
 
 function closeRental() {
+  if (S.modal) {
+    closeModal();
+    draw();
+    return;
+  }
+  if (S.pendingPost && typeof THREADS !== "undefined" && THREADS[S.pendingPost]) {
+    if (!S.modal) {
+      showPrompt(
+        T("还没发布。", "还没发布。"),
+        T("先按「发布」。关掉窗口不会把帖发出去。", "先按「发布」。关掉窗口不会把帖发出去。")
+      );
+    }
+    return;
+  }
   if (typeof sfxWebClose === "function") sfxWebClose();
   if (!leaveBrowserToRoom()) draw();
 }
@@ -436,6 +505,11 @@ document.addEventListener("keydown", (e) => {
   if (e.key !== "Escape" || !browserOverRoom()) return;
   if (notesLayer && !notesLayer.hidden) return;
   if (document.getElementById("pic-zoom")) return;
+  if (S.modal) {
+    closeModal();
+    draw();
+    return;
+  }
   closeRental();
 });
 
@@ -474,6 +548,7 @@ function goWeb(screen, extra) {
   if ("wallWho" in extra) S.wallWho = extra.wallWho;
   if ("forumId" in extra) S.forumId = extra.forumId;
   if ("newsId" in extra) S.newsId = extra.newsId;
+  if ("adId" in extra) S.adId = extra.adId;
   if ("query" in extra) S.query = extra.query;
   if ("filter" in extra) S.listFilter = extra.filter;
   if (extra.search) flag("searched", true);
@@ -481,15 +556,17 @@ function goWeb(screen, extra) {
 }
 
 function webBack() {
-  if (holdForPost("home")) return;
-  const prev = (S.webHist || []).pop();
+  const prev = (S.webHist || [])[S.webHist.length - 1];
   if (!prev) return;
+  if (holdForPost(prev.screen)) return;
+  S.webHist.pop();
   S.screen = prev.screen;
   S.tab = prev.tab;
   S.listing = prev.listing;
   S.wallWho = prev.wallWho;
   S.forumId = prev.forumId;
   S.newsId = prev.newsId;
+  S.adId = prev.adId;
   S.query = prev.query;
   S.listFilter = prev.listFilter || "all";
   draw();
@@ -510,6 +587,7 @@ function webViewKey() {
     S.listing || "",
     S.forumId || "",
     S.newsId || "",
+    S.adId || "",
     S.wallWho || "",
     S.query || "",
     S.listFilter || "",
@@ -581,7 +659,7 @@ function webAddr() {
     landlord: "http://28house.hk/user/chow",
     about: "http://28house.hk/about",
     wall: "http://wallbook.hk/home",
-    ad: "http://wallbook.hk/ad/teng",
+    ad: "http://wallbook.hk/ad/" + ((WALL_ADS[S.adId] && WALL_ADS[S.adId].slug) || S.adId || "teng"),
     "wall-me": "http://wallbook.hk/profile/vicky",
     "wall-friends": "http://wallbook.hk/friends",
     "wall-mail": "http://wallbook.hk/inbox",
@@ -638,20 +716,27 @@ function hkNavItem(label, screen, extra) {
 }
 
 function houseHeader() {
-  const mail = flag("askedOld") && !flag("sawMail")
-    ? (replyReady() ? "站内留言(1)" : "站内留言(待回)")
-    : "站内留言";
+  const favN = (S.favs || []).length;
   return el("div", { class: "site-header" }, [
     el("button", {
       type: "button",
       class: "logo-btn",
       onclick: () => goWeb("home"),
-    }, [el("div", { class: "logo", html: "廿八屋<small>香港楼盘　业主自让　2014</small>" })]),
+    }, [
+      el("div", { class: "logo" }, [
+        "廿八屋",
+        el("small", {}, [W("slogan")]),
+      ]),
+    ]),
     el("div", { class: "hdr-tools" }, [
       el("span", {}, [S.time.replace("2014年", "")]),
-      el("button", { type: "button", class: "btn ghost hdr-btn", onclick: () => goWeb("inbox") }, [mail]),
+      el("button", {
+        type: "button",
+        class: "btn ghost hdr-btn" + (flag("askedOld") && !flag("sawMail") ? " hdr-hot" : ""),
+        onclick: () => goWeb("inbox"),
+      }, [WmailLabel()]),
       el("button", { type: "button", class: "btn ghost hdr-btn", onclick: () => goWeb("favs") }, [
-        (S.favs || []).length ? "收藏(" + S.favs.length + ")" : "收藏",
+        favN ? WfavLabel(favN) : W("favs"),
       ]),
       el("button", { type: "button", class: "btn ghost hdr-btn", onclick: () => goWeb("login") }, ["章慧琪"]),
     ]),
@@ -660,30 +745,39 @@ function houseHeader() {
 
 function houseNav() {
   return el("nav", { class: "hk-nav" }, [
-    hkNavItem("首页", "home"),
-    hkNavItem("租盘", "list"),
-    hkNavItem("讨论区", "forum"),
-    hkNavItem("新闻", "news"),
+    hkNavItem(W("home"), "home"),
+    hkNavItem(W("rentList"), "list"),
+    hkNavItem(W("forum"), "forum"),
+    hkNavItem(W("news"), "news"),
     el("span", { class: "hk-nav-gap" }, ["│"]),
     (() => {
-      const btn = hkNavItem("免费刊登", "post");
+      const btn = hkNavItem(W("freePost"), "post");
       if (!postedHelp() || S.pendingPost) btn.className += " quest";
       return btn;
     })(),
-    hkNavItem("账户", "login"),
+    hkNavItem(W("account"), "login"),
   ]);
 }
 
 function houseFooter() {
   return el("footer", { class: "hk-footer" }, [
-    webLink("租务须知", () => goWeb("rules")),
-    " | ",
-    webLink("新闻中心", () => goWeb("news")),
-    " | ",
-    webLink("关于廿八屋", () => goWeb("about")),
-    " | ",
-    webLink("讨论区", () => goWeb("forum")),
-    el("div", {}, ["廿八屋 28House　2011–2014　香港业主自让　不负责成交　请自行查册"]),
+    el("div", { class: "hk-footer-nav" }, [
+      webLink(W("tenancy"), () => goWeb("rules")),
+      " | ",
+      webLink(W("newsCenter"), () => goWeb("news")),
+      " | ",
+      webLink(W("about"), () => goWeb("about")),
+      " | ",
+      webLink(W("forum"), () => goWeb("forum")),
+      " | ",
+      webLink(W("account"), () => goWeb("login")),
+    ]),
+    el("div", { class: "hk-footer-lines" }, [
+      el("p", {}, [W("footCorp")]),
+      el("p", {}, [W("foot1")]),
+      el("p", {}, [W("foot2")]),
+      el("p", {}, [W("foot3")]),
+    ]),
   ]);
 }
 
@@ -698,7 +792,7 @@ function crumb(parts) {
 }
 
 function backLink(label, fn) {
-  return el("p", { class: "fine back-link" }, [webLink("« 返回" + label, fn)]);
+  return el("p", { class: "fine back-link" }, [webLink(["« 返回", label], fn)]);
 }
 
 function siteNotice(meta, kids) {
@@ -724,12 +818,23 @@ function sideBox(title, kids) {
   return el("aside", { class: "side-box" }, [el("h3", {}, [title])].concat(kids));
 }
 
+/** 墙簿侧栏：绿灰系，不与廿八屋 side-box 共用。 */
+function wallSideBox(title, kids) {
+  return el("aside", { class: "wall-side" }, [el("h3", {}, [title])].concat(kids));
+}
+
+function wallKv(rows) {
+  return el("table", { class: "wall-kv" }, rows.map(([k, v]) =>
+    el("tr", {}, [el("th", {}, [k]), el("td", {}, [Array.isArray(v) ? v : [v]])])
+  ));
+}
+
 function viewHome() {
   const input = el("input", { type: "search", value: S.query, maxlength: "40" });
   input.addEventListener("input", () => { S.query = input.value; });
   input.addEventListener("keydown", (e) => { if (e.key === "Enter") doSearch(); });
   const chips = el("div", { class: "hot-chips" }, [
-    el("span", {}, ["热门地区："]),
+    el("span", {}, [W("hotDist")]),
     ...["元朗", "荃湾", "屯门", "大角咀", "湾仔", "北角"].map((d) =>
       webLink(d, () => {
         S.query = d;
@@ -747,70 +852,78 @@ function viewHome() {
         goWeb("detail", { listing: l.id });
       },
     }, [
-      el("span", {}, [l.title]),
-      el("b", {}, [l.rent]),
+      el("span", {}, [Ty(l, "title")]),
+      el("b", {}, [rentLabel(l)]),
     ])
   ));
   const news = el("div", { class: "mini-list" }, newsIds(5).map((id) => newsLink(id, true)));
   const mainKids = [chips];
-  if (postedHelp() && !flag("sawOwnPost")) {
-    mainKids.unshift(siteNotice("讨论区通知", [
+  if (postedHelp() && helpRepliesOpen() && !(typeof noted === "function" && noted("bbs-self"))) {
+    mainKids.unshift(siteNotice(T("讨论区通知", "论坛通知"), [
       el("p", {}, [
-        "你在「求助」的帖子有新回复。",
+        T("你在「求助」的帖子有新回复。", "你在「求助」的帖子有新回复。"),
         "　",
-        webLink("查看帖子", () => goWeb("thread", { forumId: "helpzhang" })),
+        webLink(T("查看帖子", "查看帖子"), () => goWeb("thread", { forumId: "helpzhang" })),
+      ]),
+    ]));
+  } else if (postedHelp() && !flag("sawOwnPost")) {
+    mainKids.unshift(siteNotice(T("讨论区通知", "论坛通知"), [
+      el("p", {}, [
+        T("你在「求助」的帖子有新回复。", "你在「求助」的帖子有新回复。"),
+        "　",
+        webLink(T("查看帖子", "查看帖子"), () => goWeb("thread", { forumId: "helpzhang" })),
       ]),
     ]));
   }
   const freshHome = unreadSerial();
   if (freshHome) {
     const t = THREADS[freshHome];
-    mainKids.unshift(siteNotice("杂谈有新回复", [
+    mainKids.unshift(siteNotice(T("杂谈有新回复", "闲聊有新回复"), [
       el("p", {}, [
-        webLink(t.title, () => goWeb("thread", { forumId: freshHome })),
+        webLink(Ty(t, "title"), () => goWeb("thread", { forumId: freshHome })),
       ]),
     ]));
   }
   if (flag("askedOld") && replyReady() && !flag("sawMail")) {
-    mainKids.unshift(siteNotice("站内留言", [
+    mainKids.unshift(siteNotice(W("inbox"), [
       el("p", {}, [
-        "周先生回复了你。",
+        T("周先生回复了你。", "周先生回复了你。"),
         "　",
-        webLink("查看", () => goWeb("inbox")),
+        webLink(T("查看", "查看"), () => goWeb("inbox")),
       ]),
     ]));
   }
   const main = el("div", { class: "hk-main search-hero" }, [
     ...mainKids,
-    el("h1", {}, ["搜租盘"]),
+    el("h1", {}, [W("searchRent")]),
     el("div", { class: "search-row" }, [
       input,
-      el("button", { type: "button", class: "btn", onclick: doSearch }, ["搜寻"]),
+      el("button", { type: "button", class: "btn", onclick: doSearch }, [W("search")]),
     ]),
-    el("p", { class: "hint" }, ["最近搜过：元朗　天水围　／　荃湾　新楼　／　大角咀　套房"]),
+    el("p", { class: "hint" }, [W("recentSearch")]),
     el("div", { class: "home-grid" }, [
-      el("section", {}, [el("h2", { class: "sec-h" }, ["最新放盘"]), latest]),
-      el("section", {}, [el("h2", { class: "sec-h" }, ["站内新闻"]), news]),
+      el("section", {}, [el("h2", { class: "sec-h" }, [W("latest")]), latest]),
+      el("section", {}, [el("h2", { class: "sec-h" }, [W("siteNews")]), news]),
     ]),
   ]);
   const side = el("div", { class: "hk-side" }, [
-    sideBox("租务提示", [
-      el("p", {}, ["租约应交印花税。未加盖印花，有争议时文件可能不被接纳。"]),
-      el("p", {}, ["私人屋苑多见两按一上。业主自让条款各有不同，以双方约定为准。"]),
-      webLink("租务须知（摘录）", () => goWeb("rules")),
+    sideBox(W("tipTitle"), [
+      el("p", {}, [W("tip1")]),
+      el("p", {}, [W("tip2")]),
+      webLink(W("tipLink"), () => goWeb("rules")),
     ]),
-    sideBox("你可能想睇", [
+    sideBox(W("maybeLike"), [
       postedHelp()
-        ? webLink("讨论区：散工女急求平租", () => goWeb("thread", { forumId: "helpzhang" }))
-        : webLink("免费刊登", () => goWeb("post")),
+        ? webLink(W("helpPost"), () => goWeb("thread", { forumId: "helpzhang" }))
+        : webLink(W("freePost"), () => goWeb("post")),
       el("br"),
-      webLink("讨论区：天水围要担保？", () => goWeb("thread", { forumId: "yuenlong" })),
+      webLink(W("yuenThread"), () => goWeb("thread", { forumId: "yuenlong" })),
       el("br"),
-      webLink("市建局研究新闻", () => goWeb("newsitem", { newsId: "urb" })),
+      webLink(W("urbNews"), () => goWeb("newsitem", { newsId: "urb" })),
     ]),
   ]);
   const wrap = houseShell([el("div", { class: "hk-layout" }, [main, side])], [
-    { text: "首页" },
+    { text: W("home") },
   ]);
   setTimeout(() => input.focus(), 0);
   return wrap;
@@ -829,16 +942,22 @@ function doSearch() {
   if (needPostFirst()) return;
   flag("searched", true);
   markOwnSearch();
+  const opened = countHelpSearch();
   goWeb("list", { search: true });
-  if (S.query.trim() && !filtered().length) showPrompt("暂无盘。", "没有符合的结果。");
+  if (opened) {
+    showPrompt(
+      T("求助帖有新回复。", "求助帖有新回复。"),
+      T("藤先生和后面几层刚出现。回到讨论区查看。", "藤先生和后面几层刚出现。回到论坛查看。")
+    );
+  } else if (S.query.trim() && !filtered().length) showPrompt(W("emptySearch"), W("emptySearchBody"));
 }
 
 function listFilterBar() {
   return el("div", { class: "list-filters" }, [
-    ["全部", "all"],
-    ["业主自让", "owner"],
-    ["合租", "share"],
-    ["屋苑", "estate"],
+    [W("all"), "all"],
+    [W("ownerLet"), "owner"],
+    [W("share"), "share"],
+    [W("estate"), "estate"],
   ].map(([label, id]) => el("button", {
     type: "button",
     class: "filter-chip" + ((S.listFilter || "all") === id ? " on" : ""),
@@ -877,55 +996,65 @@ function viewList() {
   input.addEventListener("keydown", (e) => { if (e.key === "Enter") doSearch(); });
     const cards = el("div", { class: "cards" });
   if (!(S.query || "").trim()) {
-    cards.append(el("p", { class: "hint" }, ["请输入地区或关键字。"]));
+    cards.append(el("p", { class: "hint" }, [W("searchHint")]));
   } else if (!rows.length) {
-    cards.append(el("p", { class: "hint" }, ["没有符合的盘。"]));
+    cards.append(el("p", { class: "hint" }, [W("noMatch")]));
   } else {
     rows.forEach((l) => cards.append(listingCard(l)));
   }
   const side = el("div", { class: "hk-side" }, [
-    sideBox("缩小范围", [
-      webLink("只看业主自让", () => { S.query = "业主自让"; doSearch(); }),
-      el("p", { class: "hint" }, ["代理盘一般要求在职证明及担保人。业主自让请向业主查询条款。"]),
+    sideBox(W("latest"), [
+      el("div", { class: "mini-list" }, homeLatest().map((l) =>
+        el("button", {
+          type: "button",
+          class: "mini-row",
+          onclick: () => {
+            if (needPostFirst()) return;
+            flag("searched", true);
+            goWeb("detail", { listing: l.id });
+          },
+        }, [
+          el("span", {}, [Ty(l, "title")]),
+          el("b", {}, [rentLabel(l)]),
+        ])
+      )),
     ]),
-    sideBox("热门搜寻", ["元朗 天水围", "荃湾 新楼", "大角咀 套房"].map((q) =>
-      el("div", {}, [webLink(q, () => { S.query = q; doSearch(); })])
-    )),
   ]);
-  const filterLabel = { all: "全部", owner: "业主自让", share: "合租", estate: "屋苑" }[S.listFilter || "all"] || "全部";
+  const filterLabel = { all: W("all"), owner: W("ownerLet"), share: W("share"), estate: W("estate") }[S.listFilter || "all"] || W("all");
   return houseShell([
     el("div", { class: "list-tools" }, [
       el("div", { class: "search-row" }, [
         input,
-        el("button", { type: "button", class: "btn", onclick: doSearch }, ["搜寻"]),
+        el("button", { type: "button", class: "btn", onclick: doSearch }, [W("search")]),
       ]),
       listFilterBar(),
-      el("p", { class: "list-tools-label" }, ["十八区："]),
+      el("p", { class: "list-tools-label" }, [W("districts")]),
       districtBar(),
     ]),
-    siteNotice("租盘", [
-      el("p", {}, ["点进盘源可看屋况、预约睇楼，或经站内留言联络业主。结果按放盘日期排列。"]),
+    siteNotice(W("rentList"), [
+      el("p", {}, [W("listNotice")]),
     ]),
     el("div", { class: "listing-meta" }, [
-      rows.length + " 个盘，" + filterLabel + "，「" + (S.query || "全部") + "」，按放盘日期排列",
+      [rows.length, T(" 个盘，", " 套房源，"), filterLabel, "，「", S.query || W("all"), "」", W("listMetaBy")],
     ]),
     el("div", { class: "hk-layout" }, [cards, side]),
   ], viewListTrail());
 }
 
 function listingCard(l) {
+  const title = Ty(l, "title");
   return el("button", {
     class: "card",
     type: "button",
     onclick: () => goWeb("detail", { listing: l.id }),
   }, [
-    imgSlot(l.img, "thumb", l.title),
+    imgSlot(l.img, "thumb", title),
     el("div", {}, [
-      el("h3", {}, [l.title]),
-      el("p", {}, [l.sub]),
-      el("p", { class: "card-spec" }, [[l.nfa, l.age, l.walk, "浏览 " + l.views].join(" | ")]),
+      el("h3", {}, [title]),
+      el("p", {}, [Ty(l, "sub")]),
+      el("p", { class: "card-spec" }, [[Ty(l, "nfa"), " | ", Ty(l, "age"), " | ", Ty(l, "walk"), " | ", T("浏览 ", "浏览 "), l.views]]),
     ]),
-    el("div", { class: "rent" }, [l.rent, el("small", {}, [l.agent ? "代理" : "业主自让"])]),
+    el("div", { class: "rent" }, [rentLabel(l), el("small", {}, [l.agent ? W("agent") : W("ownerLet")])]),
   ]);
 }
 
@@ -942,26 +1071,26 @@ function favBtn(l) {
       if (isFav(l.id)) {
         S.favs = S.favs.filter((x) => x !== l.id);
         draw();
-        showPrompt("已从我的收藏移除。");
+        showPrompt(T("已从我的收藏移除。", "已从我的收藏移除。"));
       } else {
         S.favs.push(l.id);
         draw();
-        showPrompt("已加入我的收藏。", "右上角「收藏」可再打开。");
+        showPrompt(T("已加入我的收藏。", "已加入我的收藏。"), T("右上角「收藏」可再打开。", "右上角「收藏」可再打开。"));
       }
     },
-  }, [isFav(l.id) ? "已收藏" : "收藏"]);
+  }, [isFav(l.id) ? T("已收藏", "已收藏") : W("fav")]);
 }
 
 function viewFavs() {
   const rows = (S.favs || []).map((id) => LISTINGS.find((l) => l.id === id)).filter(Boolean);
   const cards = el("div", { class: "cards" });
   if (!rows.length) {
-    cards.append(el("p", { class: "hint" }, ["还没有收藏的盘。在放盘页按「收藏」，就会列在这里。"]));
+    cards.append(el("p", { class: "hint" }, [T("还没有收藏的盘。在放盘页按「收藏」，就会列在这里。", "还没有收藏的房源。在详情页按「收藏」，就会列在这里。")]));
   } else {
     rows.forEach((l) => {
       cards.append(listingCard(l));
       cards.append(el("p", { class: "fine fav-row" }, [
-        webLink("取消收藏", () => {
+        webLink(W("unfav"), () => {
           S.favs = S.favs.filter((x) => x !== l.id);
           draw();
         }),
@@ -1006,42 +1135,47 @@ function viewDetail() {
 
 function detailCrumb(name) {
   return [
-    { text: "首页", go: () => goWeb("home") },
-    { text: "租盘", go: () => goWeb("list") },
+    { text: W("home"), go: () => goWeb("home") },
+    { text: W("rentList"), go: () => goWeb("list") },
     { text: name },
   ];
 }
 
 function specTable(rows) {
   return el("table", { class: "kv-table" }, rows.map(([k, v]) =>
-    el("tr", {}, [el("th", {}, [k]), el("td", {}, [v])])
+    el("tr", {}, [el("th", {}, [k]), el("td", {}, Array.isArray(v) ? v : [v])])
   ));
 }
 
 function detailTk() {
   const l = listingById("tk");
+  const bodyY = "最短租约一年。约睇楼须先过一个月订金，唔过订唔约。本站不负责订金。";
+  const bodyZ = "最短租约一年。预约看房须先交一个月订金，不交订不约。本站不负责订金。";
+  const body = T(bodyY, bodyZ);
   return el("div", { class: "detail hk-detail" }, [
-    imgSlot(l.img, "photo-lg", l.title),
+    imgSlot(l.img, "photo-lg", Ty(l, "title")),
     el("div", { class: "kv" }, [
-      el("h2", {}, [l.title]),
-      el("p", { class: "rent-line" }, [l.rent + "／月"]),
-      el("p", { class: "fine" }, ["编号 28WU-20140729-011"]),
+      el("h2", {}, [Ty(l, "title")]),
+      el("p", { class: "rent-line" }, [rentLabel(l)]),
+      el("p", { class: "fine" }, [T("编号", "编号"), " 28WU-20140729-011"]),
       specTable([
-        ["地区", l.area],
-        ["面积", l.nfa],
-        ["楼龄", l.age],
-        ["交通", l.walk],
-        ["放盘", l.date + "　浏览 " + l.views],
-        ["业主", l.owner],
+        [T("地区", "地区"), l.area],
+        [T("面积", "面积"), Ty(l, "nfa")],
+        [T("楼龄", "楼龄"), Ty(l, "age")],
+        [T("交通", "交通"), Ty(l, "walk")],
+        [T("租约", "租约"), T("最短一年", "最短一年")],
+        [T("睇楼", "看房"), T("须先过一个月订金", "须先交一个月订金")],
+        [T("放盘", "发布"), [l.date, "　", T("浏览", "浏览"), " ", l.views]],
+        [T("业主", "房东"), l.owner],
       ]),
-      el("p", {}, ["上手住客评语只剩一句：「夜里听得到隔壁。」天花有水渍。相片是空房。"]),
-      el("p", { class: "fine" }, ["留言功能：对方现时不在线，上线后才会看到。"]),
+      el("p", {}, [T("上手住客评语只剩一句：「夜里听得到隔壁。」天花有水渍。相片是空房。", "上一位住客评语只剩一句：「夜里能听到隔壁。」天花板有水渍。照片是空房。")]),
+      el("p", { class: "fine" }, [T("地点近奥海城，空房可即睇——条款写在上面。", "地点近奥海城，空房可即看——条款写在上面。")]),
       el("div", { class: "actions" }, [
         el("button", { class: "btn", type: "button", onclick: () => {
-          strikeFour("业主不在线", listingShort(l));
-          showPrompt("业主现时不在线。", "留言会保留，对方上线后可见。");
-        } }, ["预约看房"]),
-        el("button", { class: "btn ghost", type: "button", onclick: () => goWeb("list") }, ["返回租盘"]),
+          strikeFour(bodyY, listingShort(l));
+          showPrompt(T("业主已回覆。", "房东已回复。"), body);
+        } }, [W("bookView")]),
+        el("button", { class: "btn ghost", type: "button", onclick: () => goWeb("list") }, [W("backList")]),
         favBtn(l),
       ]),
     ]),
@@ -1050,33 +1184,34 @@ function detailTk() {
 
 function detailTw() {
   const l = listingById("tw");
+  const bodyY = "请先提供在职证明及担保人资料，再安排睇楼。本盘不接受周租。";
+  const bodyZ = "请先提供在职证明及担保人资料，再安排看房。本盘不接受按周付租。";
   return el("div", { class: "detail hk-detail" }, [
-    imgSlot(l.img, "photo-lg", l.title),
+    imgSlot(l.img, "photo-lg", Ty(l, "title")),
     el("div", { class: "kv" }, [
-      el("h2", {}, [l.title]),
-      el("p", { class: "rent-line" }, [l.rent + "／月"]),
-      el("p", { class: "fine" }, ["编号 28WU-20140730-088　代理"]),
+      el("h2", {}, [Ty(l, "title")]),
+      el("p", { class: "rent-line" }, [rentLabel(l)]),
+      el("p", { class: "fine" }, [T("编号", "编号"), " 28WU-20140730-088　", W("agent")]),
       specTable([
-        ["地区", l.area],
-        ["面积", l.nfa],
-        ["入伙", l.age],
-        ["交通", l.walk],
-        ["按金", "两个月按金 + 一个月上期"],
-        ["资格", "要担保人、要粮单"],
-        ["放盘", "地产代理代放"],
+        [T("地区", "地区"), l.area],
+        [T("面积", "面积"), Ty(l, "nfa")],
+        [T("入伙", "入住"), Ty(l, "age")],
+        [T("交通", "交通"), Ty(l, "walk")],
+        [T("按金", "押金"), T("两个月按金 + 一个月上期", "押二付一")],
+        [T("资格", "资格"), T("要担保人、要粮单", "要担保人、要工资单")],
+        [T("放盘", "发布"), T("地产代理代放", "中介代发")],
       ]),
-      el("p", {}, ["管理处日间有人。本盘不接受周租。"]),
+      el("p", {}, [T("管理处日间有人。本盘不接受周租。", "物业处白天有人。本盘不接受按周付租。")]),
       el("div", { class: "actions" }, [
         el("button", {
           class: "btn",
           type: "button",
           onclick: () => {
-            const body = "请先提供在职证明及担保人资料，再安排睇楼。本盘不接受周租。";
-            strikeFour(body, listingShort(l));
-            showPrompt("代理已回覆。", body);
+            strikeFour(bodyY, listingShort(l));
+            showPrompt(T("代理已回覆。", "中介已回复。"), T(bodyY, bodyZ));
           },
-        }, ["预约睇楼"]),
-        el("button", { class: "btn ghost", type: "button", onclick: () => goWeb("list") }, ["返回租盘"]),
+        }, [W("bookView")]),
+        el("button", { class: "btn ghost", type: "button", onclick: () => goWeb("list") }, [W("backList")]),
         favBtn(l),
       ]),
     ]),
@@ -1085,32 +1220,32 @@ function detailTw() {
 
 function detailGeneric(l) {
   const rows = [
-    ["地区", l.district + "　／　" + l.area],
-    ["面积", l.nfa],
-    ["楼龄", l.age],
-    ["交通", l.walk],
-    ["放盘", l.date + "　浏览 " + l.views],
-    ["业主", l.owner],
-  ].concat(l.specs || []);
+    [T("地区", "地区"), l.district + "　／　" + l.area],
+    [T("面积", "面积"), Ty(l, "nfa")],
+    [T("楼龄", "楼龄"), Ty(l, "age")],
+    [T("交通", "交通"), Ty(l, "walk")],
+    [T("放盘", "发布"), [l.date, "　", T("浏览", "浏览"), " ", l.views]],
+    [T("业主", "房东"), l.owner],
+  ].concat((l.specs || []).map(([k, v]) => [k, v]));
   const kids = [
-    imgSlot(l.img, "photo-lg", l.title),
+    imgSlot(l.img, "photo-lg", Ty(l, "title")),
     el("div", { class: "kv" }, [
-      el("h2", {}, [l.title]),
-      el("p", { class: "rent-line" }, [l.rent + "／月"]),
-      el("p", { class: "fine" }, ["编号 " + l.code + "　" + (l.agent ? "代理" : "业主自让")]),
+      el("h2", {}, [Ty(l, "title")]),
+      el("p", { class: "rent-line" }, [rentLabel(l)]),
+      el("p", { class: "fine" }, [T("编号", "编号"), " ", l.code, "　", l.agent ? W("agent") : W("ownerLet")]),
       specTable(rows),
-      el("p", {}, [l.blurb]),
-      el("p", { class: "fine" }, ["本站不负责口头协议。条款以业主或代理回覆为准。"]),
+      el("p", {}, [Ty(l, "blurb")]),
+      el("p", { class: "fine" }, [T("本站不负责口头协议。条款以业主或代理回覆为准。", "本站不负责口头协议。条款以房东或中介回复为准。")]),
       el("div", { class: "actions" }, [
         el("button", {
           class: "btn",
           type: "button",
           onclick: () => {
             strikeFour(l.failBody, listingShort(l));
-            showPrompt(l.failTitle, l.failBody);
+            showPrompt(Ty(l, "failTitle") || T("已回覆。", "已回复。"), Ty(l, "failBody"));
           },
-        }, ["预约睇楼"]),
-        el("button", { class: "btn ghost", type: "button", onclick: () => goWeb("list") }, ["返回租盘"]),
+        }, [W("bookView")]),
+        el("button", { class: "btn ghost", type: "button", onclick: () => goWeb("list") }, [W("backList")]),
         favBtn(l),
       ]),
     ]),
@@ -1129,7 +1264,7 @@ function detailSsp() {
     imgSlot(l.img, "photo-lg", l.title),
     el("div", { class: "kv" }, [
       el("h2", {}, [l.title]),
-      el("p", { class: "rent-line" }, [l.rent + "／周"]),
+      el("p", { class: "rent-line" }, [rentLabel(l)]),
       el("p", { class: "fine" }, ["编号 28WU-20140728-004　业主自让"]),
       specTable([
         ["地址", "九龙深水埗荣汇街 28 号　4 楼后座"],
@@ -1147,17 +1282,17 @@ function detailSsp() {
       sspRented() ? siteNotice("盘源状态", [el("p", {}, ["业主已标示：已租出（08-01）。"])]) : "",
       el("div", { class: "actions" }, [
         sspRented() ? "" : el("button", { class: "btn", type: "button", onclick: () => goViewing(false) }, [
-          flag("sawMail") ? "赴约看房" : "预约睇楼",
+          flag("sawMail") ? W("goViewing") : W("bookView"),
         ]),
-        sspRented() ? "" : el("button", { class: "btn ghost", type: "button", onclick: () => goWeb("pm") }, ["写站内留言"]),
-        el("button", { class: "btn ghost", type: "button", onclick: () => goWeb("landlord") }, ["业主档案"]),
-        el("button", { class: "btn ghost", type: "button", onclick: () => goWeb("list") }, ["返回租盘"]),
+        sspRented() ? "" : el("button", { class: "btn ghost", type: "button", onclick: () => goWeb("pm") }, [W("writePm")]),
+        el("button", { class: "btn ghost", type: "button", onclick: () => goWeb("landlord") }, [W("landlord")]),
+        el("button", { class: "btn ghost", type: "button", onclick: () => goWeb("list") }, [W("backList")]),
         favBtn(l),
       ]),
       el("h3", { class: "sec-h" }, ["屋况（业主原文）"]),
       el("p", {}, ["唐楼，行到地铁。屋内仍有家人旧物，不介意者优先。可即时入住。储物室上锁，钥匙业主收，不入租。后楼梯通往天台，住客可用。"]),
       el("h3", { class: "sec-h" }, ["交易条款"]),
-      el("p", {}, ["现金。口头。无印花。周租，可即日计。无地产佣金。"]),
+      el("p", {}, ["现金。口头。无印花。月租三千二，可按周交，可即日计。无地产佣金。"]),
       el("p", { class: "fine" }, ["本站不负责口头协议。详见", webLink("租务须知", () => goWeb("rules")), "。"]),
       el("h3", { class: "sec-h" }, ["照片说明"]),
       el("p", {}, ["业主上载相片 1 张（07-28）。本站不对相片内容作审核。"]),
@@ -1178,6 +1313,12 @@ function sspRented() {
   return S.level >= 3;
 }
 
+function pmDraftText() {
+  return Ts(
+    "周生，荣汇街 28 号 4 楼后座，我想预约睇楼。现金、口头得。我需要一个能住的地方。听日下昼得唔得？",
+    "周先生，荣汇街 28 号 4 楼后座，我想预约看房。现金、口头就行。我需要一个能住的地方。明天下午可以吗？"
+  );
+}
 const PM_DRAFT = "周生，荣汇街 28 号 4 楼后座，我想预约睇楼。现金、口头得。我需要一个能住的地方。听日下昼得唔得？";
 
 function replyReady() {
@@ -1218,7 +1359,7 @@ function sendPm() {
 function viewPm() {
   if (sspRented()) {
     return houseShell([
-      el("h2", { class: "sec-h" }, ["写站内留言"]),
+      el("h2", { class: "sec-h" }, [W("writePmTitle")]),
       siteNotice("盘源已租出", [
         el("p", {}, ["荣汇街 28 号后座已租出。本盘留言已关闭。"]),
         el("p", {}, [webLink("打开站内留言", () => goWeb("inbox"))]),
@@ -1233,7 +1374,7 @@ function viewPm() {
     const ready = replyReady();
     const read = flag("sawMail");
     return houseShell([
-      el("h2", { class: "sec-h" }, ["写站内留言"]),
+      el("h2", { class: "sec-h" }, [W("writePmTitle")]),
       siteNotice(read ? "已回复" : (ready ? "有新回复" : "待回复"), [
         el("p", {}, [read
           ? "周先生已回复。到站内留言看过，再赴约睇楼。"
@@ -1248,12 +1389,12 @@ function viewPm() {
       { text: "写留言" },
     ]);
   }
-  if (!S.pmBody) S.pmBody = PM_DRAFT;
+  if (!S.pmBody) S.pmBody = pmDraftText();
   const box = el("textarea", { class: "note-box", maxlength: "400" });
   box.value = S.pmBody;
   box.addEventListener("input", () => { S.pmBody = box.value; });
   return houseShell([
-    el("h2", { class: "sec-h" }, ["写站内留言"]),
+    el("h2", { class: "sec-h" }, [W("writePmTitle")]),
     el("p", { class: "mail-meta" }, ["收件人：周先生　　主旨：荣汇街 28 号后座　预约睇楼"]),
     el("p", { class: "hint" }, ["业主夜间常不在线，回复要到翌日上午才送到。"]),
     el("label", {}, ["留言正文", box]),
@@ -1327,43 +1468,53 @@ function viewForum() {
   });
   const rows = ids.map((id) => {
     const t = THREADS[id];
-    const title = t.title;
+    const replies = threadReplies(id);
+    const last = replies.length ? replies[replies.length - 1] : null;
+    const who = last ? last.user : t.user;
+    const when = last ? last.time : threadTime(id);
+    const prev = last ? forumPreview(Ty(last, "body")) : "";
     return el("button", {
-          type: "button",
+      type: "button",
       class: "forum-row" + (t.user === "阿琪V" ? " forum-mine" : ""),
       onclick: () => goWeb("thread", { forumId: id }),
     }, [
-      el("span", { class: "board" }, ["[" + t.board + "]"]),
-      el("span", { class: "ftitle" }, [title]),
-      el("span", { class: "fmeta" }, [t.user + "　" + threadTime(id)]),
+      el("span", { class: "board" }, [boardLabel(t.board)]),
+      el("span", { class: "forum-main" }, [
+        el("span", { class: "ftitle" }, [Ty(t, "title")]),
+        prev ? el("span", { class: "fprev" }, [T("末回：", "末回："), prev]) : "",
+      ]),
+      el("span", { class: "fmeta" }, [
+        el("span", { class: "fwho" }, [who, "　", when]),
+        el("span", { class: "fpages", "aria-hidden": "true" }, [forumPageMarks(replies.length)]),
+      ]),
     ]);
   });
   const kids = [
-    el("h2", { class: "sec-h" }, ["讨论区"]),
-    el("p", { class: "hint" }, ["公开版面。请勿留下电话、住址及银行户口。"]),
+    el("h2", { class: "sec-h" }, [W("forum")]),
+    el("p", { class: "hint" }, [T("公开版面。请勿留下电话、住址及银行户口。", "公开版面。请勿留下电话、住址及银行账户。")]),
   ];
   if (postedHelp()) {
     const hp = THREADS.helpzhang;
-    const n = (hp.replies || []).length;
-    kids.push(siteNotice(flag("sawOwnPost") ? "我的帖子" : "我的帖子（有新回复）", [
+    const n = threadReplies("helpzhang").length;
+    kids.push(siteNotice(flag("sawOwnPost") ? W("myPost") : T("我的帖子（有新回复）", "我的帖子（有新回复）"), [
       el("p", {}, [
-        webLink(hp.title, () => goWeb("thread", { forumId: "helpzhang" })),
-        "　" + hp.board + "版　回复 " + n,
+        webLink(Ty(hp, "title"), () => goWeb("thread", { forumId: "helpzhang" })),
+        "　", boardLabel(hp.board), T("　回复 ", "　回复 "), n,
       ]),
     ]));
   }
   const fresh = unreadSerial();
   if (fresh) {
     const t = THREADS[fresh];
-    kids.push(siteNotice("杂谈有新回复", [
+    kids.push(siteNotice(T("杂谈有新回复", "闲聊有新回复"), [
       el("p", {}, [
-        webLink(t.title, () => goWeb("thread", { forumId: fresh })),
+        webLink(Ty(t, "title"), () => goWeb("thread", { forumId: fresh })),
         "　" + threadTime(fresh),
       ]),
     ]));
   }
   kids.push(el("div", { class: "forum-list" }, rows));
-  return houseShell(kids, [{ text: "首页", go: () => goWeb("home") }, { text: "讨论区" }]);
+  return houseShell(kids, [{ text: W("home"), go: () => goWeb("home") }, { text: W("forum") }]);
 }
 
 function viewThread() {
@@ -1375,8 +1526,10 @@ function viewThread() {
   const replies = threadReplies(tid);
   if (S.forumId === "helpzhang") {
     flag("sawOwnPost", true);
-    note("bbs-self", "藤先生回了我的求助帖。丢了个荣汇街的盘连结。");
-    if (flag("sawLinAd")) note("same-name", "墙上和帖里是同一个名字。");
+    if (replies.some((r) => r.user === "藤先生")) {
+      note("bbs-self", "藤先生回了我的求助帖。丢了个荣汇街的盘连结。");
+      if (flag("sawLinAd")) note("same-name", "墙上和帖里是同一个名字。");
+    }
   }
   if (S.forumId === "wk1") {
     flag("sawWk1", true);
@@ -1390,28 +1543,38 @@ function viewThread() {
     flag("sawWk3", true);
     note("serial3", "第三帖底下，藤先生又没有出声。");
   }
-  const replyNodes = replies.map((r) => {
-    const kids = [
-      el("p", { class: "mail-meta" }, [r.user + "　回复于 " + r.time]),
-      el("p", {}, [r.body]),
-    ];
+  const floorBlock = (no, metaKids, bodyKids) => el("div", { class: "mail-body floor" }, [
+    el("p", { class: "mail-meta" }, [
+      el("span", { class: "floor-no" }, ["#" + no]),
+      "　",
+      ...metaKids,
+    ]),
+    ...bodyKids,
+  ]);
+  const replyNodes = replies.map((r, i) => {
+    const bodyKids = [el("p", {}, [Ty(r, "body")])];
     if (r.listing) {
-      kids.push(el("p", {}, [
-        webLink("连结：深水埗荣汇街 28 号 4 楼后座", () => goWeb("detail", { listing: r.listing })),
+      bodyKids.push(el("p", {}, [
+        webLink(T("连结：深水埗荣汇街 28 号 4 楼后座", "链接：深水埗荣汇街 28 号 4 楼后座"), () => goWeb("detail", { listing: r.listing })),
       ]));
     }
-    return el("div", { class: "mail-body" }, kids);
+    return floorBlock(i + 2, [r.user, T("　回复于 ", "　回复于 "), r.time], bodyKids);
   });
   return houseShell([
-    el("h2", { class: "sec-h" }, ["[" + t.board + "] " + t.title]),
-    el("p", { class: "mail-meta" }, [t.user + "　发表于 " + threadTime(tid)]),
-    el("div", { class: "mail-body" }, [t.body]),
-    el("p", { class: "fine" }, ["回复（" + replies.length + "）"]),
+    el("h2", { class: "sec-h thread-h" }, [
+      el("span", { class: "board" }, [boardLabel(t.board)]),
+      " ",
+      Ty(t, "title"),
+    ]),
+    floorBlock(1, [t.user, T("　发表于 ", "　发表于 "), threadTime(tid)], [
+      el("p", {}, [Ty(t, "body")]),
+    ]),
+    el("p", { class: "fine" }, [T("回复（", "回复（"), replies.length, "）"]),
     ...replyNodes,
   ], [
-    { text: "首页", go: () => goWeb("home") },
-    { text: "讨论区", go: () => goWeb("forum") },
-    { text: t.title },
+    { text: W("home"), go: () => goWeb("home") },
+    { text: W("forum"), go: () => goWeb("forum") },
+    { text: Ty(t, "title") },
   ]);
 }
 
@@ -1546,47 +1709,51 @@ function publishSerial() {
 
 function viewSerialDraft() {
   const t = THREADS[S.pendingPost];
+  const board = T(t.board, ({ 求助: "求助", 租务: "租房", 地区: "地区", 杂谈: "闲聊" })[t.board] || t.board);
   return houseShell([
-    el("h2", { class: "sec-h" }, ["讨论区　" + t.board]),
-    el("p", { class: "hint" }, ["写好了，还没发布。"]),
-    el("p", { class: "mail-meta" }, ["版块：" + t.board + "　署名：阿琪V"]),
+    el("h2", { class: "sec-h" }, [W("forum"), "　", board]),
+    el("p", { class: "hint" }, [W("draftHint")]),
+    el("p", { class: "mail-meta" }, [T("版块：", "版块："), board, T("　署名：", "　署名："), "阿琪V"]),
     el("div", { class: "post-draft" }, [
-      el("h3", { style: "margin:0 0 8px;font-size:15px;color:#1f4f96" }, [t.title]),
-      el("div", { class: "mail-body" }, [t.body]),
+      el("h3", { style: "margin:0 0 8px;font-size:15px;color:#1f4f96" }, [Ty(t, "title")]),
+      el("div", { class: "mail-body" }, [Ty(t, "body")]),
     ]),
     el("div", { class: "actions" }, [
-      el("button", { class: "btn", type: "button", onclick: publishSerial }, ["发布"]),
+      el("button", { class: "btn", type: "button", onclick: publishSerial }, [W("publish")]),
     ]),
   ], [
-    { text: "首页", go: () => goWeb("home") },
-    { text: "讨论区", go: () => goWeb("forum") },
-    { text: "发帖" },
+    { text: W("home"), go: () => goWeb("home") },
+    { text: W("forum"), go: () => goWeb("forum") },
+    { text: T("发帖", "发帖") },
   ]);
 }
 
 function viewPost() {
   if (S.pendingPost && THREADS[S.pendingPost]) return viewSerialDraft();
   const hp = THREADS.helpzhang;
+  const board = T(hp.board, ({ 求助: "求助", 租务: "租房", 地区: "地区", 杂谈: "闲聊" })[hp.board] || hp.board);
   if (!postedHelp()) {
     return houseShell([
-      el("h2", { class: "sec-h" }, ["我的帖子"]),
-      el("p", { class: "mail-meta" }, ["版块：" + hp.board + "　署名：阿琪V　刊登：" + hp.time]),
+      el("h2", { class: "sec-h" }, [W("myPost")]),
+      el("p", { class: "mail-meta" }, [
+        T("版块：", "版块："), board, T("　署名：", "　署名："), "阿琪V", T("　刊登：", "　发布："), hp.time,
+      ]),
       el("div", { class: "post-draft" }, [
-        el("h3", { style: "margin:0 0 8px;font-size:15px;color:#1f4f96" }, [hp.title]),
-        el("div", { class: "mail-body" }, [hp.body]),
+        el("h3", { style: "margin:0 0 8px;font-size:15px;color:#1f4f96" }, [Ty(hp, "title")]),
+        el("div", { class: "mail-body" }, [Ty(hp, "body")]),
       ]),
       el("div", { class: "actions" }, [
-        el("button", { class: "btn", type: "button", onclick: publishHelpPost }, ["顶帖"]),
+        el("button", { class: "btn", type: "button", onclick: publishHelpPost }, [W("bump")]),
       ]),
-    ], [{ text: "首页", go: () => goWeb("home") }, { text: "我的帖子" }]);
+    ], [{ text: W("home"), go: () => goWeb("home") }, { text: W("myPost") }]);
   }
   return houseShell([
-    el("h2", { class: "sec-h" }, ["我的帖子　顶帖"]),
-    siteNotice("系统通知", [
-      el("p", {}, ["已顶帖。求助帖重新排在讨论区「求助」版上方，可查看原文及回复。"]),
-      el("p", {}, [webLink("查看帖子", () => goWeb("thread", { forumId: "helpzhang" }))]),
+    el("h2", { class: "sec-h" }, [W("myPost"), "　", W("bump")]),
+    siteNotice(T("系统通知", "系统通知"), [
+      el("p", {}, [T("已顶帖。求助帖重新排在讨论区「求助」版上方，可查看原文及回复。", "已顶帖。求助帖重新排在论坛「求助」版上方，可查看原文及回复。")]),
+      el("p", {}, [webLink(T("查看帖子", "查看帖子"), () => goWeb("thread", { forumId: "helpzhang" }))]),
     ]),
-  ], [{ text: "首页", go: () => goWeb("home") }, { text: "免费刊登" }]);
+  ], [{ text: W("home"), go: () => goWeb("home") }, { text: W("freePost") }]);
 }
 
 function viewLandlord() {
@@ -1604,7 +1771,7 @@ function viewLandlord() {
     el("p", { class: "fine" }, ["本会员暂无其他租客评价。"]),
     el("div", { class: "actions" }, [
       el("button", { class: "btn", type: "button", onclick: () => goWeb("detail", { listing: "ssp" }) }, ["看他的盘"]),
-      sspRented() ? "" : el("button", { class: "btn ghost", type: "button", onclick: () => goWeb("pm") }, ["写站内留言"]),
+      sspRented() ? "" : el("button", { class: "btn ghost", type: "button", onclick: () => goWeb("pm") }, [W("writePm")]),
     ]),
   ], [
     { text: "首页", go: () => goWeb("home") },
@@ -1615,22 +1782,22 @@ function viewLandlord() {
 
 function viewAbout() {
   return houseShell([
-    el("h2", { class: "sec-h" }, ["关于廿八屋"]),
-    el("p", {}, ["廿八屋于 2011 年上线，刊香港业主自让及代理租盘。不设带看，不收佣金。"]),
-    el("p", { class: "fine" }, ["侧栏广告由第三方投放，本站不对连结内容负责。"]),
-  ], [{ text: "首页", go: () => goWeb("home") }, { text: "关于廿八屋" }]);
+    el("h2", { class: "sec-h" }, [W("about")]),
+    el("p", {}, [W("aboutBody")]),
+    el("p", { class: "fine" }, [W("aboutFine")]),
+  ], [{ text: W("home"), go: () => goWeb("home") }, { text: W("about") }]);
 }
 
 function wallHeader() {
   const items = [
-    ["首页", "wall"],
-    ["我的页面", "wall-me"],
-    ["好友", "wall-friends"],
-    [wallCountLabel("收件箱", wallUnread().mail), "wall-mail"],
-    ["设置", "wall-set"],
+    [W("wallHome"), "wall"],
+    [W("wallMe"), "wall-me"],
+    [W("wallFriends"), "wall-friends"],
+    [wallCountLabel(W("wallMail"), wallUnread().mail), "wall-mail"],
+    [W("wallSet"), "wall-set"],
   ];
   return el("div", { class: "wall-head" }, [
-    el("button", { type: "button", class: "wall-logo", onclick: () => goWeb("wall") }, ["墙簿"]),
+    el("button", { type: "button", class: "wall-logo", onclick: () => goWeb("wall") }, [W("wall")]),
     el("nav", { class: "wall-nav" }, items.map(([label, screen]) =>
       el("button", {
         type: "button",
@@ -1639,6 +1806,18 @@ function wallHeader() {
       }, [label])
     )),
   ]);
+}
+
+/** 页内「返回墙簿」回到首页，并丢掉这一串墙簿子页，避免浏览器后退又弹回个人页。 */
+function wallGoHome() {
+  const hist = S.webHist || [];
+  while (hist.length) {
+    const top = hist[hist.length - 1];
+    const scr = String(top.screen || "");
+    if (top.tab === "wall" || scr === "ad" || scr.indexOf("wall") === 0) hist.pop();
+    else break;
+  }
+  goWeb("wall", { replace: true });
 }
 
 function wallWhoGo(who) {
@@ -1773,7 +1952,7 @@ function wallDraftBox(e) {
     ]),
     el("div", { class: "wall-draft-acts" }, [
       el("button", { type: "button", class: "wall-draft-send", onclick: () => wallSendAnswer(e, a) }, ["发送"]),
-      el("button", { type: "button", class: "wall-draft-drop", onclick: () => wallDropDraft() }, ["删掉"]),
+      el("button", { type: "button", class: "wall-draft-drop", onclick: () => wallDropDraft() }, ["不发"]),
     ]),
   ]);
 }
@@ -1811,18 +1990,23 @@ function wallDoKeep(e) {
 }
 
 function wallNoteParts(text, e) {
-  const key = wallNoteKey(e);
-  if (!key) return [text];
-  const at = String(text).indexOf(key);
-  if (at < 0) return [text];
+  let key = wallNoteKey(e);
+  if (!key) return [typeof toHkTrad === "function" ? toHkTrad(String(text || "")) : text];
+  let at = String(text).indexOf(key);
+  if (at < 0 && typeof toHkTrad === "function") {
+    const tk = toHkTrad(key);
+    at = String(text).indexOf(tk);
+    if (at >= 0) key = tk;
+  }
+  if (at < 0) return [typeof toHkTrad === "function" ? toHkTrad(String(text || "")) : text];
   const kept = noted(e.note[0]);
   const mark = kept
-    ? el("span", { class: "wall-key-kept", title: "已记进日记簿" }, [key])
+    ? el("span", { class: "wall-key-kept", title: hkAd("已记进日记簿") }, [key])
     : el("span", {
       class: "wall-key-link",
       role: "button",
       tabindex: "0",
-      title: "点一下，记进日记簿",
+      title: hkAd("点一下，记进日记簿"),
       onclick: (ev) => { ev.stopPropagation(); wallDoKeep(e); },
       onkeydown: (ev) => {
         if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); wallDoKeep(e); }
@@ -1874,7 +2058,9 @@ function wallUnread() {
 }
 
 function wallCountLabel(label, n) {
-  return n ? label + " (" + n + ")" : label;
+  if (!n) return label;
+  if (typeof label === "string" || typeof label === "number") return label + " (" + n + ")";
+  return [label, " (", n, ")"];
 }
 
 // 进页那一刻没看过的，这一趟都标「新」，重画也不消失
@@ -1930,17 +2116,28 @@ function linAdState() {
   return "on";
 }
 
-// 他不在时，这一格让给普通广告，按日子轮
-const FILLER_ADS = [
-  ["细搬屋", "$380 起　九龙新界", "一车起搬　即日上门　$380 起"],
-  ["小学补习", "中英数　荔枝角", "一对四小组　荔枝角　免费试堂"],
-  ["迷你仓", "首月半价　葵涌", "24 小时出入　葵涌　首月半价"],
-];
+const FILLER_AD_IDS = ["move", "tutor", "storage"];
+
+function openWallAd(id) {
+  goWeb("ad", { adId: id || "lin" });
+}
+
+function wallAdButton(id, cls) {
+  const a = WALL_ADS[id];
+  if (!a) return "";
+  const trad = (s) => (typeof toHkTrad === "function" ? toHkTrad(s) : s);
+  const kids = [el("b", {}, [trad(a.sideTitle)]), trad(a.sideLine)];
+  if (a.sideBy) kids.push(el("div", {}, [trad(a.sideBy)]));
+  return el("button", {
+    class: "ad" + (cls ? " " + cls : ""),
+    type: "button",
+    onclick: () => openWallAd(id),
+  }, kids);
+}
 
 function fillerAd() {
   const day = Math.floor(clockDate().getTime() / 86400000);
-  const [title, line, detail] = FILLER_ADS[day % FILLER_ADS.length];
-  return el("button", { class: "ad mute", type: "button", onclick: () => showPrompt(title, detail) }, [el("b", {}, [title]), line]);
+  return wallAdButton(FILLER_AD_IDS[day % FILLER_AD_IDS.length], "mute");
 }
 
 function linAdButton() {
@@ -1959,12 +2156,12 @@ function linAdButton() {
       else if (st === "blip" && noted("wall-ad-gone")) note("wall-ad-blip", "藤先生那格广告今天又在，字一样。之前不见了一阵。");
       else note("lin", "有人在网上等人聊。藤先生。");
       if (flag("sawOwnPost")) note("same-name", "墙上和帖里是同一个名字。");
-      goWeb("ad");
+      openWallAd("lin");
     },
   }, [
-    el("b", {}, ["一对一深谈"]),
-    "适合想被认真听的年轻人",
-    el("div", {}, ["——藤先生"]),
+    el("b", {}, [hkAd(WALL_ADS.lin.sideTitle)]),
+    hkAd(WALL_ADS.lin.sideLine),
+    el("div", {}, [hkAd(WALL_ADS.lin.sideBy)]),
   ]);
 }
 
@@ -2033,7 +2230,7 @@ function viewWall() {
     const replies = wallReplies(e).map((x) => wallReplyLine(e, x, fresh.includes(x.key)));
     return {
       t,
-      node: wallPost(e.name, e.who, e.text, webAgo(t), null, {
+      node: wallPost(e.name, e.who, Ty(e, "text"), webAgo(t), null, {
         fresh: fresh.includes(e.id),
         entry: e,
         photo: e.photo,
@@ -2047,66 +2244,137 @@ function viewWall() {
     node: wallPost("廿八屋转贴", "house", livingIn() ? "你最近看过深水埗唐楼。" : "元朗天水围，有人在看。", webAgo(houseAt),
       el("div", { class: "post-actions" }, [webLink("打开廿八屋", () => {
         S.query = livingIn() ? "深水埗" : "元朗 天水围";
-        doSearch();
+        goWeb("list");
       })])
     ),
   });
   posts.sort((a, b) => b.t - a.t);
   const feed = el("div", { class: "feed" }, posts.map((p) => p.node));
-  const side = el("div", { class: "hk-side" }, [
-    sideBox("好友", WALL_FRIENDS.map((f) => {
+  const side = el("div", { class: "wall-rail" }, [
+    wallSideBox(hkAd("好友"), WALL_FRIENDS.map((f) => {
       const st = wallStatus(f.who);
       return el("p", { class: "side-friend" }, [
         el("i", { class: "side-dot" + (st.on ? " on" : "") }),
         webLink(f.name, () => goWeb("wall-user", { wallWho: f.who })),
-        el("span", {}, [st.text]),
+        el("span", {}, [hkAd(st.text)]),
       ]);
     })),
-    sideBox("赞助连结", [
-      el("button", { class: "ad mute", type: "button", onclick: () => showPrompt("旧机上台", "月费 $88 起　旺角信和中心 2 楼　欢迎查询") }, [el("b", {}, ["旧手机上台"]), "旺角信和中心 2 楼"]),
+    wallSideBox(T("赞助连结", "赞助链接"), [
+      wallAdButton("phone", "mute"),
       linAdButton(),
-      el("button", { class: "ad mute", type: "button", onclick: () => showPrompt("家庭人寿", "理赔快捷　资料保密　按此留下联络") }, [el("b", {}, ["家庭人寿查询"]), "理赔快　资料保密"]),
+      wallAdButton("life", "mute"),
     ]),
-    sideBox("节日", [el("p", { class: "side-fest" }, [wallFestival()])]),
-    sideBox("你可能认识", wallMaybe().map((m) => el("p", { class: "side-friend" }, [
+    wallSideBox(hkAd("节日"), [el("p", { class: "side-fest" }, [hkAd(wallFestival())])]),
+    wallSideBox(hkAd("你可能认识"), wallMaybe().map((m) => el("p", { class: "side-friend" }, [
       webLink(m.name, () => goWeb("wall-user", { wallWho: m.who })),
-      el("span", {}, [m.via]),
+      el("span", {}, [hkAd(m.via)]),
     ]))),
   ]);
-  const wrap = el("div", { class: "hk-site" });
+  const wrap = el("div", { class: "hk-site wall-site" });
   wrap.append(wallHeader());
   wrap.append(el("div", { class: "wall-grid" }, [feed, side]));
   return wrap;
 }
 
+function wallAdCta(a) {
+  return el("button", {
+    class: "wall-ad-cta",
+    type: "button",
+    onclick: () => showPrompt(T("未能完成", "未能完成"), a.ctaFail ? hkAd(a.ctaFail) : T("请稍后再试。", "请稍后再试。")),
+  }, [a.cta ? hkAd(a.cta) : T("提交", "提交")]);
+}
+
+function wallAdShell(kids) {
+  return el("div", { class: "wall-ad-page" }, [
+    backLink(W("wall"), wallGoHome),
+    el("div", { class: "wall-ad-card" }, kids),
+  ]);
+}
+
+function viewAdLin() {
+  return wallAdShell([
+    el("p", { class: "wall-ad-sponsor" }, [T("赞助内容", "赞助内容")]),
+    el("p", { class: "wall-ad-meta" }, [T("外站广告商　电邮已失效", "外站广告商　邮箱已失效")]),
+    el("div", { class: "wall-ad-floor" }, [
+      imgSlot(pic(1, "墙簿/藤先生-空头像"), "avatar-slot", "藤先生"),
+      el("h2", { class: "wall-ad-h" }, [T("把你的故事交给能懂的人", "把你的故事交给能懂的人")]),
+      el("p", { class: "wall-ad-sub" }, [T("（电邮已失效）", "（邮箱已失效）")]),
+    ]),
+    el("p", { class: "wall-ad-disc" }, [T("此页由广告商提供。墙簿不对赞助内容负责。", "此页由广告商提供。墙簿不对赞助内容负责。")]),
+  ]);
+}
+
+function hkAd(s) {
+  if (s == null || s === "") return "";
+  return typeof toHkTrad === "function" ? toHkTrad(String(s)) : String(s);
+}
+
+function viewAdShop(a) {
+  return wallAdShell([
+    el("p", { class: "wall-ad-sponsor" }, [T("赞助内容", "赞助内容")]),
+    el("p", { class: "wall-ad-meta" }, [T("外站广告　非墙簿官方", "外站广告　非墙簿官方")]),
+    el("div", { class: "wall-ad-floor" }, [
+      el("h2", { class: "wall-ad-h" }, [hkAd(a.head)]),
+      el("p", { class: "wall-ad-sub" }, [hkAd(a.sub)]),
+      wallKv((a.rows || []).map(([k, v]) => [hkAd(k), hkAd(v)])),
+    ]),
+    a.note ? el("div", { class: "wall-ad-floor muted" }, [el("p", { class: "fine" }, [hkAd(a.note)])]) : "",
+    el("div", { class: "wall-ad-acts" }, [wallAdCta(a)]),
+    el("p", { class: "wall-ad-disc" }, [T("墙簿不对赞助内容负责。", "墙簿不对赞助内容负责。")]),
+  ]);
+}
+
+function viewAdLead(a) {
+  const fields = (a.fields || []).map((label) =>
+    el("label", { class: "wall-ad-field" }, [
+      hkAd(label),
+      el("input", { type: "text", maxlength: "40", autocomplete: "off" }),
+    ])
+  );
+  return wallAdShell([
+    el("p", { class: "wall-ad-sponsor" }, [T("赞助内容", "赞助内容")]),
+    el("p", { class: "wall-ad-meta" }, [T("外站广告　非墙簿官方", "外站广告　非墙簿官方")]),
+    el("div", { class: "wall-ad-floor" }, [
+      el("h2", { class: "wall-ad-h" }, [hkAd(a.head)]),
+      el("p", { class: "wall-ad-sub" }, [hkAd(a.sub)]),
+      wallKv((a.rows || []).map(([k, v]) => [hkAd(k), hkAd(v)])),
+    ]),
+    el("div", { class: "wall-ad-floor" }, [
+      el("div", { class: "wall-ad-form" }, fields),
+      a.note ? el("p", { class: "fine" }, [hkAd(a.note)]) : "",
+    ]),
+    el("div", { class: "wall-ad-acts" }, [wallAdCta(a)]),
+    el("p", { class: "wall-ad-disc" }, [T("墙簿不对赞助内容负责。", "墙簿不对赞助内容负责。")]),
+  ]);
+}
+
 function viewAd() {
-  const wrap = el("div", { class: "hk-site" });
+  const id = S.adId && WALL_ADS[S.adId] ? S.adId : "lin";
+  const a = WALL_ADS[id];
+  const wrap = el("div", { class: "hk-site wall-site" });
   wrap.append(wallHeader());
-  wrap.append(el("div", { class: "blank-ad" }, [
-    backLink("墙簿", () => goWeb("wall")),
-    imgSlot(pic(1, "墙簿/藤先生-空头像"), "avatar-slot", "藤先生"),
-    el("p", {}, ["把你的故事交给能懂的人"]),
-    el("p", {}, ["（电邮已失效）"]),
-    el("p", { class: "fine" }, ["此页由广告商提供。"]),
-  ]));
+  if (a.kind === "blank") wrap.append(viewAdLin());
+  else if (a.kind === "lead") wrap.append(viewAdLead(a));
+  else wrap.append(viewAdShop(a));
   return wrap;
 }
 
 function showWallPhoto(title, id) {
   closeModal();
-  const sheet = el("div", { class: "sheet prompt" }, [
+  const close = () => {
+    closeModal();
+    draw();
+  };
+  const sheet = el("div", { class: "sheet prompt wall-photo-sheet" }, [
     el("h3", {}, [title]),
     imgSlot(id, "photo-lg", title),
-    el("button", {
-      class: "btn ghost",
-      type: "button",
-      onclick: () => {
-        closeModal();
-        draw();
-      },
-    }, ["好"]),
+    el("button", { class: "wall-ad-cta ghost", type: "button", onclick: close }, ["合上"]),
   ]);
-  S.modal = el("div", { class: "modal web", id: "game-modal" }, [sheet]);
+  S.modal = el("div", {
+    class: "modal web",
+    id: "game-modal",
+    onclick: (e) => { if (e.target === S.modal) close(); },
+  }, [sheet]);
   stage.append(S.modal);
 }
 
@@ -2124,10 +2392,10 @@ function wallAlbum(label, shots) {
 }
 
 function wallProfile(title, lines) {
-  const wrap = el("div", { class: "hk-site" });
+  const wrap = el("div", { class: "hk-site wall-site" });
   wrap.append(wallHeader());
   wrap.append(el("div", { class: "wall-profile" }, [
-    backLink("墙簿", () => goWeb("wall")),
+    backLink("墙簿", wallGoHome),
     el("h2", {}, [title]),
     ...lines.map((t) => typeof t === "string" ? el("p", {}, [t]) : t),
   ]));
@@ -2153,17 +2421,17 @@ function viewWallMe() {
 }
 
 function viewWallFriends() {
-  const wrap = el("div", { class: "hk-site" });
+  const wrap = el("div", { class: "hk-site wall-site" });
   wrap.append(wallHeader());
   wrap.append(el("div", { class: "wall-profile" }, [
-    backLink("墙簿", () => goWeb("wall")),
-    el("h2", {}, ["好友"]),
+    backLink(hkAd("墙簿"), wallGoHome),
+    el("h2", {}, [hkAd("好友")]),
     ...WALL_FRIENDS.map((f) => {
       const st = wallStatus(f.who);
       return el("p", { class: "wall-friend" }, [
         webLink(f.name, () => goWeb("wall-user", { wallWho: f.who })),
-        el("span", {}, [f.rel]),
-        el("span", { class: "wall-st" + (st.on ? "" : " dim") }, [st.text]),
+        el("span", {}, [hkAd(f.rel)]),
+        el("span", { class: "wall-st" + (st.on ? "" : " dim") }, [hkAd(st.text)]),
       ]);
     }),
   ]));
@@ -2184,30 +2452,32 @@ function viewWallMail() {
       fresh.includes(e.id) ? el("em", { class: "post-new" }, ["新"]) : "",
       el("span", {}, [webAgo(t)]),
     ]),
-    el("p", {}, wallNoteParts(e.text, e)),
+    el("p", {}, wallNoteParts(Ty(e, "text"), e)),
     ...wallReplies(e).map((x) => {
       const kids = [el("b", {}, [x.r.name]), "："];
       const key = wallNoteKey(e);
-      if (key && String(x.r.text).includes(key)) kids.push(...wallNoteParts(x.r.text, e));
-      else kids.push(x.r.text);
+      const replyShow = x.r.zh != null ? T(x.r.text, x.r.zh) : hkAd(x.r.text);
+      if (key && (String(replyShow).includes(key) || (typeof toHkTrad === "function" && String(replyShow).includes(toHkTrad(key))))) {
+        kids.push(...wallNoteParts(replyShow, e));
+      } else kids.push(replyShow);
       return el("p", { class: "post-reply" + (fresh.includes(x.key) ? " fresh" : "") }, kids);
     }),
-    wallActions(e, "回复") || "",
+    wallActions(e, hkAd("回复")) || "",
   ]));
-  return wallProfile("墙簿收件箱", rows.length ? rows : ["没有讯息。"]);
+  return wallProfile(hkAd("墙簿收件箱"), rows.length ? rows : [hkAd("没有讯息。")]);
 }
 
 function viewWallSet() {
-  const wrap = el("div", { class: "hk-site" });
+  const wrap = el("div", { class: "hk-site wall-site" });
   wrap.append(wallHeader());
   wrap.append(el("div", { class: "wall-profile" }, [
-    backLink("墙簿", () => goWeb("wall")),
+    backLink("墙簿", wallGoHome),
     el("h2", {}, ["设置"]),
     el("p", {}, ["谁可以找我：好友"]),
     el("p", {}, ["赞助连结：免费账户无法关闭"]),
     el("p", {}, ["语言：中文（香港）"]),
     el("p", {}, ["登出：此浏览器已记住登入"]),
-    el("button", { class: "btn ghost", type: "button", onclick: blockedLogout }, ["登出"]),
+    el("button", { class: "wall-ad-cta ghost", type: "button", onclick: blockedLogout }, ["登出"]),
   ]));
   return wrap;
 }

@@ -469,7 +469,7 @@ function roomTone(on) {
 const AMB_FILES = {
   "rong-early": "环境-后座入住",         // Lonely – Beautiful Piano Music（1～3 关全天，周生上门前）
   "rong-day": "环境-后座白天",           // Documentary Mystery（第 5 关起七点前）
-  "rong-night": "环境-后座夜里",         // Night Interior（第 4 关整天；第 5～12 关夜里）
+  "rong-night": "环境-后座夜里",         // Night Interior（第 4 关异样夜整天；第 5～12 关夜里）
   "rong-night-late": "环境-后座夜里-后段", // Hidden Hypothesis（第 13 关起后座夜里）
   "rong-stair": "环境-楼梯走廊",
   "rong-roof": "环境-天台",               // 风声（拼成首尾无缝）+ Reflective Serious Piano，混成一个文件

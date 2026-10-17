@@ -311,7 +311,7 @@ for (const d of scanDirs) {
   if (fs.statSync(d).isFile()) { files.push(d); continue; }
   (function walk(p) {
     for (const f of fs.readdirSync(p)) {
-      if (f === "node_modules" || f === "_导出") continue;
+      if (f === "node_modules" || f === "_导出" || f === "_bin") continue;
       const q = path.join(p, f);
       if (fs.statSync(q).isDirectory()) walk(q);
       else if (textExt.test(f)) files.push(q);
@@ -323,6 +323,8 @@ for (const p of files) {
   if (p === self) continue;
   const t = read(p);
   const rel = path.relative(root, p);
+  // s2hk 字表必含简体键与罕用字，不作乱码／替换符检查
+  if (/(^|[\\/])s2hk\.js$/i.test(rel)) continue;
   if (/[\x00-\x08\x0b\x0c\x0e-\x1f]/.test(t)) err(`控制字符（坏字）：${rel}`);
   if (t.includes("\uFFFD")) err(`替换符 U+FFFD（坏字）：${rel}`);
   const moji = t.match(/锟斤拷|銆|锛|鈥|鍙|鐨|浠|涓€/);
@@ -335,6 +337,32 @@ for (const p of files) {
   });
 }
 info.push(`禁写／坏字：扫描 ${files.length} 个文本文件`);
+
+/* ---------- 9. Ink 写稿（inklecate 编译＋三结局对账） ---------- */
+{
+  const inkCheck = path.join(root, "tools", "ink-check.mjs");
+  if (!fs.existsSync(inkCheck)) {
+    warn("缺 tools/ink-check.mjs，跳过 Ink 检");
+  } else {
+    try {
+      execFileSync(process.execPath, [inkCheck], {
+        cwd: root,
+        stdio: ["ignore", "pipe", "pipe"],
+        encoding: "utf8",
+        env: process.env,
+      });
+      info.push("Ink 检：通过（inklecate＋对账）");
+    } catch (e) {
+      const out = String(e.stdout || "") + String(e.stderr || "");
+      err("Ink 检失败（详见 tools/ink-check.mjs）");
+      out
+        .split(/\r?\n/)
+        .filter((ln) => /^ERROR /.test(ln) || /inklecate|结局|缺 knot|note:/.test(ln))
+        .slice(0, 40)
+        .forEach((ln) => err("  " + ln.replace(/^ERROR /, "")));
+    }
+  }
+}
 
 /* ---------- 输出 ---------- */
 console.log("== 全检 ==");

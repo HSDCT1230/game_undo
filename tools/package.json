@@ -1,0 +1,8 @@
+﻿{
+  "name": "vibe-undo-tools",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "inkjs": "2.3.2"
+  }
+}

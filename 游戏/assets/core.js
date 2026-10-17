@@ -8,12 +8,16 @@ const notesLeaf = $("#notes-leaf");
 const notesActions = $("#notes-actions");
 
 /* 壳上的中文只写在 JS，不写进 index.html，避免编辑工具把 UTF-8 弄成 ?? */
+function shellText(s) {
+  return typeof toHkTrad === "function" ? toHkTrad(s) : s;
+}
 function fillShellChrome() {
   const set = (sel, text, attr) => {
     const n = typeof sel === "string" ? $(sel) : sel;
     if (!n) return;
-    if (attr) n.setAttribute(attr, text);
-    else n.textContent = text;
+    const t = shellText(text);
+    if (attr) n.setAttribute(attr, t);
+    else n.textContent = t;
   };
   document.title = "暗度 undo";
   set("#os-title", "暗度");
@@ -36,32 +40,76 @@ function fillShellChrome() {
     const hint = document.createElement("div");
     hint.id = "rotate-hint";
     hint.setAttribute("aria-live", "polite");
-    hint.innerHTML = '<div class="rotate-phone" aria-hidden="true"></div><p>把手机竖过来玩</p>';
+    hint.innerHTML = '<div class="rotate-phone" aria-hidden="true"></div><p>' + shellText("把手机竖过来玩") + "</p>";
     document.body.appendChild(hint);
   }
 }
 fillShellChrome();
 
 /* 对白语言、字号：跟环境音开关一样存在本地，不进存档 */
-const LANG_KEY = "undo-lang";
-const LANG_MODES = ["both", "yue", "zh"];
+const LANG_KEY = "undo-lang-v3";
+const LANG_MODES = ["yue", "zh", "both"];
 const LANG_LABEL = { both: "粤＋普", yue: "粤语", zh: "普通话" };
 const SIZE_KEY = "undo-size";
 const SIZE_STEPS = [1, 1.15, 1.3];
 const SIZE_LABEL = ["字　中", "字　大", "字　特大"];
 const SIZE_VARS = { "--say-face": 18, "--say-choice": 16, "--say-phone": 15, "--say-msg": 17, "--say-chat": 12 };
 
-let langMode = "both";
+let langMode = "yue";
 let sizeStep = 0;
 try {
   const l = localStorage.getItem(LANG_KEY);
   if (LANG_MODES.includes(l)) langMode = l;
+  else langMode = "yue";
   sizeStep = Math.min(SIZE_STEPS.length - 1, Math.max(0, Number(localStorage.getItem(SIZE_KEY)) || 0));
 } catch (e) { /* 无 */ }
+
+/** 粤／普：对白与网站共用。粤语侧转香港繁体。both＝只显示粤语（不混排普通话）。 */
+function T(yue, zh) {
+  const raw = yue == null ? "" : String(yue);
+  const y = typeof toHkTrad === "function" ? toHkTrad(raw) : raw;
+  const z = zh == null || zh === "" ? raw : String(zh);
+  const mode = typeof langMode === "string" ? langMode : "yue";
+  if (mode === "zh") return z;
+  return y;
+}
+
+/** 仅要纯字串时用（拼接、属性值、输入框）。 */
+function Ts(yue, zh) {
+  return T(yue, zh);
+}
+
+/** 取对象字段：优先 key / keyZh；也认 { yue, zh }。 */
+function Ty(obj, key) {
+  if (obj == null) return "";
+  if (typeof obj === "string") return obj;
+  if (key) {
+    const y = obj[key];
+    if (y && typeof y === "object" && (y.yue != null || y.zh != null)) return T(y.yue || y.zh, y.zh || y.yue);
+    return T(y, obj[key + "Zh"] != null ? obj[key + "Zh"] : obj[key + "_zh"]);
+  }
+  return T(obj.yue || obj.text, obj.zh);
+}
+
+/** 长文：按语言模式只显示其一，不混排。 */
+function Tblock(yue, zh, className) {
+  const raw = yue == null ? "" : String(yue);
+  const y = typeof toHkTrad === "function" ? toHkTrad(raw) : raw;
+  const z = zh == null || zh === "" ? "" : String(zh);
+  const mode = typeof langMode === "string" ? langMode : "yue";
+  const box = el("div", { class: "web-bi" + (className ? " " + className : "") });
+  box.append(el("div", { class: "web-bi-main" }, [mode === "zh" ? (z || raw) : y]));
+  return box;
+}
 
 function applySize() {
   const k = SIZE_STEPS[sizeStep];
   Object.entries(SIZE_VARS).forEach(([v, px]) => document.documentElement.style.setProperty(v, Math.round(px * k) + "px"));
+}
+
+function redrawForLang() {
+  if (typeof draw !== "function" || !S) return;
+  if (S.mode === "talk" || S.mode === "web" || S.mode === "hub" || S.mode === "map") draw();
 }
 
 function optButtons() {
@@ -80,7 +128,14 @@ function optButtons() {
       langMode = LANG_MODES[(LANG_MODES.indexOf(langMode) + 1) % LANG_MODES.length];
       try { localStorage.setItem(LANG_KEY, langMode); } catch (err) { /* 无 */ }
       optButtons();
-      if (typeof draw === "function" && S && S.mode === "talk") draw();
+      redrawForLang();
+      if (langMode === "both" && typeof showPrompt === "function") {
+        const hk = (s) => (typeof toHkTrad === "function" ? toHkTrad(s) : s);
+        showPrompt(
+          hk("本页面「粤＋普」以粤语显示"),
+          hk("网页与对白现只能显示粤语，不会同普通话并排。若要改看普通话，请再点语言按钮切到「普通话」。")
+        );
+      }
     });
     size.addEventListener("click", (e) => {
       e.stopPropagation();
@@ -90,10 +145,10 @@ function optButtons() {
       optButtons();
     });
   }
-  lang.textContent = LANG_LABEL[langMode];
-  lang.setAttribute("aria-label", "对白：" + LANG_LABEL[langMode] + "，点按切换");
-  size.textContent = SIZE_LABEL[sizeStep];
-  size.setAttribute("aria-label", "对白字号：" + SIZE_LABEL[sizeStep].replace("字　", "") + "，点按切换");
+  lang.textContent = shellText(LANG_LABEL[langMode]);
+  lang.setAttribute("aria-label", shellText("对白与网站：" + LANG_LABEL[langMode] + "，点按切换"));
+  size.textContent = shellText(SIZE_LABEL[sizeStep]);
+  size.setAttribute("aria-label", shellText("对白字号：" + SIZE_LABEL[sizeStep].replace("字　", "") + "，点按切换"));
 }
 applySize();
 document.addEventListener("DOMContentLoaded", optButtons);
@@ -364,7 +419,13 @@ function el(tag, attrs = {}, kids = []) {
     else if (v === true) n.setAttribute(k, "");
     else if (v !== false && v != null) n.setAttribute(k, v);
   });
-  kids.forEach((c) => n.append(c));
+  (function walk(xs) {
+    (Array.isArray(xs) ? xs : [xs]).forEach((c) => {
+      if (c == null || c === false || c === "") return;
+      if (Array.isArray(c)) walk(c);
+      else n.append(c);
+    });
+  })(kids);
   return n;
 }
 
