@@ -26,7 +26,7 @@
 游戏/                  可玩工程（第一章十六关）
   index.html           双击或运行 打开游戏.bat
   assets/              story-* · web-data/ui/i18n · s2hk · style-*
-tools/                 全检.mjs、导出对白.mjs、ink 检查
+tools/                 全检、门检、冒烟、手机核对、通关清单、查图、导出对白、ink 检查
   img/                 全家福、做旧、CCD 等会反复用的图工具
 ```
 
@@ -41,4 +41,5 @@ tools/                 全检.mjs、导出对白.mjs、ink 检查
 | 找某份文档、查谁做主 | [策划/README](策划/README.md) |
 | 换图、补图 | [图/游戏/README](图/游戏/README.md)：按关分文件夹，覆盖同名 PNG |
 
-改完跑 `node tools/全检.mjs`（全量检验，0 个 ERROR 才算过）。
+改完跑 `node tools/全检.mjs`（全量检验，0 个 ERROR 才算过）；动过关卡表再跑 `node tools/门检.mjs`（查必做项有没有死门）。
+想完整验一遍，照 [通关核对清单](策划/剧本/改对话/通关核对清单.md) 点一次流程。
