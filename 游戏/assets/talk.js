@@ -104,7 +104,7 @@ function yueFace(s) {
   return typeof toHkTrad === "function" ? toHkTrad(s == null ? "" : String(s)) : (s == null ? "" : String(s));
 }
 
-/** 对白／旁白共用：与 T() 同逻辑——zh 用普通话原文；粤语／粤＋普用粤语侧并转香港繁体；绝不并排。 */
+/** 对白／旁白共用：与 T() 同逻辑——zh 用普通话原文；粤语／粤＋普用粤语侧并转香港繁体。并排由 talkBody() 负责。 */
 function faceLine(text, zh) {
   const mode = typeof langMode === "string" ? langMode : "both";
   if (mode === "zh") {
@@ -149,6 +149,56 @@ function turnIn(key) {
   return " turn-in";
 }
 
+/* 已读：第二次走到同一句，不再逐字打。
+   单独一个键，不进存档、重来也不清——重开一局只省掉「这一句你看过」的打字动画，
+   文字仍然整句在，随时能再读。 */
+const READ_KEY = "undo-ch1-read";
+let readMap = null;
+let readWriteTimer = 0;
+
+function readAll() {
+  if (readMap) return readMap;
+  readMap = {};
+  try {
+    const raw = localStorage.getItem(READ_KEY);
+    const arr = raw ? JSON.parse(raw) : null;
+    if (Array.isArray(arr)) arr.forEach((k) => { if (k) readMap[k] = 1; });
+  } catch (e) { /* 无 */ }
+  return readMap;
+}
+
+function readHash(s) {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return (h >>> 0).toString(36);
+}
+
+function beatKey(b) {
+  if (!b) return "";
+  const raw = String(b.text || b.prompt || "") + "|" + String(b.zh || "");
+  return raw === "|" ? "" : readHash(raw);
+}
+
+function beatRead(b) {
+  const k = beatKey(b);
+  return !!(k && readAll()[k]);
+}
+
+function beatMarkRead(b) {
+  const k = beatKey(b);
+  if (!k) return;
+  const m = readAll();
+  if (m[k]) return;
+  m[k] = 1;
+  clearTimeout(readWriteTimer);
+  readWriteTimer = setTimeout(() => {
+    try { localStorage.setItem(READ_KEY, JSON.stringify(Object.keys(readAll()))); } catch (e) { /* 无 */ }
+  }, 900);
+}
+
 /* 快速打字机：整句先占位（未打出的字透明），换行不跳；打字中点一下只补全、不翻页 */
 const TYPE_MS = 22;
 const TYPE_MS_ZH = 12;
@@ -157,7 +207,9 @@ let typer = null;
 let typeQueue = [];
 
 function typeLater(node, ms) {
-  if (node) typeQueue.push({ node, ms: ms || TYPE_MS });
+  if (!node) return;
+  if (node.dataset && node.dataset.read === "1") return; // 已读：整句直接给出
+  typeQueue.push({ node, ms: ms || TYPE_MS });
 }
 
 function typeMotionOff() {
@@ -232,7 +284,7 @@ function whoClass(name) {
     阿乐: "lok",
     差人: "cop",
     丽芬: "lifen",
-    "丽芬（旧机）": "lifen",
+    "女人的声音": "lifen",
     林伟森: "lin",
   }[name];
   return key ? "who-" + key : "";
@@ -244,10 +296,22 @@ function speakerOf(b) {
   return b.who || "现场";
 }
 
-/** 对白正文：与 faceLine 同一套三模式（粤＋普／粤语／普通话），不并排。 */
+/** 对白正文：粤语／普通话各取一侧；「粤＋普」在粤语行下面加一行小字普通话对照。
+    没有普通话侧（旁白、录音原话）时只显示粤语，不硬凑。 */
 function talkBody(text, zh, className) {
   const box = el("div", { class: "talk-body" });
+  const mode = typeof langMode === "string" ? langMode : "yue";
+  const z = zh != null && zh !== "" ? String(zh).trim() : "";
+  const showZh = mode === "both" && z && z !== String(text == null ? "" : text).trim();
   box.append(el("div", { class: "talk-text" + (className ? " " + className : "") }, [faceLine(text, zh)]));
+  if (showZh) {
+    // 用 textContent 直接落文本：这行必须是普通话原文，不能再过一遍繁化
+    const sub = document.createElement("div");
+    sub.className = "talk-zh";
+    sub.lang = "zh-CN";
+    sub.textContent = z;
+    box.append(sub);
+  }
   return box;
 }
 
@@ -366,10 +430,48 @@ function drawTalk() {
   else if (t.kind === "msg") stage.append(drawMsg(b));
   else stage.append(drawFace(b));
   startTyping();
+  beatMarkRead(b);
+  scheduleAuto(b, t.i);
   renderPlaybar();
 }
 
+/* 自动播放：检查「设置栏」的开关。读完一句停一下就走；遇到选择、goto、弹窗一概不动。 */
+let autoTimer = 0;
+
+function clearAuto() {
+  clearTimeout(autoTimer);
+  autoTimer = 0;
+}
+
+function scheduleAuto(b, i0) {
+  clearAuto();
+  if (typeof autoMode === "undefined" || !autoMode || !b) return;
+  if (b.choices || b.goto || b.act) return;
+  if (!b.text && !b.prompt) return;
+  const len = Array.from(String(b.text || b.prompt || "")).length + Array.from(String(b.zh || "")).length;
+  const ms = Math.min(11000, 1300 + len * 55);
+  autoTimer = setTimeout(() => {
+    if (!S.talk || S.talk.i !== i0 || S.mode !== "talk") return;
+    if (S.modal || S.paused) return;
+    if (finishTyping()) {
+      autoTimer = setTimeout(() => {
+        if (!S.talk || S.talk.i !== i0 || S.mode !== "talk" || S.modal || S.paused) return;
+        advanceBeat(b);
+      }, 700);
+    } else {
+      advanceBeat(b);
+    }
+  }, ms);
+}
+
 function typeBody(box) {
+  const b = currentBeat();
+  if (b && beatRead(b)) {
+    const face = box.querySelector(".talk-text");
+    const zh = box.querySelector(".talk-zh");
+    if (face) face.dataset.read = "1";
+    if (zh) zh.dataset.read = "1";
+  }
   typeLater(box.querySelector(".talk-text"));
   typeLater(box.querySelector(".talk-zh"), TYPE_MS_ZH);
   return box;
@@ -599,6 +701,6 @@ function line(who, text, extra) {
   return Object.assign({ who, text }, extra || {});
 }
 
-function showVoicemail(from, text, onClose, keep) {
-  showModal(from, "「" + text + "」", "贴在门底的手机", "voicemail", onClose, keep);
+function showVoicemail(from, text, onClose, keep, sub) {
+  showModal(from, "「" + text + "」", sub || "贴在门底的手机", "voicemail", onClose, keep);
 }

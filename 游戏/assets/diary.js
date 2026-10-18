@@ -387,18 +387,20 @@ const HAND_REPLY = {
   },
   10: {
     "paper-30": "头两个礼拜，十五号之后。你分得好清楚。",
+    "paper-norec": "熄咗录音，车照郁。……对照纸都放低，我并住睇。",
   },
   12: {
     "paper-06": "九月一号、二号、四号。俾我三分钟。",
+    "paper-30": "三十号嗰页我睇过。新嘅放低，我并埋一齐睇。",
   },
 };
 
 // from：这一轮该交的；exactly：要交几样（初诊只交一样）
 const HAND_RULE = {
   6: { from: ["note-dry", "photo-sill", "photo-print"], exactly: 1 },
-  8: { from: ["paper-16", "paper-20"], exactly: 2 },
-  10: { from: ["paper-30"], exactly: 1 },
-  12: { from: ["paper-06"], exactly: 1 },
+  8: { from: ["paper-16", "paper-20"], exactly: 1 },
+  10: { from: ["paper-30", "paper-norec"], exactly: 1 },
+  12: { from: ["paper-06", "paper-30"], exactly: 1 },
 };
 
 function handOver(n, onDone) {
@@ -440,7 +442,7 @@ function handOver(n, onDone) {
               return;
             }
             if (!useful) {
-              toolSay(host, "呢样今日未使交。");
+              toolSay(host, "这一样今天不用交。");
               return;
             }
             if (given.length >= needN) {

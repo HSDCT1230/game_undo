@@ -57,6 +57,13 @@ const SIZE_VARS = { "--say-face": 18, "--say-choice": 16, "--say-phone": 15, "--
 
 let langMode = "yue";
 let sizeStep = 0;
+/* 自动播放：默认关；和语言、字号一样只存本地，不进存档 */
+const AUTO_KEY = "undo-auto";
+const AUTO_LABEL = { off: "自动　关", on: "自动　开" };
+let autoMode = false;
+try {
+  autoMode = localStorage.getItem(AUTO_KEY) === "1";
+} catch (e) { /* 无 */ }
 try {
   const l = localStorage.getItem(LANG_KEY);
   if (LANG_MODES.includes(l)) langMode = l;
@@ -64,7 +71,7 @@ try {
   sizeStep = Math.min(SIZE_STEPS.length - 1, Math.max(0, Number(localStorage.getItem(SIZE_KEY)) || 0));
 } catch (e) { /* 无 */ }
 
-/** 粤／普：对白与网站共用。粤语侧转香港繁体。both＝只显示粤语（不混排普通话）。 */
+/** 粤／普：对白与网站共用。粤语侧转香港繁体。both＝粤语为主，对白另加一行普通话小字对照。 */
 function T(yue, zh) {
   const raw = yue == null ? "" : String(yue);
   const y = typeof toHkTrad === "function" ? toHkTrad(raw) : raw;
@@ -77,6 +84,15 @@ function T(yue, zh) {
 /** 仅要纯字串时用（拼接、属性值、输入框）。 */
 function Ts(yue, zh) {
   return T(yue, zh);
+}
+
+/** 只有一种写法的文本（界面标签、关卡清单、网页裸串）：粤语／粤＋普转港繁，普通话原样。
+    与 T() 的区别：T() 有双语来源，H() 只是把单语文本按模式繁化，幂等。 */
+function H(s) {
+  if (s == null) return "";
+  const mode = typeof langMode === "string" ? langMode : "yue";
+  if (mode === "zh") return String(s);
+  return typeof toHkTrad === "function" ? toHkTrad(String(s)) : String(s);
 }
 
 /** 取对象字段：优先 key / keyZh；也认 { yue, zh }。 */
@@ -118,9 +134,12 @@ function optButtons() {
   if (!bar) return;
   let lang = $("#lang-toggle");
   let size = $("#size-toggle");
+  let auto = $("#auto-toggle");
   if (!lang) {
     lang = el("button", { type: "button", id: "lang-toggle", class: "os-opt" });
     size = el("button", { type: "button", id: "size-toggle", class: "os-opt" });
+    auto = el("button", { type: "button", id: "auto-toggle", class: "os-opt" });
+    bar.insertBefore(auto, sfxBtn || null);
     bar.insertBefore(lang, sfxBtn || null);
     bar.insertBefore(size, sfxBtn || null);
     lang.addEventListener("click", (e) => {
@@ -132,8 +151,8 @@ function optButtons() {
       if (langMode === "both" && typeof showPrompt === "function") {
         const hk = (s) => (typeof toHkTrad === "function" ? toHkTrad(s) : s);
         showPrompt(
-          hk("本页面「粤＋普」以粤语显示"),
-          hk("网页与对白现只能显示粤语，不会同普通话并排。若要改看普通话，请再点语言按钮切到「普通话」。")
+          hk("粤＋普"),
+          hk("网页与长文只出粤语。人物对白下面，会加一行普通话小字。想整页转普通话，再点一次语言按钮。")
         );
       }
     });
@@ -144,11 +163,25 @@ function optButtons() {
       applySize();
       optButtons();
     });
+    auto.addEventListener("click", (e) => {
+      e.stopPropagation();
+      autoMode = !autoMode;
+      try { localStorage.setItem(AUTO_KEY, autoMode ? "1" : "0"); } catch (err) { /* 无 */ }
+      optButtons();
+      // 开着的时候如果正停在一句对白上，立刻排下一次；关掉就撤掉定时器
+      if (typeof clearAuto === "function") clearAuto();
+      if (autoMode && S && S.mode === "talk" && typeof drawTalk === "function") drawTalk();
+    });
   }
   lang.textContent = shellText(LANG_LABEL[langMode]);
   lang.setAttribute("aria-label", shellText("对白与网站：" + LANG_LABEL[langMode] + "，点按切换"));
   size.textContent = shellText(SIZE_LABEL[sizeStep]);
   size.setAttribute("aria-label", shellText("对白字号：" + SIZE_LABEL[sizeStep].replace("字　", "") + "，点按切换"));
+  if (auto) {
+    auto.textContent = shellText(autoMode ? AUTO_LABEL.on : AUTO_LABEL.off);
+    auto.setAttribute("aria-label", shellText("自动播放：" + (autoMode ? "开" : "关") + "，点按切换"));
+    auto.setAttribute("aria-pressed", autoMode ? "true" : "false");
+  }
 }
 applySize();
 document.addEventListener("DOMContentLoaded", optButtons);
@@ -319,6 +352,7 @@ function openHouseFromScene() {
   }
   if (S.mode === "web" && !S.paused) return;
   if (S.mode === "wait") openRental();
+  else if (typeof houseForumUnread === "function" && houseForumUnread().length) browseFromScene("forum");
   else browseFromScene(typeof wallUnread === "function" && wallUnread().n ? (wallUnread().feed ? "wall" : "wall-mail") : "home");
 }
 
@@ -423,7 +457,7 @@ function el(tag, attrs = {}, kids = []) {
     (Array.isArray(xs) ? xs : [xs]).forEach((c) => {
       if (c == null || c === false || c === "") return;
       if (Array.isArray(c)) walk(c);
-      else n.append(c);
+      else n.append(typeof c === "string" ? H(c) : c);
     });
   })(kids);
   return n;

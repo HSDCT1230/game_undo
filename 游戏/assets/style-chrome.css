@@ -186,6 +186,7 @@ a:hover {
 #clock {
   padding-left: 0;
   border-left: 0;
+  white-space: nowrap;
 }
 #hud {
   flex: 1 1 auto;
@@ -245,7 +246,10 @@ a:hover {
 @media (max-width: 420px) {
   #os-title { min-width: 0; }
   #os-title::before { margin-right: 3px; }
-  #clock { font-size: 11px; }
+  /* 390px 竖屏：日期不再断成两行，四个按钮收窄，一行放得下 */
+  #clock { font-size: 10.5px; }
+  .os-opt { margin-left: 3px; padding: 1px 3px; }
+  #sfx-toggle { flex-basis: 5.8em; width: 5.8em; min-width: 5.8em; margin-left: 3px; }
 }
 
 #stage {
@@ -3794,8 +3798,8 @@ button.mail-row:hover { background: #121a23; }
   box-sizing: border-box;
   display: flex;
   align-items: stretch;
-  width: min(92vw, 480px);
-  max-width: min(92vw, 480px);
+  width: min(92vw, 620px);
+  max-width: min(92vw, 620px);
   max-height: min(84vh, 640px);
   filter: drop-shadow(3px 8px 0 rgba(0, 0, 0, 0.28));
   font-family: "LXGW WenKai", "KaiTi", "楷体", "STKaiti", "FangSong", serif;
@@ -4026,7 +4030,7 @@ button.mail-row:hover { background: #121a23; }
 }
 
 .modal.scene .sheet.scene {
-  max-width: 480px;
+  max-width: min(92vw, 560px);
 }
 
 .modal.scene .sheet.scene.clue-sheet {
@@ -4406,6 +4410,9 @@ button.mail-row:hover { background: #121a23; }
 }
 .list-guide { margin: 0 0 10px; }
 .forum-row.forum-mine .ftitle { color: #1a5f8a; }
+.forum-row.fresh { background: #fff6e8; }
+.bbs-line.mine { color: #1a5f8a; }
+.bbs-act { margin: 0 0 8px; }
 .hk-nav-gap { color: #c9a078; padding: 0 6px; font-size: 11px; }
 
 .back-link { margin: 0 0 10px; }
@@ -4897,29 +4904,51 @@ button.mail-row:hover { background: #121a23; }
   background: #f3f6f0;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7);
 }
-.wall-draft-picks {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 8px;
-  margin: 0 0 7px;
-}
-.wall-draft-pick {
+.wall-draft-field { position: relative; }
+.wall-draft-input {
+  box-sizing: border-box;
+  width: 100%;
   margin: 0;
-  padding: 1px 0;
-  border: 0;
-  border-bottom: 1px dotted transparent;
-  background: none;
-  color: #5a7a62;
+  padding: 3px 6px;
+  border: 1px solid #8aab90;
+  background: #fff;
+  color: #333;
   font: inherit;
-  font-size: 11px;
+  font-size: 12px;
+  line-height: 1.55;
+  cursor: text;
+}
+.wall-draft-input:focus { outline: 1px solid #4e8a58; border-color: #3d7a48; }
+.wall-draft-menu {
+  position: absolute;
+  z-index: 4;
+  left: 0;
+  right: 0;
+  top: 100%;
+  margin: 1px 0 0;
+  padding: 2px 0;
+  list-style: none;
+  border: 1px solid #8aab90;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(40, 60, 40, .18);
+}
+.wall-draft-menu[hidden] { display: none; }
+.wall-draft-opt {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 4px 8px;
+  border: 0;
+  background: none;
+  color: #333;
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.45;
+  text-align: left;
   cursor: pointer;
 }
-.wall-draft-pick:hover { color: #2f5a38; border-bottom-color: #8aab90; }
-.wall-draft-pick.on {
-  color: #2a5532;
-  font-weight: 700;
-  border-bottom-color: #3d7a48;
-}
+.wall-draft-opt:hover,
+.wall-draft-opt.on { background: #e7f0e4; color: #2a5532; }
 .wall-draft-box {
   padding: 6px 8px 7px;
   border: 1px solid #c5d2c2;
@@ -5277,8 +5306,8 @@ button.mail-row:hover { background: #121a23; }
 
 /* 日记簿操作页：与目录同宽，避免底栏来回变；字 15–17px，框用实线 */
 .diary-sheet:has(.diary-tool) {
-  width: min(92vw, 480px);
-  max-width: min(92vw, 480px);
+  width: min(92vw, 620px);
+  max-width: min(92vw, 620px);
   max-height: min(90vh, 760px);
 }
 .diary-tool { color: var(--diary-ink, #1c1712); padding-bottom: 6px; }
@@ -5874,7 +5903,7 @@ button.mail-row:hover { background: #121a23; }
 }
 .modal.scene .sheet.scene:has(.clue-img),
 .modal .sheet:has(.clue-img) {
-  max-width: 480px;
+  max-width: min(92vw, 560px);
 }
 /* 并列卡：几张线索同一高度横排，不分先后 */
 .modal.scene .sheet.scene.clue-board {
@@ -6098,7 +6127,8 @@ img.map-photo {
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  background: radial-gradient(ellipse at center, rgba(0,0,0,0) 35%, rgba(0,0,0,.55) 100%);
+  /* 中心不再完全透明：图不压死也能托住白字（候诊那张是白天亮底） */
+  background: radial-gradient(ellipse at center, rgba(0,0,0,.22) 0%, rgba(0,0,0,.66) 100%);
 }
 .caption-card {
   --cap-lead: 20px;
@@ -6135,6 +6165,15 @@ img.map-photo {
 .caption-kept li:nth-child(2) { animation-delay: 0.8s; }
 .caption-kept li:nth-child(3) { animation-delay: 1.2s; }
 .caption-kept li:nth-child(n+4) { animation-delay: 1.6s; }
+/* 过关那句「这一件做完了」：暖一点、比正文小，排在记下的东西上面 */
+.caption-done {
+  margin: 0 0 16px;
+  font-size: var(--cap-small);
+  color: #e8caa0;
+  letter-spacing: 0.04em;
+  animation: caption-rise 1.2s ease 0.3s both;
+}
+
 .caption-next {
   margin: 0;
   font-size: var(--cap-small);
@@ -6222,6 +6261,15 @@ img.map-photo {
   font-size: 13px;
   letter-spacing: 0.28em;
   text-indent: 0.28em;
+}
+/* 进度：让他知道这一章还有多长，卡片上不出现数字以外的游戏词 */
+.resume-progress {
+  margin: 6px 0 0;
+  color: var(--brand-mute);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-indent: 0.2em;
+  opacity: .72;
 }
 .resume-where {
   position: relative;

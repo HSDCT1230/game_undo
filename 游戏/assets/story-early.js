@@ -638,7 +638,8 @@ function drawCut(c) {
   requestAnimationFrame(() => requestAnimationFrame(next));
 }
 
-// 赴诊出门前：周背光站在门口，信封角露一截红圈（过场图仍用 04 夹里那两张）
+// 赴诊出门前：周背光站在门口，信封角露一截红圈。
+// 这两格画面里没有窗，看不出时辰，白天也接得上；文件名沿用 04 夹旧名（见 图/游戏/README.md）。
 function startTakeback() {
   playCut([
     { img: pic(4, "场景-过场-八月十四傍晚"), ms: 6000, push: true, origin: "52% 40%", cap: "08-16　出门前" },
@@ -665,7 +666,7 @@ function afterTakeback() {
 
 function doorTalk() {
   S.modal = null;
-  setTime("2014年8月16日 周六 15:40");
+  setTime("2014年8月16日 周六 14:50");
   startTalk([
     line("", "你锁好门要出门。楼梯口撞见他。衬衫皱，领口却是干的。手背青筋。信封角朝里，像怕你看见。"),
     line("周", "章小姐。后座……我想收回自住。定金我退你。周租都退。你再住两日，走得唔得？", { zh: "章小姐。后座……我想收回来自己住。定金退你，周租也退。你再住两天，走得开吗？" }),
@@ -775,8 +776,9 @@ function axuanItem() {
   return item("rec-axuan");
 }
 
+// 第 4 关：她只听见门底有个女人在叫「阿轩」。名字要等到 09-06 翻相框背面才知道。
 function openAxuan(onClose) {
-  showVoicemail("丽芬（旧机）", "阿轩，返嚟食饭。", onClose || (() => drawNight()), axuanItem());
+  showVoicemail("女人的声音", "阿轩，返嚟食饭。", onClose || (() => drawNight()), axuanItem(), "录音　08-15");
 }
 
 function printItem() {

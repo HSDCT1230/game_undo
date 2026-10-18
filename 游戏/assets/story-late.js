@@ -3,11 +3,11 @@ function visitHome() {
   setTime("2014年9月6日 周六 21:40");
   S.visit = S.visit || {};
   startTalk([
-    line("周", "医生？难得喎。我煲咗糖水，要唔要？", { zh: "医生？难得啊。我煮了糖水，喝不喝？" }),
-    line("", "他手里端着一碗，还冒热气。不是八月七日那只白瓷碗" + (flag("meiStay") ? "，也不是表姐门口的汤" : "") + "。"),
+    line("周", "你真系带人上嚟。糖水煲好咗，摊冻咗。", { zh: "你真带人上来了。糖水煮好了，放凉了。" }),
+    line("", "他手里端着一碗，碗边没有热气。不是八月七日那只白瓷碗" + (flag("meiStay") ? "，也不是表姐门口的汤" : "") + "。"),
     line("罗启明", "唔使。我哋嚟听间屋。", { zh: "不用。我们来听房子。" }),
     line("周", "间屋唔会害人。人先会害自己。", { zh: "屋子不会害人。是人先害自己。" }),
-    line("", "进门时他又摸了一下外套口袋，没有掏出来。玩具车朝向储物室。"),
+    line("", "罗启明进门，在门槛上停了一下，摸了一把外套口袋，没有掏出来。玩具车朝向储物室。"),
     line("罗启明", "你带路。你记低过嘅，带我去睇。我跟住你。", { zh: "你带路。你记下过的，带我去看。我跟着你。" }),
     { goto: () => enterHub("visit", "hall") },
   ], "荣汇街后座", "face");
@@ -274,7 +274,7 @@ function missDesk() {
   S.miss.desk = true;
   showModal(
     "他的工作台",
-    "电脑屏幕上的日历：九月六日晚「荣汇街上门」那一条被删掉了，回收站是空的。不是墙挂日历。",
+    "电脑螢幕上的日历：九月六日晚「荣汇街上门」那一条被删掉了，回收站是空的。不是墙挂日历。",
     "桌上那只金属夹子还在。本子不见了——上门那晚夹子里有本，你见过他写。",
     "scene",
     () => { note("stolen", "上门行程被删了。现场笔记不见。他不是不记得去过。"); backToHub(); }
@@ -689,7 +689,7 @@ function nightName() {
         },
       ],
     },
-  ], "后座", "msg", { contact: "丽芬（旧机）", number: "语音留言　09-07 夜" });
+  ], "后座", "msg", { contact: "女人的声音", number: "语音留言　09-07　23:10" });
 }
 
 function callMing() {
@@ -730,7 +730,7 @@ function drawSearch() {
       () => {
         S.searchHeard = true;
         note("namecall", "鬼叫我的名字。它说我知。");
-        showVoicemail("丽芬（旧机）", "阿轩，返嚟食饭。……章慧琪。你知。", drawSearch, nameItem());
+        showVoicemail("女人的声音", "阿轩，返嚟食饭。……章慧琪。你知。", drawSearch, nameItem(), "录音　09-07");
       },
       S.searchHeard ? "语音留言　已听" : "再听语音留言"
     ),
@@ -1054,7 +1054,7 @@ function ending() {
   const hurt = resolveEndHurt();
   const kept = (S.evidence || []).map((e) => e.kind + "　" + e.title);
   const noise = Object.entries(S.skipAll || {}).filter(([id]) => !hasEvidence(id)).map(([, t]) => t);
-  const endPic = hurt === "ming" ? pic(16, "场景-结局-陈倒下") : hurt === "zhang" ? pic(16, "场景-结局-陈倒下") : pic(16, "场景-结局-陈倒下");
+  // 三条结局线各是谁倒下/没倒下都不同，一张图对不上三条，干脆不铺图：黑底字幕。
   const openLine = hurt === "ming"
     ? "警笛和白车都在楼下。棚架上是阿明。天台上，家豪掌心擦破。"
     : hurt === "zhang"
@@ -1070,13 +1070,14 @@ function ending() {
     : hurt === "zhang"
       ? "掉出去又被拉回来的是你。没有人掉进棚架。你们四个，都被带走。"
       : "摔下去的是家豪。你们四个，都被带走。";
-  const { desk, go } = captionShell(endPic, 0.4);
+  const { desk, go } = captionShell(null, 0.4);
   desk.classList.add("caption-end");
   const at = (node, d) => {
     if (node && node.style) node.style.setProperty("--d", d + "s");
     return node;
   };
   desk.append(el("div", { class: "caption-text" }, [
+    at(el("p", { class: "caption-next" }, ["2014年9月8日　00:41　荣汇街 28 号　天台"]), 0.2),
     at(el("p", { class: "caption-line" }, [openLine]), 0.6),
     at(el("p", { class: "caption-line" }, [bodyLine]), 1.8),
     at(el("p", { class: "caption-line" }, [hurtLine]), 2.4),
@@ -1107,7 +1108,7 @@ const CH2_TEASER_CHEN = [
   { lines: ["手机亮着「共享位置」。", "阿明的点，停在天台。", "名单里没有章慧琪。她是病人。"] },
   { memo: "09-06　他去了她那里。我拿走现场笔记，删了他的日历。我以为他会忘。忘了对他好。", small: "备忘　发给自己　没有收件人" },
   { say: ["你又去。你每次一接近女人，就去沿。", "你又去了。你每次一靠近女人，就去沿上。"] },
-  { lines: ["五楼。墙上钉着一把旧身高尺。", "最后一道铅笔印停在八岁，旁边写着：阿轩。", "他摸了一下刻度，在裤腿上擦了擦手。"] },
+  { lines: ["五楼。楼梯转角堆着两只别人不要的旧柜。", "墙上没有刻痕。刻痕在西贡十二乡那间村屋：一年一条，停在八岁，旁边写着阿轩。", "他摸了一下那面空墙，沾了灰，在裤腿上擦掉。"] },
   { say: ["周系周。阿明系阿明。两件事我分得开。", "周是周。阿明是阿明。两件事我分得开。"], after: "他分不开。" },
   { lines: ["铁门在头顶。风灌下来。", "门后有人在说话，断断续续，像在应一个不在的人。"] },
   { lines: ["他撞门——"], small: "然后，倒回八月十五日。那通转介电话打出去之前。" },

@@ -76,11 +76,10 @@ function helpRepliesOpen() {
   return (S.helpSearches || 0) >= 3 || (typeof noted === "function" && noted("bbs-self"));
 }
 
-function countHelpSearch() {
-  if (!postedHelp() || helpRepliesOpen()) return false;
-  if (!(S.query || "").trim()) return false;
+// 点三次「预约睇楼」之后，求助帖才露出藤先生那层。同一间连点也算。
+function countViewTry() {
+  if (helpRepliesOpen()) return;
   S.helpSearches = (S.helpSearches || 0) + 1;
-  return S.helpSearches === 3;
 }
 
 function threadReplies(id) {
@@ -204,6 +203,37 @@ function unreadSerial() {
   return "";
 }
 
+function myThreadIds() {
+  const ids = [];
+  if (postedHelp() && helpRepliesOpen()) ids.push("helpzhang");
+  if (flag("serial1")) ids.push("wk1");
+  if (flag("serial2")) ids.push("wk2");
+  if (flag("serial3")) ids.push("wk3");
+  return ids;
+}
+
+function houseForumUnread() {
+  S.houseSeen = S.houseSeen || {};
+  const keys = [];
+  myThreadIds().forEach((id) => {
+    threadReplies(id).forEach((r, i) => {
+      const k = id + "#" + i;
+      if (!S.houseSeen[k]) keys.push(k);
+    });
+  });
+  return keys;
+}
+
+function threadFresh(id) {
+  return houseForumUnread().some((k) => k.indexOf(id + "#") === 0);
+}
+
+function markHouseThread(id) {
+  if (!THREADS[id]) return;
+  S.houseSeen = S.houseSeen || {};
+  threadReplies(id).forEach((r, i) => { S.houseSeen[id + "#" + i] = true; });
+}
+
 function listingBlob(l) {
   return [l.title, l.sub, l.area, l.district].concat(l.keys).join(" ");
 }
@@ -280,15 +310,11 @@ function blockedLogout() {
   showPrompt(T("登出失败。", "退出失败。"), T("网页无回应，请稍后再试。", "网页无响应，请稍后再试。"));
 }
 
-// 网页里的任务提示，和其他场景一样别在屏幕右边的便条上
+// 网页里的任务提示，和其他场景一样别在螢幕右边的便条上
 function currentSlate() {
   if (S.mode !== "web") return "";
   if (S.pendingPost && S.screen === "post") return "看完草稿，按下面的「发布」。不按就不算发出去。";
   if (!postedHelp() && S.screen === "post") return "帖子沉下去了，顶上去，再自己搜。";
-  if (postedHelp() && !helpRepliesOpen() && S.level === 1) {
-    const n = S.helpSearches || 0;
-    return "搜索栏再搜 " + (3 - n) + " 次，任意关键字。藤和后面几层才会出现。";
-  }
   return !S.paused && typeof levelHint === "function" ? levelHint() : "";
 }
 
@@ -330,7 +356,7 @@ function laptop(inner, opts) {
   const screen = el("div", { class: "laptop-screen" });
   const titlebar = el("div", { class: "browser-titlebar" }, [
     el("span", { class: "ie-icon", "aria-hidden": "true" }, ["e"]),
-    el("span", {}, [(opts.title || (tab === "wall" ? wallCountLabel("墙簿", wallUnread().n) : "廿八屋")) + " - Windows Internet Explorer"]),
+    el("span", {}, [(opts.title || (tab === "wall" ? wallCountLabel("墙簿", wallUnread().n) : wallCountLabel("廿八屋", houseForumUnread().length))) + " - Windows Internet Explorer"]),
     browserCloseControls(),
   ]);
   const canBack = scene ? !!S.searchDoc : (S.webHist || []).length > 0;
@@ -355,7 +381,7 @@ function laptop(inner, opts) {
     el("button", { type: "button", class: "go-btn", disabled: true, tabindex: "-1" }, ["转到"]),
   ]);
   const tabs = el("div", { class: "browser-tabs" }, [
-    btnTab("廿八屋 - 香港租盘", "house", tab, scene),
+    btnTab(wallCountLabel("廿八屋", houseForumUnread().length) + " - 香港租盘", "house", tab, scene),
     btnTab(wallCountLabel("墙簿", wallUnread().n) + " - 我的首页", "wall", tab, scene),
   ]);
   const status = el("div", { class: "browser-status" }, [
@@ -621,6 +647,8 @@ function applyWebScroll() {
     // 展开回应栏时，只在必要时微移，避免被裁在视口外；不滚回顶
     const draft = stage && stage.querySelector(".post-reply-wrap.open .wall-draft");
     if (draft && draft.scrollIntoView) draft.scrollIntoView({ block: "nearest", inline: "nearest" });
+    const box = stage && stage.querySelector(".post-reply-wrap.open .wall-draft-input");
+    if (box) box.focus();
   });
 }
 
@@ -747,7 +775,7 @@ function houseNav() {
   return el("nav", { class: "hk-nav" }, [
     hkNavItem(W("home"), "home"),
     hkNavItem(W("rentList"), "list"),
-    hkNavItem(W("forum"), "forum"),
+    hkNavItem(wallCountLabel(W("forum"), houseForumUnread().length), "forum"),
     hkNavItem(W("news"), "news"),
     el("span", { class: "hk-nav-gap" }, ["│"]),
     (() => {
@@ -942,14 +970,8 @@ function doSearch() {
   if (needPostFirst()) return;
   flag("searched", true);
   markOwnSearch();
-  const opened = countHelpSearch();
   goWeb("list", { search: true });
-  if (opened) {
-    showPrompt(
-      T("求助帖有新回复。", "求助帖有新回复。"),
-      T("藤先生和后面几层刚出现。回到讨论区查看。", "藤先生和后面几层刚出现。回到论坛查看。")
-    );
-  } else if (S.query.trim() && !filtered().length) showPrompt(W("emptySearch"), W("emptySearchBody"));
+  if ((S.query || "").trim() && !filtered().length) showPrompt(W("emptySearch"), W("emptySearchBody"));
 }
 
 function listFilterBar() {
@@ -1058,6 +1080,13 @@ function listingCard(l) {
   ]);
 }
 
+function fourStuck(l) {
+  if (!l || l.id === "ssp" || typeof FOUR === "undefined") return [];
+  const name = listingShort(l);
+  S.four = S.four || {};
+  return FOUR.filter((f) => (S.four[f.id] || []).indexOf(name) >= 0).map((f) => f.text);
+}
+
 function isFav(id) {
   return (S.favs || []).includes(id);
 }
@@ -1088,8 +1117,10 @@ function viewFavs() {
     cards.append(el("p", { class: "hint" }, [T("还没有收藏的盘。在放盘页按「收藏」，就会列在这里。", "还没有收藏的房源。在详情页按「收藏」，就会列在这里。")]));
   } else {
     rows.forEach((l) => {
+      const stuck = fourStuck(l);
       cards.append(listingCard(l));
       cards.append(el("p", { class: "fine fav-row" }, [
+        stuck.length ? el("span", {}, ["卡住：" + stuck.join("、") + "　"]) : (l.id === "ssp" && S.known && S.known.rong ? el("span", {}, ["四条都过。　"]) : ""),
         webLink(W("unfav"), () => {
           S.favs = S.favs.filter((x) => x !== l.id);
           draw();
@@ -1171,7 +1202,8 @@ function detailTk() {
       el("p", {}, [T("上手住客评语只剩一句：「夜里听得到隔壁。」天花有水渍。相片是空房。", "上一位住客评语只剩一句：「夜里能听到隔壁。」天花板有水渍。照片是空房。")]),
       el("p", { class: "fine" }, [T("地点近奥海城，空房可即睇——条款写在上面。", "地点近奥海城，空房可即看——条款写在上面。")]),
       el("div", { class: "actions" }, [
-        el("button", { class: "btn", type: "button", onclick: () => {
+        el("button", { class: "btn", type: "button",         onclick: () => {
+          countViewTry();
           strikeFour(bodyY, listingShort(l));
           showPrompt(T("业主已回覆。", "房东已回复。"), body);
         } }, [W("bookView")]),
@@ -1207,6 +1239,7 @@ function detailTw() {
           class: "btn",
           type: "button",
           onclick: () => {
+            countViewTry();
             strikeFour(bodyY, listingShort(l));
             showPrompt(T("代理已回覆。", "中介已回复。"), T(bodyY, bodyZ));
           },
@@ -1241,6 +1274,7 @@ function detailGeneric(l) {
           class: "btn",
           type: "button",
           onclick: () => {
+            countViewTry();
             strikeFour(l.failBody, listingShort(l));
             showPrompt(Ty(l, "failTitle") || T("已回覆。", "已回复。"), Ty(l, "failBody"));
           },
@@ -1281,7 +1315,10 @@ function detailSsp() {
       ]),
       sspRented() ? siteNotice("盘源状态", [el("p", {}, ["业主已标示：已租出（08-01）。"])]) : "",
       el("div", { class: "actions" }, [
-        sspRented() ? "" : el("button", { class: "btn", type: "button", onclick: () => goViewing(false) }, [
+        sspRented() ? "" : el("button", { class: "btn", type: "button", onclick: () => {
+          if (!flag("sawMail")) countViewTry();
+          goViewing(false);
+        } }, [
           flag("sawMail") ? W("goViewing") : W("bookView"),
         ]),
         sspRented() ? "" : el("button", { class: "btn ghost", type: "button", onclick: () => goWeb("pm") }, [W("writePm")]),
@@ -1301,12 +1338,36 @@ function detailSsp() {
         "深水埗指定范围仍列于市区重建研究。公开咨询暂写八月下旬。",
         webLink("相关新闻", () => goWeb("newsitem", { newsId: "urb" })),
       ]),
-        el("h3", { class: "sec-h" }, ["盘源留言板（2）"]),
-      el("p", { class: "bbs-line" }, ["过路人　07-29：「厅角嗰架车系卖屋送定自己留？」　——　业主未回。"]),
-      el("p", { class: "bbs-line" }, ["深水埗住开　07-30：「问清楚周租点计，同埋锁住嗰间入唔入租。」"]),
+        el("h3", { class: "sec-h" }, ["盘源留言板"]),
+      ...sspBoardLines(),
       el("label", { class: "remark-label" }, ["备注（仅自己可见）", remark]),
     ]),
   ]);
+}
+
+function sspBoardLines() {
+  const seen = S.view || {};
+  const lines = [
+    el("p", { class: "bbs-line" }, ["过路人　07-29：「厅角嗰架车系卖屋送定自己留？」"]),
+  ];
+  if (S.boardCar) lines.push(el("p", { class: "bbs-line mine" }, ["阿琪V：「自己留。唔送。」"]));
+  else if (seen.car) lines.push(el("p", { class: "bbs-act" }, [
+    webLink("回一句：自己留。", () => {
+      S.boardCar = true;
+      note("board-car", "放盘留言我回过：厅角那架车自己留，不送。");
+      draw();
+    }),
+  ]));
+  lines.push(el("p", { class: "bbs-line" }, ["深水埗住开　07-30：「问清楚周租点计，同埋锁住嗰间入唔入租。」"]));
+  if (S.boardDoor) lines.push(el("p", { class: "bbs-line mine" }, ["阿琪V：「门锁住。包租，入唔到。」"]));
+  else if (seen.door) lines.push(el("p", { class: "bbs-act" }, [
+    webLink("回一句：门锁住，入唔到。", () => {
+      S.boardDoor = true;
+      note("board-door", "放盘留言我回过：锁住那间包在租里，进不去。");
+      draw();
+    }),
+  ]));
+  return lines;
 }
 
 function sspRented() {
@@ -1319,7 +1380,6 @@ function pmDraftText() {
     "周先生，荣汇街 28 号 4 楼后座，我想预约看房。现金、口头就行。我需要一个能住的地方。明天下午可以吗？"
   );
 }
-const PM_DRAFT = "周生，荣汇街 28 号 4 楼后座，我想预约睇楼。现金、口头得。我需要一个能住的地方。听日下昼得唔得？";
 
 function replyReady() {
   return flag("askedOld") && storyDay() >= 801;
@@ -1423,7 +1483,7 @@ function viewInbox() {
     body.push(
       el("div", { class: "site-msg pending" }, [
         el("p", { class: "mail-meta" }, ["07-31 23:14　你 → 周先生　　预约睇楼"]),
-        el("div", { class: "mail-body" }, [S.pmSent || PM_DRAFT]),
+        el("div", { class: "mail-body" }, [S.pmSent || pmDraftText()]),
       ]),
       el("div", { class: "site-msg in" }, [
         el("p", { class: "mail-meta" }, ["08-01 09:12　周先生　回复了你"]),
@@ -1438,7 +1498,7 @@ function viewInbox() {
     body.push(
       el("div", { class: "site-msg pending" }, [
         el("p", { class: "mail-meta" }, ["07-31 23:14　你 → 周先生　　未读"]),
-        el("div", { class: "mail-body" }, [S.pmSent || PM_DRAFT]),
+        el("div", { class: "mail-body" }, [S.pmSent || pmDraftText()]),
         el("p", { class: "hint" }, ["对方状态：不在线。请勿重复发送。"]),
       ])
     );
@@ -1475,7 +1535,7 @@ function viewForum() {
     const prev = last ? forumPreview(Ty(last, "body")) : "";
     return el("button", {
       type: "button",
-      class: "forum-row" + (t.user === "阿琪V" ? " forum-mine" : ""),
+      class: "forum-row" + (t.user === "阿琪V" ? " forum-mine" : "") + (threadFresh(id) ? " fresh" : ""),
       onclick: () => goWeb("thread", { forumId: id }),
     }, [
       el("span", { class: "board" }, [boardLabel(t.board)]),
@@ -1523,6 +1583,7 @@ function viewThread() {
   }
   const tid = THREADS[S.forumId] ? S.forumId : "stamp";
   const t = THREADS[tid];
+  markHouseThread(tid);
   const replies = threadReplies(tid);
   if (S.forumId === "helpzhang") {
     flag("sawOwnPost", true);
@@ -1537,7 +1598,7 @@ function viewThread() {
   }
   if (S.forumId === "wk2") {
     flag("sawWk2", true);
-    if (replies.some((r) => r.user === "藤先生")) note("serial2", "第二帖底下，藤先生只留一句：你写低。下星期再讲。");
+    if (replies.some((r) => r.user === "藤先生")) note("serial2", "第二帖底下，藤先生只留一句：下星期再讲。");
   }
   if (S.forumId === "wk3") {
     flag("sawWk3", true);
@@ -1935,23 +1996,42 @@ function wallAnswer(e) {
 function wallDraftBox(e) {
   const list = e.answer || [];
   if (!list.length) return null;
-  const i = Math.max(0, Math.min((S.wallDraft && S.wallDraft.i) || 0, list.length - 1));
-  const a = list[i];
-  const picks = list.length > 1
-    ? el("div", { class: "wall-draft-picks" }, list.map((opt, idx) => el("button", {
+  let i = Math.max(0, Math.min((S.wallDraft && S.wallDraft.i) || 0, list.length - 1));
+  const input = el("input", {
+    type: "text",
+    class: "wall-draft-input",
+    readOnly: true,
+    value: list[i].text,
+    "aria-label": "回复",
+  });
+  const menu = el("ul", {
+    class: "wall-draft-menu",
+    hidden: list.length < 2,
+  }, list.map((opt, idx) => el("li", {}, [
+    el("button", {
       type: "button",
-      class: "wall-draft-pick" + (idx === i ? " on" : ""),
-      onclick: () => { S.wallDraft = { id: e.id, i: idx }; draw(); },
-    }, [opt.text])))
-    : "";
+      class: "wall-draft-opt" + (idx === i ? " on" : ""),
+      onmousedown: (ev) => {
+        ev.preventDefault();
+        i = idx;
+        S.wallDraft = { id: e.id, i: idx };
+        input.value = opt.text;
+        menu.querySelectorAll(".wall-draft-opt").forEach((b, n) => b.classList.toggle("on", n === idx));
+        input.focus();
+      },
+    }, [opt.text]),
+  ])));
+  if (list.length > 1) {
+    input.addEventListener("focus", () => { menu.hidden = false; });
+    input.addEventListener("blur", () => { setTimeout(() => { menu.hidden = true; }, 160); });
+  }
   return el("div", { class: "wall-draft" }, [
-    picks,
     el("div", { class: "wall-draft-box" }, [
       el("span", { class: "wall-draft-who" }, ["章慧琪"]),
-      el("p", { class: "wall-draft-text" }, [a.text]),
+      el("div", { class: "wall-draft-field" }, [input, menu]),
     ]),
     el("div", { class: "wall-draft-acts" }, [
-      el("button", { type: "button", class: "wall-draft-send", onclick: () => wallSendAnswer(e, a) }, ["发送"]),
+      el("button", { type: "button", class: "wall-draft-send", onclick: () => wallSendAnswer(e, list[i]) }, ["发送"]),
       el("button", { type: "button", class: "wall-draft-drop", onclick: () => wallDropDraft() }, ["不发"]),
     ]),
   ]);
@@ -2104,8 +2184,15 @@ function wallTick() {
     }
     S.wallLastN = n;
   }
+  const houseN = typeof houseForumUnread === "function" ? houseForumUnread().length : 0;
+  if (!quiet && houseN > (S.houseLastN || 0) && n <= (S.wallLastN || 0)) {
+    if (typeof tip === "function" && S.mode !== "web" && !S.paused) {
+      tip("廿八屋讨论区有新回复。", { quiet: true, nearBar: true, ms: 2800 });
+    }
+  }
+  S.houseLastN = houseN;
   const b = document.getElementById("playbar-house");
-  if (b) b.classList.toggle("has-new", n > 0 && S.mode !== "web" && !S.paused);
+  if (b) b.classList.toggle("has-new", (n > 0 || houseN > 0) && S.mode !== "web" && !S.paused);
 }
 
 // 这格跟他在论坛出没同步：她搬进去后收起，08-24 回帖那天冒一天，09-07 论坛发帖同一分钟回来。字从来不改。

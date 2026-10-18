@@ -97,6 +97,7 @@ const LEVELS = [
     goal: "今晚，留意这间屋。",
     tasks: [
       { text: "夜里再看一遍这间屋", after: "三组不一样的，摆在一起", need: true, count: () => (nightOn() ? [pairCount(), 3] : null), done: () => pairCount() >= 3, hint: () => (nightOn() ? "先在屋里找出跟搬进来那晚不一样的东西，再点「摆在一起」。" : "") },
+      { text: "天光之前做个决定：敲门，或者忍到天亮", after: "这一夜的两种走法", need: true, show: nightOn, done: () => flag("knockedZhou") || noted("whisper"), hint: "摆好之后，门在那边——敲，或者不敲。" },
       { text: "开录音", show: nightOn, done: () => ev("rec-axuan") || noted("voice") },
       { text: "打 999", show: nightOn, done: () => flag("called999") },
       { text: "打给阿乐", show: nightOn, done: () => flag("calledLok") },
@@ -120,7 +121,7 @@ const LEVELS = [
       { text: "出门，经过前座门口", after: "周问我脚湿不湿", need: true, done: () => ev("note-dry"), hint: "前座门口，我还没经过。" },
       { text: "倾偈表姐", need: true, done: () => !!(S.chatLogs && S.chatLogs.mei16 && S.chatLogs.mei16.closed), hint: "表姐一直在等我回。" },
       { text: "接陈家豪电话", need: true, show: () => !!(S.chatLogs && S.chatLogs.mei16 && S.chatLogs.mei16.closed), done: () => flag("howardCalled"), hint: "表姐说姐夫会打来。" },
-      { text: "拿到诊所地址", need: true, show: () => flag("howardCalled"), done: () => flag("clinicAddr"), hint: "地址他说会发到手机。" },
+      { text: "拿到诊所地址", show: () => flag("howardCalled"), done: () => flag("clinicAddr"), hint: "地址他说会发到手机。" },
       { text: "给玩具车和水龙头各拍一张", need: true, show: () => !!(S.chatLogs && S.chatLogs.mei16 && S.chatLogs.mei16.closed), count: () => [cnt(["photo-car-out", "photo-tap-out"], { "photo-car-out": ev("photo-car-out"), "photo-tap-out": ev("photo-tap-out") }), 2], done: () => ev("photo-car-out") && ev("photo-tap-out"), hint: "用自己的拍立得。车同水喉各按一次快门，夹进日记簿。" },
       { text: "电话里，追问姐夫一句", after: "问陈「不太好」是什么意思", show: () => flag("howardCalled"), done: () => flag("askedWorry") },
       { text: "问姐夫为什么这么急", after: "问陈为什么这么快", show: () => flag("howardCalled"), done: () => flag("askedWhyFast") },
@@ -139,7 +140,7 @@ const LEVELS = [
   },
   {
     part: 2, title: "澄心初诊", date: "8月16日 出门前～16:00", place: "后座门口、澄心候诊、诊室",
-    clock: "2014年8月16日 周六 15:40",
+    clock: "2014年8月16日 周六 14:50",
     goal: "终于有人肯听，把屋里的事说清楚。",
     tasks: [
       { text: "记下门口收回，收好红圈信封", need: true, done: () => noted("takeback") && ev("letter-red"), hint: "楼梯口那一幕，信封角。记进日记簿再出门。" },
@@ -303,7 +304,6 @@ const LEVELS = [
       { text: "空抽屉再拉一次", after: "空抽屉掉出鱼牌", show: () => !!(S.miss && S.miss.chen) && !ev("chen-wallet"), done: () => ev("fish-tag") },
       { text: "问他那块鱼，再上网对履历", after: "问过。履历和校报对不上", show: () => ev("fish-tag"), done: () => flag("askedFishLuo") && noted("fish-cv") },
       { text: "再出走廊，看椅脚边", after: "钱夹：合照，夹层是他的学生证", show: () => !!(S.miss && S.miss.leftCorr) && !ev("fish-tag"), done: () => ev("chen-wallet") },
-      { text: "翻廿八屋站内旧闻", show: () => typeof missDirtReady === "function" ? missDirtReady() : ev("mail-dirt"), done: () => noted("twofiles") },
       { text: "回家，听周一句，看门口", after: "楼梯口周一句；铁闸差一格；门底干水印", show: () => typeof missDirtReady === "function" ? missDirtReady() : ev("mail-dirt"), done: () => noted("day-trace") },
     ],
     advance: {
@@ -547,7 +547,7 @@ function levelBlocks() {
   };
   const need = shown.filter((t) => t.need);
   const opt = shown.filter((t) => !t.need);
-  const blocks = [el("p", { class: "diary-note level-name" }, [L.goal])];
+  const blocks = [el("p", { class: "diary-note level-name" }, [levelGoalText(L)])];
   if (need.length) blocks.push(el("ul", { class: "task-list" }, need.map(row)));
   if (opt.length) blocks.push(el("ul", { class: "task-list opt-list" }, opt.map(row)));
   const ht = hintTask();
@@ -660,8 +660,30 @@ function cardBg(n) {
   return pic(n, name);
 }
 
-// 各底图中间区域原始亮度差很大（候诊约 195、厅约 97、天台约 67、夜里厅约 43），压到看起来同一暗度
-const CARD_LUM = { "场景-候诊": 0.16, "场景-后座厅": 0.32, "场景-天台": 0.4, "场景-夜里后座厅": 0.62 };
+// 各底图中间区域原始亮度差很大（10-17 重出后实测：候诊约 151、白天厅约 103、天台约 100、夜里厅约 36）。
+// 不压成同一暗度，按「这一场是白天还是夜里」定，目标是落到 45～60 这一段：
+// 压到 25 以下白字压得住，但屋子就看不见了（08-15「早上」那张后来读成夜里，就是 0.32 压过头）。
+const CARD_LUM = { "场景-候诊": 0.4, "场景-后座厅": 0.7, "场景-天台": 0.4, "场景-夜里后座厅": 1.12 };
+
+// 过关卡第一句：把「刚才那一关做成了什么」说出来，别只列下一站。
+// 只写单语（H() 按语言模式繁化），不写粤语口语，免得普通话模式里突然冒一句粤语。
+const DONE_LINE = {
+  1: "帖子有人回。荣汇街二十八号，四楼，后座——今晚搬。",
+  2: "钥匙在你手上。周生说：静一点，水喉旧。",
+  3: "两个礼拜住下来。屋里的样子、日历上的夜，你都记下了。",
+  4: "这一夜你记住了：车转了向，门底有脚印，水又滴。",
+  5: "有人肯听，也有人先替你说「你太累」。明天下午四点，澄心。",
+  6: "他真的坐下来听。作业带回来了：几点、哪间房、怎样动。",
+  7: "纸上第一次有了钟点。他站在门口说：两分钟。",
+  8: "纸归纸，心里归心里。两堆你都分开了。",
+  9: "录音关掉，车还是转。表姐在电话那头听见了水声。",
+  10: "那句最不敢讲的，你说出来了。他没有写病。",
+  11: "一个礼拜记满了。他答应星期六来。",
+  12: "他说今晚来：只听门底，不过夜。",
+  13: "他亲耳听到了那三秒。本子上写的是「延迟三秒」。",
+  14: "本子不在，细节他讲得出；上门行程被删了。",
+  15: "录音叫了你的名字。他叫出了一个字：鱼。",
+};
 
 function stageFilled() {
   return !!(stage && stage.children && stage.children.length);
@@ -806,6 +828,7 @@ function drawCaption(c, L) {
     if (prev) desk.classList.add("has-prev");
     if (prev && !kept.length) desk.classList.add("no-kept");
     kids.push(
+      prev && DONE_LINE[c.from] ? el("p", { class: "caption-done" }, [H(DONE_LINE[c.from])]) : "",
       prev && kept.length ? el("ul", { class: "caption-kept" }, kept.map((t) => el("li", {}, [t]))) : "",
       prev && prev.next ? el("p", { class: "caption-next" }, [prev.next]) : "",
       el("p", { class: "caption-line" }, [levelGoalText(L) || (typeof toHkTrad === "function" ? toHkTrad("继续。") : "继续。")]),
@@ -859,7 +882,7 @@ function openingLineText(pair) {
 function levelGoalText(lv) {
   if (!lv) return "";
   if (lv.goalZh != null && typeof T === "function") return T(lv.goal, lv.goalZh);
-  return typeof toHkTrad === "function" ? toHkTrad(lv.goal || "") : (lv.goal || "");
+  return typeof H === "function" ? H(lv.goal || "") : (lv.goal || "");
 }
 
 // 开场一旦开始就不许跳：盖一层透明罩吃掉所有点击，键盘也拦下（浏览器自己的组合键放行）。
@@ -1312,11 +1335,14 @@ function resumeCaption(c, L, go, leave) {
       el("span", { class: "resume-undo", "aria-hidden": "true" }, "undo".split("").map((ch) => el("span", {}, [ch]))),
     ]),
     el("p", { class: "resume-sub" }, ["第一章：章慧琪"]),
+    el("p", { class: "resume-progress" }, [
+      (PARTS[cur.part] || "") + "　·　" + curN + " / " + (LEVELS.length - 1),
+    ]),
     el("div", { class: "resume-where", role: "group", "aria-label": "存档" }, [
       el("span", { class: "resume-ribbon", "aria-hidden": "true" }),
       el("p", { class: "resume-when" }, [shortDay(savedTime)]),
       cur.place ? el("p", { class: "resume-place" }, [cur.place]) : "",
-      cur.goal ? el("p", { class: "resume-goal" }, [cur.goal]) : "",
+      cur.goal ? el("p", { class: "resume-goal" }, [levelGoalText(cur)]) : "",
     ]),
     btn("resume-go", "继续", leave(() => { choiceUnlock(); loadSave(); })),
     btn("resume-link", "选关", pick),
@@ -1390,6 +1416,10 @@ if (typeof window !== "undefined") {
 // 跳关补上的东西当作以前看过：墙簿不响，日记簿收集的东西不打点
 function markPastSeen() {
   wallMarkAllSeen();
+  if (typeof markHouseThread === "function" && typeof myThreadIds === "function") {
+    myThreadIds().forEach(markHouseThread);
+    S.houseLastN = 0;
+  }
   S.evOpened = S.evOpened || {};
   (S.evidence || []).forEach((e) => { S.evOpened[e.id] = true; });
 }
