@@ -1,5 +1,5 @@
 const PIC_ROOT = "../图/游戏/";
-const PIC_VER = "20261016-chen-id3";
+const PIC_VER = "20261018-canon5";
 
 const PIC_LV = [
   "",
