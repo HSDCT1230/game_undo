@@ -1456,6 +1456,16 @@ function bootGame() {
     draw();
     return;
   }
+  // 调试：直接开浏览器分页。?web=blank 空白分页，?web=vhu 校园网登入页。
+  const web = q.get("web");
+  if (web) {
+    S.mode = "web";
+    S.paused = null;
+    S.tab = "blank";
+    S.screen = web === "vhu" ? "vhu-login" : "newtab";
+    draw();
+    return;
+  }
   const old = PREVIEW_TO[Number(q.get("preview"))];
   if (old) return jumpLevel(old[0], old[1]);
   const jump = Number(q.get("level"));

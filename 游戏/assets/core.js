@@ -239,6 +239,21 @@ const initial = () => ({
   visitSeen: {},
   miss: {},
   skipAll: {},
+  vhu: {
+    authed: false,
+    id: "",
+    pw: "",
+    err: "",
+    need: false,
+    out: false,
+    mail: "",
+    notice: "",
+    libq: "",
+    libdone: false,
+    errUrl: "",
+    url: "",
+    read: {},
+  },
 });
 
 let S = initial();

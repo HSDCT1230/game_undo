@@ -280,6 +280,8 @@ function isWallScreen(screen) {
 }
 
 function holdForPost(screen) {
+  // 空白分页与校园网是另外两个站，不受廿八屋发帖门禁管。
+  if (screen === "newtab" || screen === "web-error" || String(screen).indexOf("vhu-") === 0) return false;
   const onWall = isWallScreen(S.screen);
   if (S.pendingPost) {
     if (screen === "post") return false;
@@ -354,9 +356,15 @@ function laptop(inner, opts) {
   const desk = el("div", { class: "desk" });
   const laptopBox = el("div", { class: "laptop" });
   const screen = el("div", { class: "laptop-screen" });
+  const title = opts.title
+    || (tab === "wall"
+      ? wallCountLabel("墙簿", wallUnread().n)
+      : tab === "blank"
+        ? blankTabTitle()
+        : wallCountLabel("廿八屋", houseForumUnread().length));
   const titlebar = el("div", { class: "browser-titlebar" }, [
     el("span", { class: "ie-icon", "aria-hidden": "true" }, ["e"]),
-    el("span", {}, [(opts.title || (tab === "wall" ? wallCountLabel("墙簿", wallUnread().n) : wallCountLabel("廿八屋", houseForumUnread().length))) + " - Windows Internet Explorer"]),
+    el("span", { class: "browser-title" }, [title + " - Windows Internet Explorer"]),
     browserCloseControls(),
   ]);
   const canBack = scene ? !!S.searchDoc : (S.webHist || []).length > 0;
@@ -383,10 +391,11 @@ function laptop(inner, opts) {
   const tabs = el("div", { class: "browser-tabs" }, [
     btnTab(wallCountLabel("廿八屋", houseForumUnread().length) + " - 香港租盘", "house", tab, scene),
     btnTab(wallCountLabel("墙簿", wallUnread().n) + " - 我的首页", "wall", tab, scene),
+    btnTab(blankTabTitle(), "blank", tab, scene),
   ]);
   const status = el("div", { class: "browser-status" }, [
     el("span", {}, ["完成"]),
-    el("span", {}, ["Internet　│　100%"]),
+    el("span", {}, [opts.secure ? "Internet | 受保護模式：開啟" : "Internet　│　100%"]),
   ]);
   screen.append(titlebar, chrome, tabs, inner, status);
   laptopBox.append(screen);
@@ -400,10 +409,11 @@ function btnTab(label, id, on, scene) {
     class: id === on ? "on" : "",
     onclick: () => {
       if (scene) {
-        browseFromScene(id === "wall" ? "wall" : "home");
+        browseFromScene(id === "wall" ? "wall" : id === "blank" ? "newtab" : "home");
         return;
       }
       if (id === "wall") goWeb("wall");
+      else if (id === "blank") goWeb("newtab");
       else if (S.pendingPost || !postedHelp()) goWeb("post");
       else goWeb(flag("searched") ? "list" : "home");
     },
@@ -442,7 +452,8 @@ function browseFromScene(screen) {
     if (S.mode === "night") stopNightClock();
     S.mode = "web";
   }
-  goWeb(String(screen).startsWith("wall") ? screen : (postedHelp() ? "home" : "post"));
+  const keep = screen === "newtab" || screen === "web-error" || String(screen).startsWith("wall") || String(screen).indexOf("vhu-") === 0;
+  goWeb(keep ? screen : (postedHelp() ? "home" : "post"));
 }
 
 function openRental() {
@@ -568,6 +579,7 @@ function goWeb(screen, extra) {
   S.wallFresh = null;
   S.wallNav = (S.wallNav || 0) + 1;
   if (extra.tab) S.tab = extra.tab;
+  else if (screen === "newtab" || screen === "web-error" || String(screen).indexOf("vhu-") === 0) S.tab = "blank";
   else if (screen === "ad" || screen === "wall" || String(screen).indexOf("wall-") === 0) S.tab = "wall";
   else S.tab = "house";
   if ("listing" in extra) S.listing = extra.listing;
@@ -657,8 +669,12 @@ function renderWeb() {
   sfxWebOpen();
   clearStage();
   const inner = webInner();
-  const wallish = S.tab === "wall" || S.screen === "ad" || String(S.screen).indexOf("wall-") === 0;
-  stage.append(laptop(inner, { tab: wallish ? "wall" : "house", addr: webAddr() }));
+  const tab = S.tab === "wall" || S.tab === "blank" ? S.tab : "house";
+  stage.append(laptop(inner, {
+    tab,
+    addr: webAddr(),
+    secure: String(S.screen).indexOf("vhu-") === 0,
+  }));
   if (S.modal) stage.append(S.modal);
   else offerSlate();
   renderPlaybar();
@@ -693,11 +709,28 @@ function webAddr() {
     "wall-mail": "http://wallbook.hk/inbox",
     "wall-set": "http://wallbook.hk/settings",
     "wall-user": "http://wallbook.hk/profile/" + (S.wallWho || ""),
+    newtab: "about:blank",
+    "web-error": (S.vhu && S.vhu.errUrl) || "http://",
+    "vhu-login": "https://" + VHU_HOST + "/login",
+    "vhu-home": "https://" + VHU_HOST + "/home",
+    "vhu-profile": "https://" + VHU_HOST + "/profile",
+    "vhu-academic": "https://" + VHU_HOST + "/academic",
+    "vhu-library": "https://" + VHU_HOST + "/library",
+    "vhu-mail": "https://" + VHU_HOST + "/webmail" + (S.vhu && S.vhu.mail ? "/read/" + S.vhu.mail : ""),
+    "vhu-notice": "https://" + VHU_HOST + "/notice" + (S.vhu && S.vhu.notice ? "/" + S.vhu.notice : ""),
   };
   return map[S.screen] || "http://28house.hk/";
 }
 
 function webInner() {
+  // 未登入却直接进校园网子页（后退、旧纪录），一律落回登入页。
+  if (String(S.screen).indexOf("vhu-") === 0 && S.screen !== "vhu-login") {
+    const st = typeof vhuSt === "function" ? vhuSt() : null;
+    if (!st || !st.authed) {
+      if (st) st.need = true;
+      S.screen = "vhu-login";
+    }
+  }
   const views = {
     home: viewHome,
     list: viewList,
@@ -721,6 +754,15 @@ function webInner() {
     "wall-mail": viewWallMail,
     "wall-set": viewWallSet,
     "wall-user": viewWallUser,
+    newtab: viewNewTab,
+    "web-error": viewWebError,
+    "vhu-login": viewVhuLogin,
+    "vhu-home": viewVhuHome,
+    "vhu-profile": viewVhuProfile,
+    "vhu-academic": viewVhuAcademic,
+    "vhu-library": viewVhuLibrary,
+    "vhu-mail": viewVhuMail,
+    "vhu-notice": viewVhuNotice,
   };
   const fn = views[S.screen];
   return fn ? fn() : viewHome();

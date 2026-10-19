@@ -24,6 +24,7 @@
 - 通关另记一个键 `undo-ch1-cleared`（`{ first, last, times }`，`levels.js` 的 `markCleared()`），不跟存档放一起，清档、重来都不碰它。
 - 结局画面有「第二章　预告」：`story-late.js` 的 `CH2_TEASER`，取自 [第二章](../策划/剧本/02-第二章-陈家豪.md) 2-1 楼梯，停在他撞门。
 - 调试跳关：`index.html?level=N`（N = 1–16）。前面各关的必拿物和笔记会自动补上，不读存档。
+- 调试网页：`index.html?web=blank` 直接开空白分页（第三分页），`index.html?web=vhu` 直接开校园网登入页；都不进剧情，方便单测网页。
 - 分段测试：`index.html?test` 出一张目录，每关「从关头」和关中间的几段都能点。也可以直接写 `?level=N&seg=b`（段号见目录，段表在 `levels.js` 的 `SEGS`）。第 10 关只有关头。
 - 旧链接 `?preview=1..26` 仍然能开，按 `PREVIEW_TO` 对到现在的关和段。
 
@@ -52,14 +53,21 @@
   assets/
     pics.js · sfx.js · core.js · ui.js · diary.js
     web-data.js   廿八屋／墙簿等常量数据
-    web-ui.js     站点与墙簿界面逻辑
+    web-ui.js     站点与墙簿界面逻辑（浏览器外壳：标题栏／地址栏／分页）
+    web-vhu.js    维港大学校园网 ＋ 空白分页
     talk.js · hub.js
     story-early.js    开局～黎明
     story-clinic.js   诊所弧＋周间
     story-late.js     上门～天台
     levels.js · map.js · main.js
-    style-base.css · style-chrome.css
+    style-base.css · style-chrome.css · style-vhu.css
 ```
+
+浏览器里现在是三个分页：廿八屋、墙簿、新分页。第三个是空白页，可以自己输网址（`about:blank`），
+认得 `28house.hk`／`wallbook.hk`／`vhu.edu.hk` 三个域名，别的落到 IE 的「无法显示网页」。
+校园网在 `portal.vhu.edu.hk`，学生编号 `91024656E`，密码同编号（罗医生的旧帐户，2014 年已转校友只读）。
+`web-vhu.js` 结尾留了注释：以后要放剧情线索，在 `VHU_MAILS`／`VHU_NOTICES` 加一条，或在
+`viewVhuProfile`／`viewVhuAcademic` 里加一行，不要另起一套状态。登录态存在 `S.vhu`（进存档）。
 
 脚本是普通 `<script>`，按 index.html 里的顺序载入，共用一个全局。已拆分的 stub（`story.js`／`web.js`／`style.css`）不要再挂进页面。改了 JS／CSS 记得把 index.html 里的 `?v=` 一起改。
 

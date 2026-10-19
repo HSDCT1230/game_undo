@@ -333,6 +333,18 @@ a:hover {
   margin-left: auto;
   font-family: Arial, sans-serif;
   letter-spacing: .08em;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+/* 标题长了（例如「VHU Portal - 維港大學」）窄屏下不许换行，直接省略号；
+   否则右侧的 — □ × 会被挤到第二行。 */
+.browser-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin-right: 8px;      /* 省略号不要贴住右侧的 — □ × */
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 .window-x {
   margin: 0 0 0 2px;

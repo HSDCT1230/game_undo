@@ -1,0 +1,475 @@
+/* style-vhu.css — 维港大学校园入门网站（2014）与浏览器空白分页
+   只作用于 .vhu-*，不改廿八屋／墙簿的样式。load 在 style-chrome.css 之后。 */
+
+.vhu-site {
+  --vhu-ink: #22302f;
+  --vhu-teal: #2c4a4d;
+  --vhu-teal-d: #1b3336;
+  --vhu-gold: #b49a63;
+  --vhu-line: #ccd6d1;
+  --vhu-paper: #fbfaf5;
+  --vhu-link: #15507a;
+  --vhu-mute: #7c8985;
+  background: #fff;
+  color: var(--vhu-ink);
+  font: 12.5px/1.65 Arial, "Microsoft JhengHei", "Microsoft YaHei", sans-serif;
+  -webkit-text-size-adjust: 100%;
+}
+
+.vhu-site a { color: var(--vhu-link); }
+
+/* 窗口高度别跟着页面内容忽大忽小 */
+.laptop-screen > .hk-site.vhu-site {
+  display: flex;
+  flex-direction: column;
+  min-height: 640px;
+}
+.vhu-site .vhu-foot { margin-top: auto; }
+/* 竖排容器里 body 是唯一可伸缩的子项，页面比窗口高时它会被压扁，
+   里面的服务格就溢出来盖住页脚。禁止压缩，让它把站点撑高、由窗口滚动。 */
+.vhu-site .vhu-body { flex: 0 0 auto; }
+
+/* ---------- 页头 ---------- */
+
+.vhu-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px 9px;
+  background: linear-gradient(180deg, #33565a, #244246);
+  border-bottom: 3px solid var(--vhu-gold);
+  color: #fff;
+}
+.vhu-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--vhu-gold);
+  color: #e8dcc0;
+  font: 700 13px/1 Georgia, "Times New Roman", serif;
+  letter-spacing: .06em;
+}
+.vhu-wordmark { display: flex; flex-direction: column; line-height: 1.15; }
+.vhu-wordmark strong { font-size: 19px; font-weight: 600; letter-spacing: .12em; }
+.vhu-wordmark small { font-size: 9px; letter-spacing: .16em; color: #cfc4a9; }
+.vhu-head-side {
+  margin-left: auto;
+  text-align: right;
+  font-size: 10.5px;
+  line-height: 1.5;
+  color: #d7e0dd;
+}
+.vhu-head-side small { display: block; font-size: 8.5px; color: #a9bdb8; }
+
+/* ---------- 导航 ---------- */
+
+.vhu-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  padding: 0 10px;
+  background: #edf1ee;
+  border-bottom: 1px solid var(--vhu-line);
+}
+.vhu-nav-item {
+  padding: 7px 12px;
+  border: 0;
+  background: transparent;
+  color: #20494d;
+  font: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+.vhu-nav-item:hover { background: #fff; text-decoration: underline; }
+.vhu-nav-item.on { background: #fff; font-weight: 700; box-shadow: inset 0 -2px var(--vhu-gold); }
+.vhu-nav-gap { flex: 1 1 auto; }
+.vhu-nav-out { color: #6d7a76; }
+
+.vhu-subbar {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 5px 16px;
+  background: var(--vhu-paper);
+  border-bottom: 1px solid #e2e6e2;
+  color: #5c6a66;
+  font-size: 11px;
+}
+.vhu-subbar span { padding: 0 10px; border-right: 1px solid #dde3df; }
+.vhu-subbar span:first-child { padding-left: 0; }
+.vhu-sub-time { margin-left: auto; border-right: 0 !important; }
+
+.vhu-crumb {
+  padding: 6px 16px;
+  background: #fff;
+  border-bottom: 1px solid #eef1ee;
+  color: var(--vhu-mute);
+  font-size: 11px;
+}
+
+/* ---------- 正文 ---------- */
+
+.vhu-body { padding: 14px 16px 22px; min-height: 380px; }
+.vhu-h2 {
+  margin: 0 0 4px;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: .02em;
+  color: #1d3a3d;
+}
+.vhu-h3 {
+  margin: 18px 0 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #d8dfdb;
+  font-size: 13px;
+  font-weight: 700;
+  color: #1d3a3d;
+}
+.vhu-lead { margin: 0 0 12px; color: #5f6d69; font-size: 11.5px; }
+.vhu-note { margin: 0 0 10px; color: #5c6a66; font-size: 11.5px; }
+.vhu-fine { margin: 8px 0 0; color: var(--vhu-mute); font-size: 10.5px; line-height: 1.7; }
+.vhu-alert {
+  margin: 10px 0 14px;
+  padding: 8px 10px;
+  border: 1px solid #d9cba6;
+  background: #fbf6e8;
+  color: #6b5426;
+  font-size: 11.5px;
+}
+
+/* ---------- 面板与表格 ---------- */
+
+.vhu-cols {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 14px;
+  margin-top: 12px;
+}
+.vhu-panel {
+  padding: 0 10px 10px;
+  border: 1px solid var(--vhu-line);
+  background: #fff;
+}
+.vhu-panel > h3 {
+  margin: 0 -10px 8px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--vhu-line);
+  background: #eef3f0;
+  color: #20494d;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.vhu-kv { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+.vhu-kv th {
+  width: 96px;
+  padding: 4px 8px 4px 0;
+  text-align: left;
+  font-weight: 400;
+  vertical-align: top;
+  color: #6b7874;
+}
+.vhu-kv td { padding: 4px 0; border-bottom: 1px dotted #e3e8e4; color: var(--vhu-ink); }
+.vhu-kv tr:last-child td { border-bottom: 0; }
+.vhu-kv-wide { max-width: 640px; }
+.vhu-kv-wide th { width: 130px; }
+
+.vhu-list { margin: 0; padding: 0; list-style: none; font-size: 11.5px; }
+.vhu-list li {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  padding: 4px 0;
+  border-bottom: 1px dotted #e3e8e4;
+}
+.vhu-list li:last-child { border-bottom: 0; }
+.vhu-date { flex: 0 0 auto; color: var(--vhu-mute); font-size: 10.5px; }
+.vhu-link-btn {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--vhu-link);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.vhu-link-btn:hover { text-decoration: underline; }
+
+.vhu-services {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.vhu-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 9px 10px;
+  border: 1px solid var(--vhu-line);
+  background: #fafbf9;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.vhu-tile:hover { background: #fff; border-color: #8fa8a2; }
+.vhu-tile strong { color: #1f4a4e; font-size: 12px; }
+.vhu-tile small { color: var(--vhu-mute); font-size: 10.5px; }
+.vhu-tile.off { opacity: .55; cursor: default; }
+.vhu-tile.off:hover { background: #fafbf9; border-color: var(--vhu-line); }
+
+.vhu-table { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+.vhu-table th {
+  padding: 5px 8px;
+  border: 1px solid #d6ded9;
+  background: #eef3f0;
+  color: #2b4a4d;
+  font-weight: 700;
+  text-align: left;
+  white-space: nowrap;
+}
+.vhu-table td { padding: 5px 8px; border: 1px solid #e1e6e2; vertical-align: top; }
+.vhu-table tbody tr:nth-child(even) { background: #fafbf9; }
+.vhu-num { white-space: nowrap; }
+.vhu-mono { font-family: Consolas, "Courier New", monospace; font-size: 11px; }
+
+/* ---------- 学业纪录 ---------- */
+
+.vhu-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin: 6px 0 14px;
+  padding: 8px 10px;
+  border: 1px solid #e0e6e2;
+  background: #f7f9f7;
+  color: #3f514d;
+  font-size: 11.5px;
+}
+.vhu-year { margin: 0 0 16px; }
+.vhu-year h3 {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0 0 6px;
+  color: #1d3a3d;
+  font-size: 12.5px;
+}
+.vhu-gpa { margin-left: auto; color: #6f7c78; font-size: 11px; font-weight: 400; }
+
+/* ---------- 图书馆 ---------- */
+
+.vhu-search-row { display: flex; gap: 6px; margin-bottom: 10px; }
+.vhu-input {
+  padding: 5px 7px;
+  border: 1px solid #9aa8a3;
+  background: #fff;
+  color: var(--vhu-ink);
+  font: inherit;
+  font-size: 12px;
+}
+.vhu-input:focus { outline: 1px solid #7f9db9; }
+.vhu-search { flex: 1 1 auto; min-width: 0; }
+.vhu-empty {
+  padding: 10px;
+  border: 1px dashed #cfd8d3;
+  background: #fafbf9;
+  color: #6f7c78;
+  font-size: 11.5px;
+}
+
+/* ---------- 电邮与公告 ---------- */
+
+.vhu-mail-list tbody tr,
+.vhu-notice-list tbody tr { cursor: pointer; }
+.vhu-mail-list tbody tr:hover,
+.vhu-notice-list tbody tr:hover { background: #f2f7f4; }
+.vhu-unread td { color: #173f43; font-weight: 700; }
+.vhu-mail-head { margin-bottom: 12px; }
+.vhu-mail-body,
+.vhu-article {
+  padding: 12px 14px;
+  border: 1px solid #dbe2dd;
+  background: #fdfdfa;
+  font-size: 12px;
+  line-height: 1.85;
+}
+.vhu-mail-body p,
+.vhu-article p { margin: 0 0 .8em; }
+.vhu-mail-body p:last-child,
+.vhu-article p:last-child { margin-bottom: 0; }
+.vhu-back { margin: 0 0 8px; font-size: 11px; }
+.vhu-meta { margin: 0 0 10px; color: var(--vhu-mute); font-size: 11px; }
+
+/* ---------- 按钮 ---------- */
+
+.vhu-btn {
+  padding: 5px 16px;
+  border: 1px solid #26555a;
+  background: linear-gradient(#3f7378, #2a565b);
+  color: #fff;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  box-shadow: inset 1px 1px rgba(255, 255, 255, .18);
+}
+.vhu-btn:hover { background: linear-gradient(#4b8388, #316166); }
+.vhu-btn.ghost {
+  border-color: #a9b4b0;
+  background: linear-gradient(#fff, #eceeed);
+  color: #334;
+  box-shadow: none;
+}
+.vhu-actions { display: flex; gap: 8px; margin-top: 12px; }
+
+/* ---------- 登入 ---------- */
+
+.vhu-login-wrap {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(260px, .9fr);
+  gap: 22px;
+  align-items: start;
+  max-width: 760px;
+  margin: 6px auto 0;
+}
+.vhu-login-intro { padding: 14px 0; }
+.vhu-login-intro h1 {
+  margin: 0;
+  color: #26494d;
+  font: 400 30px/1.1 Georgia, "Times New Roman", serif;
+  letter-spacing: .02em;
+}
+.vhu-login-cn { margin: 4px 0 14px; color: #3d5f63; font-size: 15px; letter-spacing: .3em; }
+.vhu-login-intro p { color: #4c5e5a; font-size: 12px; }
+.vhu-login-intro ul { margin: 12px 0 0; padding-left: 16px; color: #6a7773; font-size: 11px; line-height: 1.9; }
+
+.vhu-login-form {
+  padding: 14px 16px 12px;
+  border: 1px solid #cfd8d3;
+  background: #fbfbf8;
+}
+.vhu-login-form h2 {
+  margin: 0 0 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #dfe5e0;
+  color: #1d3a3d;
+  font-size: 14px;
+}
+.vhu-login-form label { display: block; margin: 9px 0 4px; color: #5c6a66; font-size: 11px; }
+.vhu-login-form .vhu-input { box-sizing: border-box; width: 100%; }
+.vhu-login-btn { width: 100%; margin-top: 12px; padding: 7px 0; }
+.vhu-login-links { margin: 10px 0 0; font-size: 11px; }
+.vhu-msg {
+  margin: 0 0 6px;
+  padding: 6px 8px;
+  border: 1px solid #cfdcd5;
+  background: #eef4f1;
+  color: #3d5a52;
+  font-size: 11px;
+}
+.vhu-err {
+  margin: 0 0 6px;
+  padding: 6px 8px;
+  border: 1px solid #e2c3c0;
+  background: #fbeeee;
+  color: #8e2f27;
+  font-size: 11px;
+}
+.vhu-login-foot {
+  max-width: 760px;
+  margin: 22px auto 0;
+  padding-top: 10px;
+  border-top: 1px solid #dfe5e0;
+}
+.vhu-login-foot h3 { margin: 0 0 6px; color: #4c5e5a; font-size: 11px; }
+.vhu-login-foot ul { margin: 0; padding: 0; list-style: none; color: #5c6a66; font-size: 11px; }
+.vhu-login-foot li { padding: 3px 0; border-bottom: 1px dotted #e3e8e4; }
+.vhu-login-foot li:last-child { border-bottom: 0; }
+
+/* ---------- 空白分页 ---------- */
+
+.vhu-blank { background: #fff; }
+.vhu-blank-inner { width: min(520px, 100%); margin: 64px auto 0; padding: 0 16px 40px; }
+.vhu-blank-mark { margin: 0 0 18px; color: #c3cbc7; font: 11px Consolas, "Courier New", monospace; }
+.vhu-url-form label { display: block; margin-bottom: 5px; color: #6b7874; font-size: 11px; }
+.vhu-url-row { display: flex; gap: 6px; }
+.vhu-url-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 8px 9px;
+  border: 1px solid #7f9db9;
+  font: 13px Tahoma, Arial, sans-serif;
+}
+.vhu-url-input:focus { outline: 1px solid #7f9db9; }
+.vhu-fav { margin-top: 26px; padding-top: 10px; border-top: 1px solid #e7ebe8; }
+.vhu-fav h3 { margin: 0 0 6px; color: #6b7874; font-size: 11px; font-weight: 400; }
+.vhu-fav ul { margin: 0; padding: 0; list-style: none; font-size: 12px; }
+.vhu-fav li { padding: 3px 0; }
+
+/* ---------- 打不开的网址 ---------- */
+
+.vhu-error { background: #fff; }
+.vhu-error-inner {
+  max-width: 600px;
+  margin: 48px auto 0;
+  padding: 0 18px 40px;
+  color: #333;
+  font-size: 12.5px;
+}
+.vhu-error-inner h1 { margin: 0 0 12px; font-size: 18px; font-weight: 400; }
+.vhu-error-inner ul { margin: 6px 0 12px; padding-left: 20px; line-height: 1.9; }
+.vhu-error-sub { margin: 12px 0 4px; }
+.vhu-error hr { margin: 16px 0; border: 0; border-top: 1px solid #d9d9d9; }
+
+/* ---------- 页脚 ---------- */
+
+.vhu-foot {
+  padding: 10px 16px 12px;
+  border-top: 1px solid #dde3df;
+  background: #f7f8f4;
+  color: #7e8a86;
+  font-size: 10px;
+  line-height: 1.7;
+}
+.vhu-foot p { margin: 0; }
+
+/* ---------- 窄屏 ---------- */
+
+@media (max-width: 720px) {
+  .laptop-screen > .hk-site.vhu-site { min-height: 0; }
+  .vhu-cols { grid-template-columns: minmax(0, 1fr); }
+  .vhu-services { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .vhu-login-wrap { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .vhu-login-intro h1 { font-size: 24px; }
+  .vhu-login-intro { padding: 4px 0; }
+  .vhu-sub-time { margin-left: 0; }
+  .vhu-head-side { display: none; }
+}
+
+@media (max-width: 460px) {
+  .vhu-body { padding: 12px 10px 18px; }
+  .vhu-nav { padding: 0 4px; }
+  .vhu-nav-item { padding: 7px 8px; font-size: 12px; }
+  /* 窄屏上那根撑满的空白把「登出」顶到第二行最左，像掉出来的；
+     去掉它，改用 margin-left:auto，换行后也靠右。 */
+  .vhu-nav-gap { display: none; }
+  .vhu-nav-out { margin-left: auto; }
+  .vhu-services { grid-template-columns: minmax(0, 1fr); }
+  .vhu-kv-wide th { width: 96px; }
+  .vhu-blank-inner { margin-top: 36px; }
+  .vhu-table { font-size: 11px; }
+  .vhu-table th,
+  .vhu-table td { padding: 4px 6px; }
+  .vhu-crumb { padding: 6px 10px; }
+}
+
+@media (max-width: 640px), (pointer: coarse) {
+  .vhu-nav-item { min-height: 32px; }
+  .vhu-input,
+  .vhu-url-input { min-height: 32px; font-size: 13px; }
+  .vhu-btn { min-height: 32px; }
+  .vhu-tile { min-height: 46px; }
+  .vhu-mail-list tbody tr,
+  .vhu-notice-list tbody tr { min-height: 34px; }
+}
