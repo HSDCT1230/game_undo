@@ -27,6 +27,17 @@
   --scroll-stage-thumb: #5a6e84;
   --scroll-web-track: #e8e4dc;
   --scroll-web-thumb: #b9b1a3;
+
+  /* 品牌（与标题「暗度 undo」那一版字同一套）：炭黑、暖米灰、砖红。
+     旁白、字幕、续玩卡都从这里取，别在别处另写颜色。 */
+  --brand-ink: #c5b8ad;
+  --brand-ink-hi: #ded3c4;
+  --brand-mute: #8a8076;
+  --brand-dim: #6e675f;
+  --brand-red: #a52019;
+  --brand-red-deep: #6e2a22;
+  --brand-face: "Segoe UI", "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+  --brand-track: 0.28em;
 }
 
 /* 滚动条跟所在界面同色，不抢戏 */
@@ -1356,13 +1367,13 @@ a:hover {
   max-width: 36rem;
   margin: 0 auto;
   padding: 0;
-  color: #fff6e8;
-  font-family: "LXGW WenKai", "KaiTi", "楷体", "STKaiti", serif;
+  color: var(--brand-ink-hi);
+  font-family: var(--brand-face);
   font-size: var(--say-face);
   font-style: normal;
-  font-weight: 400;
-  line-height: 1.9;
-  letter-spacing: 0.06em;
+  font-weight: 300;
+  line-height: 1.95;
+  letter-spacing: 0.1em;
   text-align: center;
   text-shadow:
     0 1px 2px rgba(0,0,0,.9),
@@ -1757,8 +1768,8 @@ button.phone-act.done {
 }
 .talk.phone .talk-text.stage-dir,
 .talk.msg .talk-text.stage-dir {
-  font-family: "LXGW WenKai", "KaiTi", "楷体", "STKaiti", serif;
-  letter-spacing: 0.04em;
+  font-family: var(--brand-face);
+  letter-spacing: 0.08em;
 }
 .phone-choices,
 .phone-pad {
@@ -3434,12 +3445,14 @@ button.mail-row:hover { background: #121a23; }
   border: 0;
   border-radius: 2px;
   background: rgba(12, 16, 22, .52);
-  color: #ddd3c3 !important;
+  color: var(--brand-ink) !important;
+  font-family: var(--brand-face);
   font-size: 13px;
-  line-height: 1.45;
+  line-height: 1.6;
+  letter-spacing: 0.06em;
 }
 .room.scene-fit > .room-note {
-  color: #c4b496;
+  color: #b6a894;
 }
 .room-dock {
   position: absolute;
@@ -6179,23 +6192,26 @@ img.map-photo {
   /* 中心不再完全透明：图不压死也能托住白字（候诊那张是白天亮底） */
   background: radial-gradient(ellipse at center, rgba(0,0,0,.22) 0%, rgba(0,0,0,.66) 100%);
 }
+/* 档位跟着「字号」走（--say-face 18 → 20.7 → 23.4），别写死 px，否则字幕不随设置放大 */
 .caption-card {
-  --cap-lead: 20px;
-  --cap-body: var(--say-face);
-  --cap-small: 16px;
-  --cap-gap: 32px;
+  --cap-lead: calc(var(--say-face) * 1.11);
+  --cap-body: calc(var(--say-face) * 0.94);
+  --cap-small: calc(var(--say-face) * 0.72);
+  --cap-gap: 34px;
 }
+/* 旁白版式：跟标题「暗度 undo」同一套字——无衬线、大字距、暖米灰。
+   纸上的东西（日记、便条）仍用楷体，那是实物；屏幕上的旁白一律走品牌字。 */
 .caption-text {
   position: relative;
   z-index: 1;
-  width: min(640px, 86%);
+  width: min(740px, 88%);
   text-align: center;
-  color: #fff6e8;
-  font-family: "LXGW WenKai", "KaiTi", "楷体", "STKaiti", serif;
-  font-weight: 400;
-  line-height: 1.9;
-  letter-spacing: 0.06em;
-  text-shadow: 0 1px 12px rgba(0,0,0,.75);
+  color: var(--brand-ink-hi);
+  font-family: var(--brand-face);
+  font-weight: 300;
+  line-height: 1.95;
+  letter-spacing: 0.12em;
+  text-shadow: 0 1px 14px rgba(0,0,0,.8);
 }
 .caption-line {
   margin: 0;
@@ -6204,10 +6220,25 @@ img.map-photo {
 }
 .caption-kept {
   list-style: none;
-  margin: 0;
+  margin: 0 auto;
   padding: 0;
+  width: fit-content;
+  max-width: 100%;
+  text-align: left;
   font-size: var(--cap-body);
-  color: #f0e6d4;
+  line-height: 1.9;
+  letter-spacing: 0.1em;
+  color: var(--brand-ink);
+}
+/* 记下的每一条前面点一小截砖红——书签带的颜色，只用来标记，不做装饰 */
+.caption-kept li::before {
+  content: "";
+  display: inline-block;
+  width: 10px;
+  height: 1px;
+  margin-right: 0.7em;
+  vertical-align: 0.32em;
+  background: rgba(165, 32, 25, 0.85);
 }
 .caption-kept li { animation: caption-rise 1.2s ease both; }
 .caption-kept li:nth-child(1) { animation-delay: 0.4s; }
@@ -6216,36 +6247,36 @@ img.map-photo {
 .caption-kept li:nth-child(n+4) { animation-delay: 1.6s; }
 /* 过关那句「这一件做完了」：暖一点、比正文小，排在记下的东西上面 */
 .caption-done {
-  margin: 0 0 16px;
-  font-size: var(--cap-small);
-  color: #e8caa0;
-  letter-spacing: 0.04em;
+  margin: 0 0 18px;
+  font-size: calc(var(--say-face) * 0.67);
+  color: var(--brand-ink);
+  font-weight: 400;
+  letter-spacing: var(--brand-track);
+  text-indent: var(--brand-track);
   animation: caption-rise 1.2s ease 0.3s both;
 }
 
+/* 时间地点、提示、按钮说明都用这一档：小、大字距、灰 */
 .caption-next {
   margin: 0;
   font-size: var(--cap-small);
-  color: #c9bba2;
+  color: var(--brand-mute);
+  letter-spacing: var(--brand-track);
+  text-indent: var(--brand-track);
   animation: caption-rise 1.4s ease 1.4s both;
 }
 .caption-kept + .caption-next { margin-top: 18px; }
 .caption-acts {
   display: flex;
   justify-content: center;
-  gap: 28px;
+  gap: 22px;
   margin-top: var(--cap-gap);
   animation: caption-rise 1s ease 2.2s both;
 }
 /* 开局存档：标题、上次停在、继续（唯一有框）→ 选关 → 重来（最小灰字）；选关和确认在同一张卡里换页 */
-/* 色板对齐品牌定稿 o3：炭黑底、暖米灰字、砖红强调 */
+/* 色板只在 :root 定义一次（文件头那份），这里不再复写一份；
+   这块只负责把底色压成炭黑，其余全部继承品牌变量 */
 .resume-card {
-  --brand-ink: #c5b8ad;
-  --brand-ink-hi: #d8cfc4;
-  --brand-mute: #8a8076;
-  --brand-dim: #6e675f;
-  --brand-red: #a52019;
-  --brand-red-deep: #6e2a22;
   background: #1e1e1e;
 }
 .resume-card .caption-plate img {
@@ -6499,12 +6530,53 @@ img.map-photo {
 .caption-end .caption-kept + .caption-next,
 .caption-end .caption-kept + .caption-line,
 .caption-end .caption-next + .caption-line { margin-top: var(--cap-gap); }
-.caption-end .caption-kept.noise { color: #b3a68f; }
+.caption-end .caption-kept.noise { color: var(--brand-dim); }
+/* 章末那个「暗度　undo　第一章」按标题标来排：大字距，上面一截砖红短线 */
 .caption-title {
-  margin: var(--cap-gap) 0 0;
-  font-size: var(--cap-small);
-  color: #c9bba2;
+  margin: calc(var(--cap-gap) + 4px) 0 0;
+  font-family: var(--brand-face);
+  font-size: calc(var(--say-face) * 1.25);
+  font-weight: 500;
+  color: var(--brand-ink-hi);
   letter-spacing: 0.3em;
+  text-indent: 0.3em;
+}
+.caption-title::before {
+  content: "";
+  display: block;
+  width: 26px;
+  height: 1px;
+  margin: 0 auto 16px;
+  background: var(--brand-red);
+}
+/* 落款里的标：跟续玩卡首页那个「暗度／undo」同构，只是小一号。
+   间距靠 0.28em 字距留下的尾隙 + 这一档 gap，别再各写一个 margin。 */
+.caption-lock {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  letter-spacing: 0;
+  text-indent: 0;
+}
+.caption-brand { letter-spacing: 0.28em; }
+.caption-ch {
+  /* 左边多留半格：它是 0.7em 的小字，紧贴竖排 undo 会挤成一条 */
+  margin-left: 0.55em;
+  font-size: 0.7em;
+  font-weight: 400;
+  color: var(--brand-mute);
+  letter-spacing: var(--brand-track);
+}
+.caption-undo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 0.4em;
+  font-weight: 400;
+  line-height: 1.02;
+  letter-spacing: 0;
+  color: var(--brand-mute);
+  opacity: 0.85;
 }
 .caption-end .caption-go { animation-delay: 8.6s; }
 .caption-end .caption-acts { flex-wrap: wrap; gap: 12px 28px; }
@@ -6527,57 +6599,45 @@ img.map-photo {
 .caption-teaser .teaser-memo {
   display: inline-block;
   padding: 10px 16px;
-  border-left: 2px solid rgba(201, 212, 188, .6);
+  border-left: 2px solid var(--brand-red);
   background: rgba(0, 0, 0, .35);
-  font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+  font-family: var(--brand-face);
   font-size: var(--cap-small);
+  color: var(--brand-ink);
   text-align: left;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.08em;
 }
 .caption-teaser .teaser-say { color: var(--say-hao); }
 .caption-teaser .teaser-zh { margin-top: 4px; }
-.caption-teaser .teaser-after { margin-top: var(--cap-gap); color: #c9bba2; }
+.caption-teaser .teaser-after { margin-top: var(--cap-gap); color: var(--brand-mute); }
 .has-prev.no-kept .caption-line { animation-delay: 1.4s; }
 .has-prev.no-kept .caption-acts { animation-delay: 2.4s; }
 .has-prev.no-kept .caption-go { animation-delay: 3.4s; }
 .caption-go {
   position: relative;
   min-height: 0;
-  padding: 10px 36px 14px;
-  border: 0;
-  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0.3) 45%, transparent 72%);
-  color: rgba(242, 234, 220, 0.92);
-  font-family: inherit;
-  font-size: var(--cap-body);
+  min-width: 8em;
+  padding: 9px 26px 11px;
+  border: 1px solid rgba(197, 184, 173, 0.45);
+  border-radius: 2px;
+  background: rgba(8, 8, 10, 0.38);
+  color: var(--brand-ink-hi);
+  font-family: var(--brand-face);
+  font-size: calc(var(--say-face) * 0.89);
   font-weight: 400;
   line-height: 1.4;
-  letter-spacing: 0.12em;
-  text-shadow: 0 0 12px rgba(242, 234, 220, 0.35), 0 1px 10px rgba(0,0,0,.9);
+  letter-spacing: var(--brand-track);
+  text-indent: 0;
+  text-shadow: none;
   cursor: pointer;
-  transition: color .25s ease, text-shadow .25s ease;
-  animation: caption-breathe 3.2s ease-in-out 3.2s infinite;
-}
-.caption-go::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  bottom: 2px;
-  width: 70%;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(242, 234, 220, 0.7), transparent);
-  transform: translateX(-50%);
-  transition: width .35s ease, opacity .35s ease;
+  transition: color .25s ease, border-color .25s ease, background .25s ease;
 }
 .caption-go:hover,
 .caption-go:focus-visible {
-  color: #fffaf0;
-  text-shadow: 0 0 18px rgba(255, 248, 232, 0.6), 0 1px 10px rgba(0,0,0,.9);
+  color: #f2ebe0;
+  border-color: rgba(197, 184, 173, 0.9);
+  background: rgba(197, 184, 173, 0.1);
   outline: none;
-  animation-play-state: paused;
-}
-.caption-go:hover::after,
-.caption-go:focus-visible::after {
-  width: 120%;
 }
 @keyframes caption-breathe {
   0%, 100% { opacity: 1; }
@@ -6638,10 +6698,12 @@ img.map-photo {
   bottom: 14%;
   margin: 0;
   text-align: center;
-  color: #efe6d6;
-  font-family: "LXGW WenKai", "KaiTi", "楷体", "STKaiti", serif;
+  color: var(--brand-ink-hi);
+  font-family: var(--brand-face);
+  font-weight: 300;
   font-size: var(--cap-lead);
   letter-spacing: 0.32em;
+  text-indent: 0.32em;
   text-shadow: 0 0 4px rgba(0,0,0,.95), 0 1px 14px rgba(0,0,0,.9), 0 0 28px rgba(0,0,0,.7);
   opacity: 0;
   transition: opacity 1.2s ease 0.8s;
@@ -6656,10 +6718,12 @@ img.map-photo {
   z-index: 1;
   margin: 0;
   text-align: center;
-  color: #efe6d6;
-  font-family: "LXGW WenKai", "KaiTi", "楷体", "STKaiti", serif;
+  color: var(--brand-ink-hi);
+  font-family: var(--brand-face);
+  font-weight: 300;
   font-size: var(--cap-small);
   letter-spacing: 0.28em;
+  text-indent: 0.28em;
   text-shadow: 0 0 4px rgba(0,0,0,.95), 0 1px 14px rgba(0,0,0,.9), 0 0 28px rgba(0,0,0,.7);
   opacity: 1;
   transition: opacity 1.4s ease 0.6s;
@@ -6697,29 +6761,36 @@ img.map-photo {
 @keyframes opening-fade { to { opacity: 0; } }
 .opening-gate {
   margin: 0;
+  font-family: var(--brand-face);
   font-size: var(--cap-small);
-  color: #a89880;
+  color: var(--brand-mute);
   letter-spacing: 0.3em;
+  text-indent: 0.3em;
   animation: caption-rise 1.2s ease 0.4s both, caption-breathe 3.2s ease-in-out 1.6s infinite;
 }
 .opening-lines {
   position: relative;
   z-index: 1;
-  width: min(21em, 82%);
+  width: min(25em, 86%);
   margin-bottom: 6vh;
-  color: #8f8676;
-  font-family: "LXGW WenKai", "KaiTi", "楷体", "STKaiti", serif;
+  color: #a29684;
+  font-family: var(--brand-face);
+  font-weight: 300;
   font-size: var(--cap-lead);
-  line-height: 1.9;
-  letter-spacing: 0.08em;
+  line-height: 2;
+  letter-spacing: 0.14em;
   text-align: left;
 }
 .opening-lines:has(.opening-gate) { width: auto; margin: 0; text-align: center; }
-.opening-line { margin: 0; min-height: 1.9em; }
+.opening-line { margin: 0; min-height: 2em; }
+/* 最后那行「这一关要做的事」：上面一条细线隔开，跟续玩卡里时间／地方那条线一样 */
 .opening-line.goal {
-  margin-top: 1.1em;
-  color: #f3eadb;
-  text-shadow: 0 0 14px rgba(255, 240, 210, 0.18);
+  margin-top: 1.3em;
+  padding-top: 1.2em;
+  border-top: 1px solid rgba(197, 184, 173, 0.18);
+  color: var(--brand-ink-hi);
+  letter-spacing: 0.16em;
+  text-shadow: 0 0 16px rgba(255, 240, 210, 0.14);
 }
 /* 光标跟在正在打的那一行后面；打完停在最后一行一直闪 */
 .opening-line:last-child::after {
@@ -6766,8 +6837,9 @@ html.screen-on body::after {
   align-items: center;
   justify-content: center;
   pointer-events: none;
-  color: #e9dcc4;
-  font-family: "LXGW WenKai", "KaiTi", "楷体", "STKaiti", serif;
+  color: var(--brand-ink-hi);
+  font-family: var(--brand-face);
+  font-weight: 300;
   font-size: clamp(26px, 5.4vw, 52px);
   letter-spacing: 0.34em;
   text-indent: 0.34em;
@@ -6792,11 +6864,14 @@ html.screen-on body::after {
 }
 @media (max-width: 800px) {
   .caption-card {
-    --cap-lead: 18px;
-    --cap-body: 16px;
-    --cap-small: 15px;
+    --cap-lead: var(--say-face);
+    --cap-body: calc(var(--say-face) * 0.83);
+    --cap-small: calc(var(--say-face) * 0.67);
     --cap-gap: 26px;
   }
+  /* 窄屏字距收一点，否则一行放不下几个字 */
+  .caption-text { letter-spacing: 0.1em; }
+  .opening-lines { letter-spacing: 0.1em; }
 }
 
 /* 去哪、做什么：一张横线便条，用回形针别在画面右边 */
@@ -7022,10 +7097,12 @@ html.screen-on body::after {
     justify-content: center;
     gap: 18px;
     background: #07080b;
-    color: #d8ccb6;
-    font-family: "LXGW WenKai", "KaiTi", "STKaiti", serif;
+    color: var(--brand-ink);
+    font-family: var(--brand-face);
+    font-weight: 300;
     font-size: 17px;
     letter-spacing: 0.3em;
+    text-indent: 0.3em;
   }
   #rotate-hint p { margin: 0; }
   .rotate-phone {

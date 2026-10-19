@@ -1089,7 +1089,14 @@ function ending() {
     at(el("p", { class: "caption-line" }, [flag("keptMing") ? "那晚你没有叫他走。" : "那晚你叫他走。他停在门口。"]), 5.9),
     flag("meiStay") || flag("meiSofa") ? at(el("p", { class: "caption-line" }, [flag("meiStay") ? "表姐的汤，每个星期六还是放在门口。" : "表姐铺好的那条新床单，一直没有收。"]), 6.2) : "",
     flag("gaveRoofKey") || flag("keptRoofKey") ? at(el("p", { class: "caption-line" }, [flag("gaveRoofKey") ? "天台钥匙你给了周。后来插在门上的，就是那一把。" : "天台钥匙你自己收着，最后放进了阿明掌心。"]), 6.5) : "",
-    at(el("p", { class: "caption-title" }, ["暗度　undo　第一章"]), 7.2),
+    // 章末落款按标题标排：中文大字距 + 竖排 undo，与续玩卡上那个标同构。
+    at(el("p", { class: "caption-title" }, [
+      el("span", { class: "caption-lock" }, [
+        el("span", { class: "caption-brand" }, ["暗度"]),
+        el("span", { class: "caption-undo", "aria-hidden": "true" }, "undo".split("").map((ch) => el("span", {}, [ch]))),
+        el("span", { class: "caption-ch" }, ["第一章"]),
+      ]),
+    ]), 7.2),
     at(el("div", { class: "caption-acts" }, [
       go("第二章　预告", () => chapter2Teaser(0)),
       go("回到廿八屋", () => newGame()),
