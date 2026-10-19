@@ -1275,7 +1275,15 @@ function choiceLock(card) {
     shut.push(node);
   };
   Array.from(document.body.children).forEach((n) => { if (n !== app) seal(n); });
-  if (app) Array.from(app.children).forEach((n) => { if (n.id !== "stage") seal(n); });
+  // 顶栏也锁，只留「全屏」那颗：换屏幕大小跟玩不玩无关，等选完再全屏太别扭
+  if (app) Array.from(app.children).forEach((n) => {
+    if (n.id === "stage") return;
+    if (n.id === "os-bar") {
+      Array.from(n.children).forEach((c) => { if (c.id !== "fs-toggle") seal(c); });
+      return;
+    }
+    seal(n);
+  });
   const keys = () => Array.from(card.querySelectorAll("button")).filter((b) => !b.disabled && b.offsetParent);
   const onKey = (e) => {
     if (e.ctrlKey || e.metaKey || e.altKey || /^F\d+$/.test(e.key)) return;

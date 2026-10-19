@@ -198,6 +198,10 @@ a:hover {
   padding-left: 0;
   border-left: 0;
   white-space: nowrap;
+  /* 窄屏放不下时给省略号，不要在半个字中间硬切 */
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 #hud {
   flex: 1 1 auto;
@@ -214,6 +218,11 @@ a:hover {
   font-family: "KaiTi", "楷体", "STKaiti", serif;
   letter-spacing: 0.06em;
   white-space: nowrap;
+  /* 位置先让位：日子钟点比地点重要，挤的时候只收地点这一截 */
+  flex: 0 999 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 #sfx-toggle {
   flex: 0 0 7.6em;
@@ -249,10 +258,16 @@ a:hover {
   cursor: pointer;
 }
 .os-opt:hover { background: rgba(255, 255, 255, .12); }
-@media (max-width: 640px) {
+/* 顶栏挤不下时先收地点：日子钟点、按钮都比它要紧，地点在房间条和底栏还写着 */
+@media (max-width: 740px) {
   #hud-place { display: none; }
+}
+@media (max-width: 640px) {
   .os-opt { margin-left: 4px; padding: 1px 4px; }
   #sfx-toggle { flex-basis: 6.4em; width: 6.4em; min-width: 6.4em; margin-left: 4px; }
+  /* 顶栏到 640 已经四颗，再塞「全屏」会把日期挤断；竖屏手机本来也没有浏览器边框可去，
+     键盘上按 F 一样能进全屏，所以这颗在窄屏收起来 */
+  #fs-toggle { display: none; }
 }
 @media (max-width: 420px) {
   #os-title { min-width: 0; }

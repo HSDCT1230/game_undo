@@ -186,6 +186,65 @@ function optButtons() {
 applySize();
 document.addEventListener("DOMContentLoaded", optButtons);
 
+/* ---------- 全屏 ----------
+   走浏览器全屏（不是 F11：那个脚本管不到，退出也只能靠浏览器自己）。
+   按钮只报状态、不猜状态，进出都由 fullscreenchange 回来同步，
+   这样玩家按 Esc、按 F11、用浏览器菜单退出，顶栏那颗都会跟着变。
+   不支持的浏览器（iPhone 上的 Safari）整颗不出现，不留一颗按了没反应的按钮。 */
+const FS_LABEL = { on: "全屏　开", off: "全屏　关" };
+function fsEnabled() {
+  return !!(document.fullscreenEnabled || document.webkitFullscreenEnabled);
+}
+function fsOn() {
+  return !!(document.fullscreenElement || document.webkitFullscreenElement);
+}
+function fsToggle() {
+  const root = document.documentElement;
+  const quiet = (p) => { if (p && p.catch) p.catch(() => {}); };
+  try {
+    if (fsOn()) {
+      const out = document.exitFullscreen || document.webkitExitFullscreen || document.webkitCancelFullScreen;
+      quiet(out && out.call(document));
+    } else {
+      const go = root.requestFullscreen || root.webkitRequestFullscreen || root.msRequestFullscreen;
+      const p = go && go.call(root);
+      // 这台机器（老 iPad 之类）答「有全屏」但真请求又被拒：把按钮收掉，别留一颗按不动的
+      if (p && p.catch) p.catch(() => { const b = $("#fs-toggle"); if (b && !fsOn()) b.hidden = true; });
+    }
+  } catch (e) { /* 被浏览器拒了就算了，界面不改口 */ }
+}
+function fsSync() {
+  const b = $("#fs-toggle");
+  if (!b) return;
+  const on = fsOn();
+  b.textContent = shellText(FS_LABEL[on ? "on" : "off"]);
+  b.setAttribute("aria-pressed", on ? "true" : "false");
+  b.setAttribute("aria-label", shellText("全屏：" + (on ? "开" : "关") + "，点按" + (on ? "退出全屏" : "进入全屏") + "（快捷键 F）"));
+}
+["fullscreenchange", "webkitfullscreenchange"].forEach((ev) => document.addEventListener(ev, fsSync));
+document.addEventListener("DOMContentLoaded", () => {
+  const bar = $("#os-bar");
+  if (!bar || $("#fs-toggle") || !fsEnabled()) return;
+  const b = el("button", { type: "button", id: "fs-toggle", class: "os-opt" });
+  bar.append(b);
+  b.addEventListener("click", (e) => {
+    e.stopPropagation();
+    fsToggle();
+  });
+  fsSync();
+});
+/* F 进出全屏。这一颗登记在 window 捕获阶段、core.js 又先于 levels.js 加载，
+   所以卡片锁键盘、开场锁键盘的时候它照样管用——换个屏幕大小不算跳过剧情。 */
+addEventListener("keydown", (e) => {
+  if (e.ctrlKey || e.metaKey || e.altKey || e.repeat) return;
+  if (e.key !== "f" && e.key !== "F") return;
+  const t = e.target;
+  if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName || ""))) return;
+  if (!fsEnabled()) return;
+  e.preventDefault();
+  fsToggle();
+}, true);
+
 const initial = () => ({
   time: "2014年7月31日 周四 23:14",
   mode: "web",
