@@ -9,7 +9,7 @@ import re
 import json
 import io
 
-ROOT = r"G:\code\active\lab\vibe_undo"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))   # tools → 仓库根
 IMGDIR = os.path.join(ROOT, "图", "游戏")
 ASSETS = os.path.join(ROOT, "游戏", "assets")
 

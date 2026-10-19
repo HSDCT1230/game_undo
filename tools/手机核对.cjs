@@ -33,6 +33,9 @@ const PROBE = `JSON.stringify((()=>{
   document.querySelectorAll("#stage *").forEach(e=>{
     const r=e.getBoundingClientRect();
     if(r.width<1||r.height<1) return;
+    // 满铺底图（开场卡、场景图）在 390 宽的竖屏上按 cover 铺，左右各裁几像素是必然的，不算排版出屏。
+    // 真正的横向滚动由 scrollW 那一条单独查，这里只管文字/按钮有没有被切掉。
+    if(e.tagName==="IMG" && r.width>=vw-1) return;
     if(r.right>vw+2||r.left<-2) out.over.push([(e.className||e.tagName).toString().slice(0,28),Math.round(r.left),Math.round(r.right)]);
   });
   out.over=out.over.slice(0,8);

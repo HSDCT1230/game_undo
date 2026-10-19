@@ -472,7 +472,7 @@ function imgSlot(id, className, alt) {
     class: "img-slot missing " + (className || ""),
     "data-img": id,
   });
-  const mark = el("span", { class: "img-mark" }, ["待补图　图/游戏/" + id + ".png"]);
+  const mark = el("span", { class: "img-mark" }, ["待补图　图/游戏/" + id + ".jpg"]);
   const image = document.createElement("img");
   image.alt = alt || id;
   image.draggable = false;

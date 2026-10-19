@@ -34,3 +34,8 @@ _git_err.txt
 tools/_bin/
 tools/node_modules/
 tools/package-lock.json
+
+# 检查脚本跑出来的截图（每次重跑都会覆盖，不入库）
+tools/_t/
+tools/_mob/
+tools/_smoke/

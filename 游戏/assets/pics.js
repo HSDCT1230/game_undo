@@ -1,5 +1,10 @@
 const PIC_ROOT = "../图/游戏/";
-const PIC_VER = "20261018-canon5";
+const PIC_VER = "20261019-jpg1";
+// 图库里一律 .jpg（2026-10-19 全库由 PNG 转出，见 tools/压图.py）。
+// 为什么不留 PNG：这批图是照片，PNG 存等于没压缩，193.7MB→26.7MB，首屏才拉得动。
+// 换图流程不变：照旧往同名路径放图，但放完跑一遍 `python tools/压图.py`，它会转好并删掉原 .png；
+// 忘了跑的话，全检会报「图库里还有未转换的 .png」，不会悄悄当成缺图。
+const PIC_EXT = "jpg";
 
 const PIC_LV = [
   "",
@@ -178,7 +183,7 @@ function picCap(id) {
 }
 
 function picSrc(path) {
-  return encodeURI(PIC_ROOT + path + ".png") + "?v=" + PIC_VER;
+  return encodeURI(PIC_ROOT + path + "." + PIC_EXT) + "?v=" + PIC_VER;
 }
 
 const MAP_PIC = "00-地图/";
