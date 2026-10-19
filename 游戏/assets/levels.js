@@ -971,7 +971,8 @@ function playOpening() {
     phase = "typing";
     desk.classList.add("locked");
     openingLock(true);
-    roomTone(true);
+    // 这里原本会起 roomTone（380Hz 低通白噪，当房间底噪）。引子是黑屏心声，没有"房间"，
+    // 那层噪声正好盖在 -39dB 的钢琴上，听着像空调嗡嗡。只留钢琴和打字声。
     // 点这一下既是解锁声音，也是这首钢琴的起拍：音乐和第一行心声同时进来
     openingMusic(true);
     lines.replaceChildren();

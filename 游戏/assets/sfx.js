@@ -510,6 +510,13 @@ const CLINIC_AMB_BY_VISIT = {
 };
 const CLINIC_VISIT_BY_LEVEL = { 6: 1, 8: 2, 10: 3, 12: 4, 14: 5 };
 const AMB_VOL = 0.5;
+/* 个别曲子素材本身太轻，单独补一档。开场那首整体 -39.6 dBFS（常规环境声 -36 左右），
+   而引子里又只有它一条，不补就只剩底噪听得见。2.5 倍约 +8dB，峰值 0.19，不削波。 */
+const AMB_BOOST = { opening: 2.5 };
+
+function ambTarget(key) {
+  return AMB_VOL * BG_VOL[bgLevel] * (AMB_BOOST[key] || 1);
+}
 // 换了同名文件就改这个，免得浏览器放旧的
 const AMB_REV = "20261012e";
 const ambMissing = {};
@@ -610,7 +617,7 @@ function ambFade(audio, to, ms, done) {
 }
 
 function ambPlay(a) {
-  const vol = AMB_VOL * BG_VOL[bgLevel];
+  const vol = ambTarget(ambNow.key);
   a.play().then(() => {
     if (ambNow.audio !== a) return;
     ambFade(a, vol, ambVol(a) < vol * 0.9 ? 1500 : 200);
@@ -621,7 +628,7 @@ function ambSet(key) {
   // 同地点但上次被自动播放拦住、停着：在同一次用户点按里再试；在放着就跟上开关的大／小
   if (key && key === ambNow.key && ambNow.audio) {
     const a = ambNow.audio;
-    const vol = AMB_VOL * BG_VOL[bgLevel];
+    const vol = ambTarget(key);
     if (a.paused) { if (vol) ambPlay(a); }
     else if (Math.abs(ambVol(a) - vol) > 0.01) ambFade(a, vol, 600);
     return;
@@ -654,7 +661,10 @@ function sfxSync() {
   if (S.mode !== "web") webHeard = false;
   ambSet(bgOn() ? ambKey() : "");
   if (!bgOn()) roomTone(false);
-  if (S.mode === "card" || S.mode === "wait" || S.mode === "end") padStart(S.mode === "end" ? 82.4 : 110);
+  // 开场引子也是 card，但那会儿画面里只有钢琴。字幕底乐是 110Hz 的 drone，
+  // 音量虽小却正好压在钢琴的低频上——引子期间先收掉，进第 1 关再按原规矩来
+  if (openingTone) padStop();
+  else if (S.mode === "card" || S.mode === "wait" || S.mode === "end") padStart(S.mode === "end" ? 82.4 : 110);
   else padStop();
   hissOn(S.mode === "night" && S.night && S.night.recording);
   if (!(S.mode === "talk" && S.talk && S.talk.incoming)) ringStop();
