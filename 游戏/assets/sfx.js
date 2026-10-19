@@ -510,15 +510,22 @@ const CLINIC_AMB_BY_VISIT = {
 };
 const CLINIC_VISIT_BY_LEVEL = { 6: 1, 8: 2, 10: 3, 12: 4, 14: 5 };
 const AMB_VOL = 0.5;
-/* 个别曲子素材本身太轻，单独补一档。开场那首整体 -39.6 dBFS（常规环境声 -36 左右），
-   而引子里又只有它一条，不补就只剩底噪听得见。2.5 倍约 +8dB，峰值 0.19，不削波。 */
-const AMB_BOOST = { opening: 2.5 };
+/* 个别曲子素材本身太轻，单独补一档。
+
+   算的是「文件电平 × 这里的倍数 × AMB_VOL」，不是光乘这里的数——之前写 2.5 时以为
+   +8dB，实际被 AMB_VOL 的 0.5 吃掉一半，净增益只有 1.9dB，跟普通环境声差不多响。
+   而开场那首是**稀疏**的钢琴（音符短、间隔长，10ms 窗最响也只有 -28dBFS），
+   同样的 RMS 听感上远弱于诊室那种持续铺底，笔记本喇叭上就整个消失了。
+
+   素材实测：RMS -37.9 dBFS、峰值 -20.5 dBFS。给 10 倍 → 净 5 倍（+14dB），
+   出声时 RMS 约 -24、峰值约 -6.6，不削波，引子里也没有别的声音跟它抢。 */
+const AMB_BOOST = { opening: 10 };
 
 function ambTarget(key) {
   return AMB_VOL * BG_VOL[bgLevel] * (AMB_BOOST[key] || 1);
 }
-// 换了同名文件就改这个，免得浏览器放旧的
-const AMB_REV = "20261012e";
+// 换了同名文件就改这个，免得浏览器放旧的（换曲记得跟：文件换了不跟，玩家听到的还是旧的）
+const AMB_REV = "20261020a";
 const ambMissing = {};
 
 function ambSrc(key) {
@@ -618,9 +625,13 @@ function ambFade(audio, to, ms, done) {
 
 function ambPlay(a) {
   const vol = ambTarget(ambNow.key);
+  // 开场那首是玩家点「戴上耳机，点一下」之后立刻该听到的：淡入压到 500ms。
+  // 别的地点声慢慢浮上来才不突兀，但引子里等 1.5 秒，配合素材本身的弱起，
+  // 前两三秒基本是空的，听着就像根本没放。
+  const inMs = ambNow.key === "opening" ? 500 : 1500;
   a.play().then(() => {
     if (ambNow.audio !== a) return;
-    ambFade(a, vol, ambVol(a) < vol * 0.9 ? 1500 : 200);
+    ambFade(a, vol, ambVol(a) < vol * 0.9 ? inMs : 200);
   }).catch(() => { /* 浏览器还不许出声；下次点按再试 */ });
 }
 
