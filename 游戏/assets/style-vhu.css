@@ -111,28 +111,28 @@
 
 /* ---------- 正文 ---------- */
 
-.vhu-body { padding: 14px 16px 22px; min-height: 380px; }
+.vhu-body { padding: 12px 16px 8px; min-height: 380px; }
 .vhu-h2 {
-  margin: 0 0 4px;
-  font-size: 17px;
+  margin: 0 0 3px;
+  font-size: 16px;
   font-weight: 700;
   letter-spacing: .02em;
   color: #1d3a3d;
 }
 .vhu-h3 {
-  margin: 18px 0 8px;
+  margin: 12px 0 6px;
   padding-bottom: 4px;
   border-bottom: 1px solid #d8dfdb;
   font-size: 13px;
   font-weight: 700;
   color: #1d3a3d;
 }
-.vhu-lead { margin: 0 0 12px; color: #5f6d69; font-size: 11.5px; }
+.vhu-lead { margin: 0 0 8px; color: #5f6d69; font-size: 11.5px; }
 .vhu-note { margin: 0 0 10px; color: #5c6a66; font-size: 11.5px; }
 .vhu-fine { margin: 8px 0 0; color: var(--vhu-mute); font-size: 10.5px; line-height: 1.7; }
 .vhu-alert {
-  margin: 10px 0 14px;
-  padding: 8px 10px;
+  margin: 8px 0 10px;
+  padding: 6px 10px;
   border: 1px solid #d9cba6;
   background: #fbf6e8;
   color: #6b5426;
@@ -145,7 +145,7 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 14px;
-  margin-top: 12px;
+  margin-top: 10px;
 }
 .vhu-panel {
   padding: 0 10px 10px;
@@ -165,13 +165,13 @@
 .vhu-kv { width: 100%; border-collapse: collapse; font-size: 11.5px; }
 .vhu-kv th {
   width: 96px;
-  padding: 4px 8px 4px 0;
+  padding: 3px 8px 3px 0;
   text-align: left;
   font-weight: 400;
   vertical-align: top;
   color: #6b7874;
 }
-.vhu-kv td { padding: 4px 0; border-bottom: 1px dotted #e3e8e4; color: var(--vhu-ink); }
+.vhu-kv td { padding: 3px 0; border-bottom: 1px dotted #e3e8e4; color: var(--vhu-ink); }
 .vhu-kv tr:last-child td { border-bottom: 0; }
 .vhu-kv-wide { max-width: 640px; }
 .vhu-kv-wide th { width: 130px; }
@@ -181,7 +181,7 @@
   display: flex;
   gap: 8px;
   align-items: baseline;
-  padding: 4px 0;
+  padding: 3px 0;
   border-bottom: 1px dotted #e3e8e4;
 }
 .vhu-list li:last-child { border-bottom: 0; }
@@ -200,13 +200,15 @@
 .vhu-services {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
+  gap: 7px;
 }
 .vhu-tile {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 9px 10px;
+  flex-direction: row;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 10px;
   border: 1px solid var(--vhu-line);
   background: #fafbf9;
   font: inherit;
@@ -215,7 +217,7 @@
 }
 .vhu-tile:hover { background: #fff; border-color: #8fa8a2; }
 .vhu-tile strong { color: #1f4a4e; font-size: 12px; }
-.vhu-tile small { color: var(--vhu-mute); font-size: 10.5px; }
+.vhu-tile small { color: var(--vhu-mute); font-size: 10.5px; text-align: right; }
 .vhu-tile.off { opacity: .55; cursor: default; }
 .vhu-tile.off:hover { background: #fafbf9; border-color: var(--vhu-line); }
 
@@ -425,7 +427,7 @@
 /* ---------- 页脚 ---------- */
 
 .vhu-foot {
-  padding: 10px 16px 12px;
+  padding: 8px 16px 9px;
   border-top: 1px solid #dde3df;
   background: #f7f8f4;
   color: #7e8a86;
@@ -440,6 +442,9 @@
   .laptop-screen > .hk-site.vhu-site { min-height: 0; }
   .vhu-cols { grid-template-columns: minmax(0, 1fr); }
   .vhu-services { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  /* 窄屏格子变窄，说明文字退回下一行，不跟标题挤。 */
+  .vhu-tile { flex-direction: column; align-items: stretch; gap: 2px; padding: 9px 10px; }
+  .vhu-tile small { text-align: left; }
   .vhu-login-wrap { grid-template-columns: minmax(0, 1fr); gap: 12px; }
   .vhu-login-intro h1 { font-size: 24px; }
   .vhu-login-intro { padding: 4px 0; }

@@ -10,33 +10,33 @@ const VHU_PW = "91024656E";
 const VHU_NOTICES = [
   {
     id: "maint",
-    date: "2014年9月5日",
+    date: "2014年7月25日",
     tag: "系统",
-    title: "入门网站九月维护通告",
+    title: "入门网站八月维护通告",
     body: [
-      "资讯科技服务中心将于二〇一四年九月十三日（星期六）凌晨零时至上午六时，为入门网站进行例行维护。",
+      "资讯科技服务中心将于二〇一四年八月九日（星期六）凌晨零时至上午六时，为入门网站进行例行维护。",
       "维护期间，选科、成绩查阅、图书馆续借及电邮服务将会暂停。校园无线网络不受影响。",
       "如维护提早完成，服务会提前恢复，不另行通知。",
     ],
   },
   {
     id: "quota",
-    date: "2014年8月28日",
+    date: "2014年7月8日",
     tag: "电邮",
     title: "学生电邮储存空间提升至 500MB",
     body: [
-      "由九月一日起，学生及校友电邮帐户的储存空间由 200MB 提升至 500MB。",
+      "由七月十五日起，学生及校友电邮帐户的储存空间由 200MB 提升至 500MB。",
       "单个附件上限维持 20MB。如邮件超出配额，系统会退回寄件人，不会暂存。",
       "资讯科技服务中心",
     ],
   },
   {
     id: "alumni",
-    date: "2014年7月15日",
+    date: "2014年6月18日",
     tag: "帐户",
     title: "校友帐户政策更新",
     body: [
-      "由二〇一四年八月一日起，毕业同学的入门网站帐户会转为校友帐户。",
+      "由二〇一四年七月一日起，毕业同学的入门网站帐户会转为校友帐户。",
       "校友帐户保留：校园电邮、学业纪录查阅、图书馆目录查询。",
       "选科、eLearn、宿舍申请及学生会服务，会于毕业手续办妥后停止。",
       "校友帐户不会自动删除。如帐户连续两年没有登入，系统会暂停电邮转寄，学业纪录仍然保留。",
@@ -60,8 +60,8 @@ const VHU_MAILS = [
     id: "alumni14",
     from: "校友事务处",
     addr: "alumni@vhu.edu.hk",
-    date: "2014年8月20日 10:04",
-    subject: "校友电子通讯（2014 年 8 月号）",
+    date: "2014年7月18日 10:04",
+    subject: "校友电子通讯（2014 年 7 月号）",
     unread: true,
     body: [
       "各位校友：",
@@ -108,6 +108,21 @@ const VHU_MAILS = [
       "临床见习组别已公布，请于医学院地下布告板查阅。",
       "精神科见习将于二〇〇四年一月至二月进行，地点容后通知。",
       "医学院",
+    ],
+  },
+  // 2003 年非典型肺炎：医学院停临床见习，是那几年香港医学生共同的记忆。
+  // 只是时代锚点，不是线索；不想要可以直接删掉这一条。
+  {
+    id: "sars03",
+    from: "医学院院务处",
+    addr: "medfac@vhu.edu.hk",
+    date: "2003年4月2日 11:35",
+    subject: "临床见习暂停（非典型肺炎）",
+    body: [
+      "因应本港非典型肺炎情况，医学院决定由四月三日起，暂停所有医院临床见习及面授课堂，直至另行通知。",
+      "同学请留在家中，按学科网页公布的进度自修。临床技能评核与考试安排，容后公布。",
+      "如有发烧或呼吸道症状，请勿回校，并即时求医。",
+      "医学院院务处",
     ],
   },
 ];
@@ -202,7 +217,9 @@ function vhuUnread() {
 }
 
 function blankTabTitle() {
-  const s = String(S.screen || "");
+  // 人在别的分页时，分页标题也要显示这一页最后停在哪，而不是退回「新分页」。
+  const mem = typeof tabMemory === "function" && S.tab !== "blank" ? tabMemory("blank") : null;
+  const s = String((mem && mem.screen) || S.screen || "");
   if (s.indexOf("vhu-") === 0) return "VHU Portal - 维港大学";
   if (s === "web-error") return "无法显示网页";
   return "新分页";
@@ -295,6 +312,16 @@ function vhuForgot() {
     T(
       "请带同学生证，于办公时间到资讯科技服务中心办理。",
       "请携带学生证，于办公时间到信息技术服务中心办理。"
+    )
+  );
+}
+
+function vhuAccountHelp() {
+  showPrompt(
+    T("帐户查询", "帐户查询"),
+    T(
+      "校友帐户请电邮 alumni@vhu.edu.hk 联络校友事务处；学生帐户请到资讯科技服务中心。",
+      "校友帐户请电邮 alumni@vhu.edu.hk 联系校友事务处；学生帐户请到信息技术服务中心。"
     )
   );
 }
@@ -501,7 +528,7 @@ function viewVhuLogin() {
     el("p", { class: "vhu-login-links" }, [
       webLink("忘记密码", vhuForgot),
       "　│　",
-      webLink("帐户查询", vhuForgot),
+      webLink("帐户查询", vhuAccountHelp),
     ]),
   ]);
 
@@ -567,7 +594,7 @@ function viewVhuHome() {
       el("button", {
         type: "button",
         class: "vhu-link-btn",
-        onclick: () => { st.notice = n.id; goWeb("vhu-notice"); },
+        onclick: () => { goWeb("vhu-notice", { noticeId: n.id }); },
       }, [n.title]),
     ])
   ));
@@ -600,7 +627,7 @@ function viewVhuHome() {
     ]),
     el("h3", { class: "vhu-h3" }, ["网上服务"]),
     el("div", { class: "vhu-services" }, [
-      tile("个人资料", "姓名、学号、书院", "profile"),
+      tile("个人资料", "姓名、学号、舍堂", "profile"),
       tile("学业纪录", "2000–2005 成绩", "academic"),
       tile("图书馆", "目录、借阅纪录", "library"),
       tile("电邮", unread ? unread + " 封未读" : "没有未读邮件", "mail"),
@@ -621,7 +648,7 @@ function viewVhuProfile() {
     ["课程", "内外全科医学士（MBBS）"],
     ["修业年期", "2000–2005"],
     ["学籍状况", "毕业（2005年6月）"],
-    ["书院", "博文书院"],
+    ["入学途径", "大学联合招生办法（JUPAS）"],
     ["舍堂", "海宁堂（2000–2003）"],
     ["校园电邮", "91024656e@vhu.edu.hk"],
     ["通讯地址", "香港湾仔（2005年登记）"],
@@ -769,10 +796,9 @@ function viewVhuMail() {
   const st = vhuSt();
   const mail = st.mail ? VHU_MAILS.find((m) => m.id === st.mail) : null;
   if (mail) {
-    st.read[mail.id] = true;
     return vhuShell([
       el("p", { class: "vhu-back" }, [
-        webLink("« 返回收件箱", () => { st.mail = ""; draw(); }),
+        webLink("« 返回收件箱", () => { goWeb("vhu-mail", { mailId: "" }); }),
       ]),
       el("h2", { class: "vhu-h2" }, [mail.subject]),
       el("table", { class: "vhu-kv vhu-kv-wide vhu-mail-head" }, [
@@ -782,14 +808,14 @@ function viewVhuMail() {
         ["主旨", mail.subject],
       ].map(([k, v]) => el("tr", {}, [el("th", {}, [k]), el("td", {}, [v])]))),
       el("div", { class: "vhu-mail-body" }, mail.body.map((p) => el("p", {}, [p]))),
-      el("p", { class: "vhu-fine" }, ["此邮件为 2014 年 9 月 7 日之前的存档副本。"]),
+      el("p", { class: "vhu-fine" }, ["此为存档邮件，附件下载已于 2011 年停用。"]),
     ], "mail");
   }
   const rows = VHU_MAILS.map((m) => {
     const read = !!st.read[m.id];
     return el("tr", {
       class: (m.unread && !read ? "vhu-unread" : "") + " vhu-mail-row",
-      onclick: () => { st.mail = m.id; draw(); },
+      onclick: () => { st.read[m.id] = true; goWeb("vhu-mail", { mailId: m.id }); },
     }, [
       el("td", {}, [m.from]),
       el("td", {}, [m.unread && !read ? el("b", {}, ["● "]) : "", m.subject]),
@@ -821,7 +847,7 @@ function viewVhuNotice() {
   if (one) {
     return vhuShell([
       el("p", { class: "vhu-back" }, [
-        webLink("« 返回公告", () => { st.notice = ""; draw(); }),
+        webLink("« 返回公告", () => { goWeb("vhu-notice", { noticeId: "" }); }),
       ]),
       el("h2", { class: "vhu-h2" }, [one.title]),
       el("p", { class: "vhu-meta" }, [one.date + "　·　" + one.tag]),
@@ -838,7 +864,7 @@ function viewVhuNotice() {
       ])]),
       el("tbody", {}, VHU_NOTICES.map((n) => el("tr", {
         class: "vhu-mail-row",
-        onclick: () => { st.notice = n.id; draw(); },
+        onclick: () => { goWeb("vhu-notice", { noticeId: n.id }); },
       }, [
         el("td", { class: "vhu-num" }, [n.date]),
         el("td", {}, [n.tag]),

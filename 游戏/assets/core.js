@@ -204,6 +204,8 @@ const initial = () => ({
   pmSent: "",
   webHist: [],
   webFwd: [],
+  // 每个分页最后停在哪一页。切走再切回来要回到原页，不是一张新的 about:blank。
+  tabMem: { house: null, wall: null, blank: null },
   wallWho: "",
   forumId: "",
   pendingPost: "",

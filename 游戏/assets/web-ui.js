@@ -448,6 +448,19 @@ function btnTab(label, id, on, scene) {
         browseFromScene(id === "wall" ? "wall" : id === "blank" ? "newtab" : "home");
         return;
       }
+      // 点自己所在的分页不重载——真实浏览器只是把这一页提到前面。
+      if (id === on) return;
+      // 该分页上次停在哪就回哪：从校园网切去廿八屋再切回来，还是原来那一页。
+      const mem = id === "house" && (S.pendingPost || !postedHelp()) ? null : tabMemory(id);
+      if (mem) {
+        if (holdForPost(mem.screen)) return;
+        restoreWebSnap(mem);
+        S.tab = id;
+        webAddrDraft = null;
+        webStartLoad();
+        draw();
+        return;
+      }
       if (id === "wall") goWeb("wall");
       else if (id === "blank") goWeb("newtab");
       else if (S.pendingPost || !postedHelp()) goWeb("post");
@@ -479,7 +492,25 @@ function snapWeb() {
     adId: S.adId,
     query: S.query,
     listFilter: S.listFilter || "all",
+    // 校园网站内页（收件箱／公告栏）是同一个 screen，靠这两项分开列表与单条。
+    vhuMail: (S.vhu && S.vhu.mail) || "",
+    vhuNotice: (S.vhu && S.vhu.notice) || "",
   };
+}
+
+/* 分页记忆：浏览器窗口里三个分页各自记得自己停在那一页。 */
+function tabKey() {
+  return S.tab === "wall" || S.tab === "blank" ? S.tab : "house";
+}
+
+function rememberTab() {
+  S.tabMem = S.tabMem || { house: null, wall: null, blank: null };
+  S.tabMem[tabKey()] = snapWeb();
+}
+
+function tabMemory(id) {
+  const mem = S.tabMem && S.tabMem[id];
+  return mem && mem.screen ? mem : null;
 }
 
 function browseFromScene(screen) {
@@ -626,6 +657,9 @@ function goWeb(screen, extra) {
   if ("adId" in extra) S.adId = extra.adId;
   if ("query" in extra) S.query = extra.query;
   if ("filter" in extra) S.listFilter = extra.filter;
+  // 收件箱／公告栏的列表与单条是同一个 screen，用这两个走历史栈。
+  if ("mailId" in extra && S.vhu) S.vhu.mail = extra.mailId || "";
+  if ("noticeId" in extra && S.vhu) S.vhu.notice = extra.noticeId || "";
   if (extra.search) flag("searched", true);
   webAddrDraft = null;
   webStartLoad();
@@ -670,6 +704,10 @@ function restoreWebSnap(p) {
   S.adId = p.adId;
   S.query = p.query;
   S.listFilter = p.listFilter || "all";
+  if (S.vhu) {
+    if (p.screen === "vhu-mail") S.vhu.mail = p.vhuMail || "";
+    if (p.screen === "vhu-notice") S.vhu.notice = p.vhuNotice || "";
+  }
 }
 
 /* ---------- 地址栏、四个导航键 ---------- */
@@ -809,6 +847,7 @@ function renderWeb() {
   else offerSlate();
   renderPlaybar();
   applyWebScroll();
+  if (S.mode === "web") rememberTab();
 }
 
 function webAddr() {
