@@ -904,6 +904,7 @@ function openingLock(on) {
 function playOpening() {
   openingClear();
   openingLock(false);
+  openingMusic(false);
   clockHold = false;
   S.mode = "card";
   S.card = null;
@@ -948,6 +949,9 @@ function playOpening() {
     if (phase === "leaving") return;
     phase = "leaving";
     openingClear();
+    // 心声打完、最后那行「今晚就搵到可以搬入去嘅房」也停够了：钢琴从屏幕通电开始淡出，
+    // 收进黑屋那一声「通电」里，之后交给第 1 关自己的声音（廿八屋先静着，回到屋里才有地点声）
+    openingMusic(false);
     desk.classList.add("leaving");
     openingLater(() => {
       clockHold = true;
@@ -968,6 +972,8 @@ function playOpening() {
     desk.classList.add("locked");
     openingLock(true);
     roomTone(true);
+    // 点这一下既是解锁声音，也是这首钢琴的起拍：音乐和第一行心声同时进来
+    openingMusic(true);
     lines.replaceChildren();
     openingLater(() => typeRow(0), 700);
   };
@@ -1024,6 +1030,8 @@ function bootDate() {
 
 function startLevelNow() {
   roomTone(false);
+  // 兜底：跳过 powerOn 的路径（跳关、重来）也不会把开场曲带进第 1 关
+  openingMusic(false);
   const app = document.getElementById("app");
   if (app) app.classList.remove("opening-dark");
   openingLock(false);

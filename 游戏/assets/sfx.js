@@ -465,8 +465,26 @@ function roomTone(on) {
   roomNode = { src, g };
 }
 
+/* 开场引子：黑屋心声那一首钢琴。跟环境声同一套（同一条音量、同一个开关、
+   同一段落淡出），只是它没有「地点」，由 playOpening / startLevelNow 点名开关。
+   进第 1 关就收掉；钢琴是长音，切得比地点声慢一档，收在屏幕通电那几秒里。 */
+let openingTone = false;
+let ambOutMs = 1200;   // 换地点时旧那首淡出多久；开场曲退出时临时加长
+
+function openingMusic(on) {
+  on = !!on;
+  if (openingTone === on) return;
+  openingTone = on;
+  if (!on) ambOutMs = 2600;
+  sfxSync();
+  ambOutMs = 1200;
+}
+
 /* 环境声：按地点循环。只用 assets/sfx/ 里的选用文件，不用 备用/ 里挑剩的 */
 const AMB_FILES = {
+  // 开场引子那一首：黑屋心声还没进第 1 关的时候。Empty Room Piano Echoes（29.7 秒，
+  // 心声打完约 20 秒，所以不会循环到接缝）。跟着「环境音」开关，和别的地点声一样。
+  "opening": "环境-开场引子",
   "rong-early": "环境-后座入住",         // Lonely – Beautiful Piano Music（1～3 关全天，周生上门前）
   "rong-day": "环境-后座白天",           // Documentary Mystery（第 5 关起七点前）
   "rong-night": "环境-后座夜里",         // Night Interior（第 4 关异样夜整天；第 5～12 关夜里）
@@ -528,7 +546,10 @@ function clinicAmbKey() {
 }
 
 function ambKey() {
-  if (!S || S.mode === "card" || S.mode === "wait" || S.mode === "end") return "";
+  if (!S) return "";
+  // 开场引子：点掉「戴上耳机，点一下」之后一直放到屏幕通电。mode 已经是 card，所以这条要在前面
+  if (openingTone) return "opening";
+  if (S.mode === "card" || S.mode === "wait" || S.mode === "end") return "";
   const p = String(S.place || "");
   if (p === "mei") return "mei";
   if (p === "clinic-wait") return "clinic-wait";
@@ -608,7 +629,7 @@ function ambSet(key) {
   const old = ambNow;
   if (old.audio) {
     const oa = old.audio;
-    ambFade(oa, 0, 1200, () => {
+    ambFade(oa, 0, ambOutMs, () => {
       oa.pause();
       if (oa.ambGain) oa.ambGain.disconnect();
     });
