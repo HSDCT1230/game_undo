@@ -203,6 +203,7 @@ const initial = () => ({
   pmBody: "",
   pmSent: "",
   webHist: [],
+  webFwd: [],
   wallWho: "",
   forumId: "",
   pendingPost: "",

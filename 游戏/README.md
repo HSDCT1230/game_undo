@@ -69,6 +69,11 @@
 `web-vhu.js` 结尾留了注释：以后要放剧情线索，在 `VHU_MAILS`／`VHU_NOTICES` 加一条，或在
 `viewVhuProfile`／`viewVhuAcademic` 里加一行，不要另起一套状态。登录态存在 `S.vhu`（进存档）。
 
+外壳不是只有样子：地址栏是真的 `<input>`，输进去按 Enter 或点「转到」就导航（当前地址再输一次＝刷新）；
+← → 走 `S.webHist`／`S.webFwd` 两个栈，■ 只在载入那 600ms 里可按（点了状态栏写「已停止」），↻ 刷新并回顶。
+状态栏左格写「正在開啟 <域名>…」再转「完成」，是 `webStartLoad()`／`webEndLoad()` 在管，
+重绘会重建 DOM，所以载入状态存在 `webLoadEnd` 时间戳里，地址栏里没提交的文字存在 `webAddrDraft` 里。
+
 脚本是普通 `<script>`，按 index.html 里的顺序载入，共用一个全局。已拆分的 stub（`story.js`／`web.js`／`style.css`）不要再挂进页面。改了 JS／CSS 记得把 index.html 里的 `?v=` 一起改。
 
 改完任何东西，在仓库根跑一次全量检验（不抽查）：`node tools/全检.mjs`。它检查 JS 语法、index.html 是否纯 ASCII 及引用、函数重名、缺图、缺音效、每句角色台词有没有普通话（含不走 `line()` 的裸对象）、粤普互串、选择有没有后果、禁止的旧写法（地名、人名错字，规则见 `.cursor/rules/`）、控制字符和乱码。有 ERROR 退出码为 1；WARN 要人工逐条看完。

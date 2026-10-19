@@ -368,25 +368,61 @@ function laptop(inner, opts) {
     browserCloseControls(),
   ]);
   const canBack = scene ? !!S.searchDoc : (S.webHist || []).length > 0;
+  const canFwd = scene ? false : (S.webFwd || []).length > 0;
+  const loading = webLoadEnd > Date.now();
+  // 地址栏是真的输入框：回车或「转到」才导航，输入中不重绘，草稿靠 webAddrDraft 熬过重绘。
+  const addrBox = el("input", {
+    type: "text",
+    class: "addr",
+    value: webAddrDraft != null ? webAddrDraft : addr,
+    spellcheck: "false",
+    autocomplete: "off",
+    "aria-label": "地址",
+    oninput: (e) => { webAddrDraft = e.target.value; },
+    onfocus: (e) => e.target.select(),
+    onkeydown: (e) => {
+      if (e.key === "Enter") { e.preventDefault(); webSubmitAddr(); }
+      else if (e.key === "Escape") { webAddrDraft = null; e.target.value = addr; e.target.blur(); }
+    },
+  });
   const chrome = el("div", { class: "browser-chrome" }, [
     el("div", { class: "browser-nav" }, [
       el("button", {
         type: "button",
+        "data-nav": "back",
         disabled: !canBack,
         onclick: scene ? () => { S.searchDoc = ""; drawSearch(); } : webBack,
         title: "后退",
       }, ["←"]),
-      el("button", { type: "button", disabled: true, title: "前进" }, ["→"]),
-      el("button", { type: "button", disabled: true, title: "停止" }, ["■"]),
       el("button", {
         type: "button",
-        onclick: scene ? () => { S.searchDoc = ""; drawSearch(); } : () => draw(),
+        "data-nav": "fwd",
+        disabled: !canFwd,
+        onclick: webForward,
+        title: "前进",
+      }, ["→"]),
+      el("button", {
+        type: "button",
+        "data-nav": "stop",
+        disabled: !loading,
+        onclick: webStopLoad,
+        title: "停止",
+      }, ["■"]),
+      el("button", {
+        type: "button",
+        "data-nav": "reload",
+        onclick: scene ? () => { S.searchDoc = ""; drawSearch(); } : webReload,
         title: "刷新",
       }, ["↻"]),
     ]),
     el("span", { class: "addr-label" }, ["地址"]),
-    el("div", { class: "addr" }, [addr]),
-    el("button", { type: "button", class: "go-btn", disabled: true, tabindex: "-1" }, ["转到"]),
+    addrBox,
+    el("button", {
+      type: "button",
+      class: "go-btn",
+      onclick: webSubmitAddr,
+      title: "转到",
+    }, ["转到"]),
   ]);
   const tabs = el("div", { class: "browser-tabs" }, [
     btnTab(wallCountLabel("廿八屋", houseForumUnread().length) + " - 香港租盘", "house", tab, scene),
@@ -394,7 +430,7 @@ function laptop(inner, opts) {
     btnTab(blankTabTitle(), "blank", tab, scene),
   ]);
   const status = el("div", { class: "browser-status" }, [
-    el("span", {}, ["完成"]),
+    el("span", { class: "bs-left" }, [loading ? webLoadLabel() : "完成"]),
     el("span", {}, [opts.secure ? "Internet | 受保護模式：開啟" : "Internet　│　100%"]),
   ]);
   screen.append(titlebar, chrome, tabs, inner, status);
@@ -575,6 +611,7 @@ function goWeb(screen, extra) {
       if (S.webHist.length > 24) S.webHist.shift();
     }
   }
+  S.webFwd = [];
   S.screen = screen;
   S.wallFresh = null;
   S.wallNav = (S.wallNav || 0) + 1;
@@ -590,6 +627,8 @@ function goWeb(screen, extra) {
   if ("query" in extra) S.query = extra.query;
   if ("filter" in extra) S.listFilter = extra.filter;
   if (extra.search) flag("searched", true);
+  webAddrDraft = null;
+  webStartLoad();
   draw();
 }
 
@@ -598,17 +637,107 @@ function webBack() {
   if (!prev) return;
   if (holdForPost(prev.screen)) return;
   S.webHist.pop();
-  S.screen = prev.screen;
-  S.tab = prev.tab;
-  S.listing = prev.listing;
-  S.wallWho = prev.wallWho;
-  S.forumId = prev.forumId;
-  S.newsId = prev.newsId;
-  S.adId = prev.adId;
-  S.query = prev.query;
-  S.listFilter = prev.listFilter || "all";
+  S.webFwd = S.webFwd || [];
+  S.webFwd.push(snapWeb());
+  if (S.webFwd.length > 24) S.webFwd.shift();
+  restoreWebSnap(prev);
+  webAddrDraft = null;
+  webStartLoad();
   draw();
 }
+
+function webForward() {
+  const next = (S.webFwd || [])[S.webFwd.length - 1];
+  if (!next) return;
+  if (holdForPost(next.screen)) return;
+  S.webFwd.pop();
+  S.webHist = S.webHist || [];
+  S.webHist.push(snapWeb());
+  if (S.webHist.length > 24) S.webHist.shift();
+  restoreWebSnap(next);
+  webAddrDraft = null;
+  webStartLoad();
+  draw();
+}
+
+function restoreWebSnap(p) {
+  S.screen = p.screen;
+  S.tab = p.tab;
+  S.listing = p.listing;
+  S.wallWho = p.wallWho;
+  S.forumId = p.forumId;
+  S.newsId = p.newsId;
+  S.adId = p.adId;
+  S.query = p.query;
+  S.listFilter = p.listFilter || "all";
+}
+
+/* ---------- 地址栏、四个导航键 ---------- */
+
+// 输入中的草稿。重绘会重建输入框，靠它把没提交的文字留住。
+let webAddrDraft = null;
+// 状态栏「正在開啟…」的截止时间戳；大于此刻即载入中，「停止」才可按。
+let webLoadEnd = 0;
+let webLoadTimer = null;
+let webReloadTop = false;
+const WEB_LOAD_MS = 600;
+
+function webLoadLabel() {
+  const a = webAddr();
+  if (a === "about:blank") return "正在開啟 about:blank…";
+  const host = String(a).replace(/^[a-z][a-z0-9+.-]*:\/\//i, "").split("/")[0];
+  return "正在開啟 " + (host || a) + "…";
+}
+
+function webStartLoad() {
+  webLoadEnd = Date.now() + WEB_LOAD_MS;
+  clearTimeout(webLoadTimer);
+  webLoadTimer = setTimeout(() => webEndLoad("完成"), WEB_LOAD_MS);
+}
+
+function webEndLoad(label) {
+  clearTimeout(webLoadTimer);
+  webLoadTimer = null;
+  webLoadEnd = 0;
+  const left = stage && stage.querySelector(".browser-status .bs-left");
+  if (left) left.textContent = label || "完成";
+  const stop = stage && stage.querySelector('.browser-nav button[data-nav="stop"]');
+  if (stop) stop.disabled = true;
+}
+
+function webStopLoad() {
+  webEndLoad("已停止");
+}
+
+function webReload() {
+  webReloadTop = true;
+  webAddrDraft = null;
+  webStartLoad();
+  draw();
+}
+
+function webSubmitAddr() {
+  const box = stage && stage.querySelector(".browser-chrome .addr");
+  const raw = String(box ? box.value : (webAddrDraft || "")).trim();
+  if (!raw) {
+    if (box) box.focus();
+    return;
+  }
+  if (typeof vhuOpenUrl !== "function" || typeof vhuNormalizeUrl !== "function") return;
+  // 从搜查画面里直接输网址会离开剧情镜头，这里顺手把模式拨回浏览器。
+  if (S.mode !== "web") {
+    S.mode = "web";
+    S.paused = null;
+    S.searchDoc = "";
+  }
+  if (vhuNormalizeUrl(raw) === vhuNormalizeUrl(webAddr())) {
+    webReload();
+    return;
+  }
+  webAddrDraft = null;
+  vhuOpenUrl(raw);
+}
+
 
 /* 网页内容区滚动：同页重绘（回应展开、收藏、记下）保住位置；换页才回到顶 */
 function webPageScrollEl(root) {
@@ -665,7 +794,8 @@ function applyWebScroll() {
 }
 
 function renderWeb() {
-  rememberWebScroll();
+  if (webReloadTop) { webReloadTop = false; webScrollSnap = null; }
+  else rememberWebScroll();
   sfxWebOpen();
   clearStage();
   const inner = webInner();

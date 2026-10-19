@@ -380,17 +380,37 @@ a:hover {
 .go-btn {
   min-width: 25px;
   height: 23px;
-  padding: 0 5px;
+  padding: 0 6px;
   border: 1px solid #9ba4ad;
   background: linear-gradient(#fff, #d8dde2);
   color: #52606d;
   box-shadow: inset 1px 1px #fff;
+  font: 11px Tahoma, Arial, sans-serif;
+  cursor: pointer;
+}
+
+.go-btn {
+  padding: 0 11px;
+}
+
+.browser-nav button:not(:disabled):hover,
+.go-btn:hover {
+  background: linear-gradient(#fff, #e7ebf0);
+}
+
+.browser-nav button:not(:disabled):active,
+.go-btn:active {
+  background: linear-gradient(#c9d1d8, #e9edf1);
+  box-shadow: inset 2px 2px 3px rgba(0, 0, 0, .16);
 }
 
 .browser-nav button:disabled,
 .go-btn:disabled {
   opacity: 1;
   cursor: default;
+  color: #b8bfc6;
+  background: linear-gradient(#fbfbfa, #e2e4e3);
+  box-shadow: none;
 }
 
 .addr-label {
@@ -398,18 +418,25 @@ a:hover {
 }
 
 .addr {
+  flex: 1 1 auto;
   min-width: 0;
-  min-height: 23px;
-  overflow: hidden;
-  padding: 4px 7px 3px 22px;
+  height: 23px;
+  padding: 3px 7px 3px 22px;
   border: 1px solid #7f9db9;
-  background:
-    linear-gradient(90deg, #eef6ff 0 17px, #fff 17px);
+  border-radius: 0;
+  background: linear-gradient(90deg, #eef6ff 0 17px, #fff 17px);
   color: #222;
   font: 11px Tahoma, Arial, sans-serif;
-  box-shadow: inset 1px 1px 2px rgba(0,0,0,.12);
-  white-space: nowrap;
-  text-overflow: ellipsis;
+  line-height: 15px;
+  box-shadow: inset 1px 1px 2px rgba(0, 0, 0, .12);
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.addr:focus {
+  border-color: #4a7bb0;
+  background: linear-gradient(90deg, #eef6ff 0 17px, #fff 17px);
 }
 
 .browser-tabs {
@@ -4178,11 +4205,21 @@ button.mail-row:hover { background: #121a23; }
   }
 
   .browser-nav {
-    display: none;
+    gap: 1px;
+    margin-right: 1px;
+  }
+
+  .browser-nav button {
+    min-width: 22px;
+    padding: 0 3px;
   }
 
   .addr-label {
     display: none;
+  }
+
+  .go-btn {
+    padding: 0 7px;
   }
 
   .addr {
@@ -6949,13 +6986,13 @@ html.screen-on body::after {
   #os-bar { flex-basis: 40px; height: 40px; min-height: 40px; padding: 0 6px; }
   #clock { line-height: 1.15; }
   .os-opt, #sfx-toggle { min-height: 30px; }
-  .browser-nav button { min-width: 36px; min-height: 32px; }
+  .browser-nav button { min-width: 29px; min-height: 32px; }
   .scene-fit .hot small { font-size: 11.5px; }
 
   .browser-titlebar { font-size: 12px; }
   .browser-status { display: none; }
-  .go-btn { min-width: 44px; height: 32px; }
-  .addr { min-height: 32px; }
+  .go-btn { min-width: 44px; height: 32px; font-size: 12px; }
+  .addr { height: 32px; font-size: 12px; }
   .browser-tabs button { min-height: 32px; }
   .site-header { gap: 6px 10px; padding: 6px 10px; }
   .site-header .btn.ghost { min-height: 32px; }
