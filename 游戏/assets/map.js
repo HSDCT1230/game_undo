@@ -275,7 +275,7 @@ function renderPlan(host, rooms, viewBox) {
 
 function renderMap() {
   const here = $("#map-here");
-  if (here) here.textContent = "人在　" + placeLine(S.place);
+  if (here) here.textContent = "人在" + placeLine(S.place);
   renderTabs();
   const host = $("#map-draw");
   const sheet = $("#map-sheet");

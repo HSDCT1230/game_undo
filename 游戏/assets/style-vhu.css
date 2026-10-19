@@ -18,11 +18,14 @@
 
 .vhu-site a { color: var(--vhu-link); }
 
-/* 窗口高度别跟着页面内容忽大忽小 */
+/* 站点高度跟着窗口走：撑满屏幕剩余高度，短页靠 margin-top:auto 把页脚压到窗口底。
+   以前这里写死 min-height:640px——窗口不足 640 时站点比屏幕还高，
+   .laptop-screen 的 overflow:hidden 把下半页连着状态栏一起裁掉；
+   而站点自身又没有溢出（scrollHeight == clientHeight），滚也滚不出来，那半页等于不存在。 */
 .laptop-screen > .hk-site.vhu-site {
   display: flex;
   flex-direction: column;
-  min-height: 640px;
+  min-height: 0;
 }
 .vhu-site .vhu-foot { margin-top: auto; }
 /* 竖排容器里 body 是唯一可伸缩的子项，页面比窗口高时它会被压扁，
@@ -108,6 +111,28 @@
   color: var(--vhu-mute);
   font-size: 11px;
 }
+/* 面包屑的箭头：给它自己的左右间距，别用全角空格撑 */
+.vhu-crumb-mark {
+  display: inline-block;
+  margin: 0 .55em;
+  color: #aab5b1;
+  font-size: 11px;
+}
+
+/* 元信息分隔：一根真的 1px 竖线。
+   以前这些位置是「　│　」／「　·　」——用全角空格和中点拼出来的分隔，
+   在 2014 年的内联网页面上反而显得假；那时是用表格边框或细竖线分的。 */
+.vhu-sep {
+  display: inline-block;
+  width: 1px;
+  height: 0.92em;
+  margin: 0 0.62em;
+  background: #c9d2ce;
+  vertical-align: -0.08em;
+}
+.vhu-meta-line > .vhu-sep { background: #bcc7c2; }
+.vhu-foot-line > .vhu-sep { height: 0.86em; margin: 0 0.55em; background: #ccd4d0; }
+.vhu-login-links > .vhu-sep { margin: 0 0.6em; }
 
 /* ---------- 正文 ---------- */
 
@@ -186,6 +211,16 @@
 }
 .vhu-list li:last-child { border-bottom: 0; }
 .vhu-date { flex: 0 0 auto; color: var(--vhu-mute); font-size: 10.5px; }
+
+/* IE 的错误页底下那行：错误说明靠左、「Internet Explorer」靠右。
+   以前是中间塞两个全角空格把它顶过去的。 */
+.vhu-ie-foot {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+}
+.vhu-ie-brand { color: #9aa6a2; }
 .vhu-link-btn {
   padding: 0;
   border: 0;
@@ -386,8 +421,15 @@
 }
 .vhu-login-foot h3 { margin: 0 0 6px; color: #4c5e5a; font-size: 11px; }
 .vhu-login-foot ul { margin: 0; padding: 0; list-style: none; color: #5c6a66; font-size: 11px; }
-.vhu-login-foot li { padding: 3px 0; border-bottom: 1px dotted #e3e8e4; }
+.vhu-login-foot li {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 3px 0;
+  border-bottom: 1px dotted #e3e8e4;
+}
 .vhu-login-foot li:last-child { border-bottom: 0; }
+.vhu-date-title { flex: 1 1 auto; min-width: 0; }
 
 /* ---------- 空白分页 ---------- */
 
@@ -439,7 +481,6 @@
 /* ---------- 窄屏 ---------- */
 
 @media (max-width: 720px) {
-  .laptop-screen > .hk-site.vhu-site { min-height: 0; }
   .vhu-cols { grid-template-columns: minmax(0, 1fr); }
   .vhu-services { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   /* 窄屏格子变窄，说明文字退回下一行，不跟标题挤。 */

@@ -354,7 +354,7 @@ const CAL_DAYS = [
   ["08-05", "散工回来晚了。你在门口脱鞋，怕吵到前座。其实隔一幅墙。", "warm", "", true],
   ["08-06", "把衣服晾在天台。周生的竹竿靠在墙角最上头那格。", "warm", "", true],
   ["08-07", "他送来一碗糖水，说「太热」。白瓷碗放在茶几晒痕旁边。第二天他还来收——这只碗以后不再出现。", "warm", "示意-日历-0807-糖水", true],
-  ["08-08", "倾偈　陈美娟", "warm", "", true],
+  ["08-08", "倾偈：陈美娟", "warm", "", true],
   ["08-09", "无事。把带来的书立起来，靠着墙。这只箱以后就是书架。", "warm", "", true],
   ["08-10", "第二笔周租，现金。他数两遍，忽然问有没有陌生人打电话来问这栋楼。你说没有。他点头，写在日历上。", "warm", "示意-日历-0810-交租", true],
   ["08-11", "夜里回来，铁闸推到一半，那声「咔」比前几天多响了一下。你回头看了一眼，什么也没有。", "crack", "示意-日历-0811-铁闸", true],
@@ -1101,7 +1101,7 @@ function phoneMenu() {
     },
   }, ["放下手机"]));
   const frame = el("div", { class: "phone-frame" }, [
-    el("div", { class: "phone-status" }, ["中国移动　拨号　" + clockHm()]),
+    phoneStatus("拨号"),
     home,
   ]);
   S.modal = el("div", { class: "modal phone-menu", id: "game-modal" }, [frame]);
@@ -1406,10 +1406,25 @@ function drawChatHist(host) {
   }
   hits.forEach((r) => {
     host.append(el("div", { class: "chat-hit" }, [
-      el("div", { class: "bubble-meta" }, [r.when + "　" + r.clock + "　" + r.who]),
+      // 抬头三格：日子、时刻、谁说的。靠 flex 的 gap 分开，不在字符串里塞全角空格
+      el("div", { class: "bubble-meta" }, [
+        el("span", { class: "bm-day" }, [r.when]),
+        el("span", { class: "bm-time" }, [r.clock]),
+        el("span", { class: "bm-who" }, [r.who]),
+      ]),
       el("div", { class: "bubble-text " + whoClass(r.who) }, [r.text]),
     ]));
   });
+}
+
+/* 窗口最下面那条状态：倾偈 ／ 网络：在线。
+   中间那根竖线是真的 1px，不再用「　│　」拿全角空格和制表符拼。 */
+function chatStatusBar() {
+  return el("div", { class: "chat-status" }, [
+    el("span", {}, ["倾偈"]),
+    el("span", { class: "chat-st-sep", "aria-hidden": "true" }),
+    el("span", {}, ["网络：在线"]),
+  ]);
 }
 
 let chatHeard = { pack: "", n: 0 };
@@ -1421,7 +1436,11 @@ function drawChat() {
   box.append(imgSlot("00-通用/场景-倾偈窗口", "talk-bg", "倾偈"));
   const chat = el("div", { class: "chat" });
   chat.append(el("div", { class: "chat-bar" }, [
-    el("span", {}, ["倾偈　—　陈美娟"]),
+    el("span", { class: "chat-title" }, [
+      el("span", { class: "chat-app" }, ["倾偈"]),
+      el("span", { class: "chat-dash", "aria-hidden": "true" }, ["—"]),
+      el("span", {}, ["陈美娟"]),
+    ]),
     el("button", {
       type: "button",
       class: "chat-close",
@@ -1458,7 +1477,7 @@ function drawChat() {
       find,
       histBox,
     ]));
-    chat.append(el("div", { class: "chat-status" }, ["倾偈　│　网络：在线"]));
+    chat.append(chatStatusBar());
     box.append(chat);
     stage.append(box);
     find.focus();
@@ -1473,7 +1492,8 @@ function drawChat() {
     const mine = k === "me";
     bubbles.append(el("div", { class: "bubble " + (mine ? "me" : "she") }, [
       el("div", { class: "bubble-meta" }, [
-        (mine ? "章慧琪" : "陈美娟") + "　" + chatClock(i),
+        el("span", { class: "bm-who" }, [mine ? "章慧琪" : "陈美娟"]),
+        el("span", { class: "bm-time" }, [chatClock(i)]),
       ]),
       el("div", { class: "bubble-text " + whoClass(mine ? "章慧琪" : "陈美娟") }, [t]),
     ]));
@@ -1534,7 +1554,7 @@ function drawChat() {
         },
       }, ["合上倾偈"]));
     }
-    chat.append(el("div", { class: "chat-status" }, ["倾偈　│　网络：在线"]));
+    chat.append(chatStatusBar());
     box.append(chat);
     stage.append(box);
     pinLog();
@@ -1606,7 +1626,7 @@ function drawChat() {
     });
     chat.append(ch);
   }
-  chat.append(el("div", { class: "chat-status" }, ["倾偈　│　网络：在线"]));
+  chat.append(chatStatusBar());
   box.append(chat);
   stage.append(box);
   pinLog();

@@ -1052,7 +1052,7 @@ function ending() {
   try { (typeof clearStore === "function" ? clearStore() : localStorage.removeItem(SAVE_KEY)); } catch (e) { /* 忽略 */ }
   markCleared();
   const hurt = resolveEndHurt();
-  const kept = (S.evidence || []).map((e) => e.kind + "　" + e.title);
+  const kept = (S.evidence || []).map((e) => e.kind + "：" + e.title);
   const noise = Object.entries(S.skipAll || {}).filter(([id]) => !hasEvidence(id)).map(([, t]) => t);
   // 三条结局线各是谁倒下/没倒下都不同，一张图对不上三条，干脆不铺图：黑底字幕。
   const openLine = hurt === "ming"

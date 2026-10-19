@@ -681,7 +681,9 @@ function sfxSetLevel(n) {
 function sfxButton() {
   const b = document.getElementById("sfx-toggle");
   if (!b) return;
-  b.textContent = BG_LABEL[bgLevel];
+  // 和环境音那几颗一样，名与值拆两格（setPairLabel 在 core.js）
+  if (typeof setPairLabel === "function") setPairLabel(b, BG_LABEL[bgLevel]);
+  else b.textContent = BG_LABEL[bgLevel];
   b.classList.toggle("off", !BG_VOL[bgLevel]);
   b.setAttribute("aria-label", BG_LABEL[bgLevel] + "，点按切换。只影响环境声");
 }

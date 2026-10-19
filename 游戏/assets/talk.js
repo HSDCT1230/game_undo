@@ -493,7 +493,7 @@ function drawIncoming() {
   const kids = [];
   if (bgId) kids.push(imgSlot(bgId, "talk-bg", t.loc || "来电"));
   kids.push(el("div", { class: "phone-frame" }, [
-    el("div", { class: "phone-status" }, ["中国移动　来电　" + clockHm()]),
+    phoneStatus("来电"),
     el("div", { class: "phone-incoming" }, [
       el("div", { class: "phone-tag" }, ["来电"]),
       portraitSlot(WHO_IMG[t.contact] ? t.contact : (t.number || who)),
@@ -592,7 +592,7 @@ function drawFace(b) {
 function drawPhone(b) {
   const t = S.talk;
   const speaker = speakerOf(b);
-  const tag = t.eavesdrop ? "隔门听电话" : t.dialout ? "拨号　通话中" : "通话中";
+  const tag = t.eavesdrop ? "隔门听电话" : t.dialout ? "拨号／通话中" : "通话中";
   const box = el("div", { class: "talk phone" + phoneEnterClass(), "aria-live": "polite" });
   const bgId = talkBgId();
   if (bgId) box.append(imgSlot(bgId, "talk-bg", t.loc || "通话"));
@@ -613,7 +613,7 @@ function drawPhone(b) {
     ? choiceBox(b, "phone-choices")
     : el("div", { class: "phone-pad" }, [nextBtn(b, t.eavesdrop ? yueFace("再贴过去听") : yueFace("听下句"))]);
   box.append(el("div", { class: "phone-frame" }, [
-    el("div", { class: "phone-status" }, [yueFace("中国移动　通话　") + clockHm()]),
+    phoneStatus("通话"),
     el("div", { class: "phone-incall" }, [
       el("div", { class: "phone-tag" }, [yueFace(tag)]),
       portraitSlot(WHO_IMG[t.contact] ? t.contact : (WHO_IMG[t.number] ? t.number : speaker)),
@@ -653,7 +653,7 @@ function drawSms(b) {
   const bgId = talkBgId();
   if (bgId) box.append(imgSlot(bgId, "talk-bg", t.loc || "短讯"));
   box.append(el("div", { class: "sms-frame" }, [
-    el("div", { class: "sms-status" }, [yueFace("中国移动　信息　") + clockHm()]),
+    phoneStatus("信息", "sms-status"),
     el("div", { class: "sms-bar" }, [
       el("strong", { class: whoClass(who) }, [who]),
       el("span", {}, [sub]),
@@ -679,7 +679,7 @@ function drawMsg(b) {
     el("div", { class: "msg-tag" }, [yueFace("语音留言")]),
     el("div", { class: "msg-from " + whoClass(t.contact) }, [t.contact || yueFace("未知来源")]),
     el("div", { class: "msg-num" }, [t.number || yueFace("语音留言")]),
-    el("div", { class: "msg-wave", "aria-hidden": "true" }, ["▶　00:07 / 00:11"]),
+    el("div", { class: "msg-wave", "aria-hidden": "true" }, ["▶ 00:07 / 00:11"]),
     msgBody(b, whoClass(t.contact)),
     b.choices ? choiceBox(b, "msg-choices") : el("div", { class: "talk-actions" }, [nextBtn(b, yueFace("听完"))]),
   ]));

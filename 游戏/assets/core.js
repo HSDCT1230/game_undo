@@ -128,6 +128,23 @@ function redrawForLang() {
   if (S.mode === "talk" || S.mode === "web" || S.mode === "hub" || S.mode === "map") draw();
 }
 
+/* 顶栏开关的字：写法是「名　值」——「环境音　大」「字　中」「自动　关」。
+   以前把两段拼进一个字符串、中间塞个全角空格撑着，看着像空格排版而不是排版。
+   现在拆成两格：名淡一点、值亮一点，距离交给 CSS 的 gap，字里不再有撑出来的空。
+   传进来的还是原来那个带全角空格的标签，split 一次就散开，标签表不用动。 */
+function setPairLabel(node, label) {
+  const full = shellText(String(label || ""));
+  const cut = full.indexOf("　");
+  if (cut < 0) {
+    node.textContent = full;
+    return;
+  }
+  node.replaceChildren(
+    el("span", { class: "os-k" }, [full.slice(0, cut)]),
+    el("span", { class: "os-v" }, [full.slice(cut + 1)]),
+  );
+}
+
 function optButtons() {
   const bar = $("#os-bar");
   const sfxBtn = $("#sfx-toggle");
@@ -175,10 +192,10 @@ function optButtons() {
   }
   lang.textContent = shellText(LANG_LABEL[langMode]);
   lang.setAttribute("aria-label", shellText("对白与网站：" + LANG_LABEL[langMode] + "，点按切换"));
-  size.textContent = shellText(SIZE_LABEL[sizeStep]);
   size.setAttribute("aria-label", shellText("对白字号：" + SIZE_LABEL[sizeStep].replace("字　", "") + "，点按切换"));
+  setPairLabel(size, SIZE_LABEL[sizeStep]);
   if (auto) {
-    auto.textContent = shellText(autoMode ? AUTO_LABEL.on : AUTO_LABEL.off);
+    setPairLabel(auto, autoMode ? AUTO_LABEL.on : AUTO_LABEL.off);
     auto.setAttribute("aria-label", shellText("自动播放：" + (autoMode ? "开" : "关") + "，点按切换"));
     auto.setAttribute("aria-pressed", autoMode ? "true" : "false");
   }
@@ -217,7 +234,7 @@ function fsSync() {
   const b = $("#fs-toggle");
   if (!b) return;
   const on = fsOn();
-  b.textContent = shellText(FS_LABEL[on ? "on" : "off"]);
+  setPairLabel(b, FS_LABEL[on ? "on" : "off"]);
   b.setAttribute("aria-pressed", on ? "true" : "false");
   b.setAttribute("aria-label", shellText("全屏：" + (on ? "开" : "关") + "，点按" + (on ? "退出全屏" : "进入全屏") + "（快捷键 F）"));
 }
@@ -540,6 +557,18 @@ function el(tag, attrs = {}, kids = []) {
   return n;
 }
 
+/* 手机顶栏：运营商、状态、钟点各占一格，两端顶开。
+   以前是「中国移动　来电　08:12」——用两个全角空格把三件事撑开，
+   像拿空格排的表；真的手机顶栏本来就是左一个、右一个。 */
+function phoneStatus(mode, cls) {
+  const face = (s) => (typeof yueFace === "function" ? yueFace(s) : s);
+  return el("div", { class: cls || "phone-status" }, [
+    el("span", { class: "ps-carrier" }, [face("中国移动")]),
+    el("span", { class: "ps-mode" }, [face(mode || "")]),
+    el("span", { class: "ps-clock" }, [clockHm()]),
+  ]);
+}
+
 // 本机开发（localhost / file:// / ?dev）才露出「待补图」路径；线上和局域网手机只见灰底
 const DEV_PICS = /^(localhost|127\.0\.0\.1|\[::1\])?$/.test(location.hostname) || /[?&]dev\b/.test(location.search);
 document.documentElement.classList.toggle("dev-pics", DEV_PICS);
@@ -549,7 +578,7 @@ function imgSlot(id, className, alt) {
     class: "img-slot missing " + (className || ""),
     "data-img": id,
   });
-  const mark = el("span", { class: "img-mark" }, ["待补图　图/游戏/" + id + ".jpg"]);
+  const mark = el("span", { class: "img-mark" }, ["待补图：图/游戏/" + id + ".jpg"]);
   const image = document.createElement("img");
   image.alt = alt || id;
   image.draggable = false;

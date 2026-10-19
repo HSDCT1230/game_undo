@@ -46,7 +46,7 @@ function peekItem(id, next) {
 
 function itemLabel(id) {
   const it = hasEvidence(id) ? (S.evidence.find((e) => e.id === id) || item(id)) : item(id);
-  return it.kind + "　" + it.title;
+  return it.kind + "：" + it.title;
 }
 
 /* ---------- 日记簿目录用：每样东西关于屋里哪样、哪句笔记和证物重复 ---------- */
@@ -455,7 +455,7 @@ function handOver(n, onDone) {
             say = (HAND_REPLY[n] || {})[e.id] || "呢样我记低。";
             redraw();
           },
-        }, [e.kind + "　" + e.title]));
+        }, [e.kind + "：" + e.title]));
       });
       host.append(cards);
     },
@@ -645,14 +645,16 @@ function compareSolvable() {
 }
 
 function tokenLabel(t) {
+  // 卡片抬头写清「哪件东西（什么时候记的）」：东西在前、时候进括号。
+  // 以前是「搬进来·沙发：…」，中点是拼出来的分隔，读起来像机器写的。
   if (t.startsWith("base:")) {
     const b = BASE.find((x) => x.id === t.slice(5));
-    return "搬进来·" + b.name + "：" + baseText(b.id);
+    return b.name + "（搬进来）：" + baseText(b.id);
   }
   if (t.startsWith("tonight:")) {
     const id = t.slice(8);
     const b = BASE.concat([PRINT_ROW]).find((x) => x.id === id);
-    return (S.level === 4 ? "今晚·" : "十四号夜·") + b.name + "：" + tonightText(id);
+    return b.name + "（" + (S.level === 4 ? "今晚" : "十四号夜") + "）：" + tonightText(id);
   }
   return itemLabel(t);
 }
@@ -669,8 +671,9 @@ function compareReady() {
 
 function compareBody() {
   const rows = compareDone();
-  const lines = rows.map((r) => (r.fixedLeft || r.lt) + "　｜　" + r.rt);
-  return "头两个礼拜　｜　十五号之后\n" + (lines.length ? lines.join("\n") : "（还没写）");
+  // 对照纸是日记里的一页，两栏用斜线分——不用「　｜　」那种拿全角空格撑出来的竖线
+  const lines = rows.map((r) => (r.fixedLeft || r.lt) + "／" + r.rt);
+  return "头两个礼拜／十五号之后\n" + (lines.length ? lines.join("\n") : "（还没写）");
 }
 
 function compareAlmost() {

@@ -148,7 +148,7 @@ function diaryEntry(label, onclick, unread, side, img) {
   return el("button", {
     type: "button",
     class: "evidence-open" + (unread ? " unread" : ""),
-    "aria-label": (side ? side + "　" : "") + label + (unread ? "（未打开）" : ""),
+    "aria-label": (side ? side + "，" : "") + label + (unread ? "（未打开）" : ""),
     onclick,
   }, [
     thumb,
@@ -203,7 +203,7 @@ function timelineBlocks() {
         renderDiaryIndex();
       },
     }, [
-      el("span", { class: "diary-fold-name" }, ["历史收集　" + span]),
+      el("span", { class: "diary-fold-name" }, ["历史收集（" + span + "）"]),
       el("span", { class: "diary-count" }, [String(n)]),
       el("span", { class: "diary-fold-go", "aria-hidden": "true" }, [S.diaryOld ? "收起 ▴" : "展开 ▾"]),
     ]));
@@ -522,7 +522,7 @@ function showClueModal(item, opts) {
           type: "button",
           class: "clue-kin-link",
           onclick: () => diaryPush(() => showClueModal(e, { canFile: false, fromIndex: true })),
-        }, [e.kind + "　" + e.title + " ›"])),
+        }, [e.kind + "：" + e.title + " ›"])),
       ]));
     }
     kids.push(el("div", { class: "clue-acts" }, [

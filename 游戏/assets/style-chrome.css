@@ -227,6 +227,11 @@ a:hover {
 #sfx-toggle {
   flex: 0 0 7.6em;
   box-sizing: border-box;
+  /* 和环境音一样是「名＋值」两格：里面那颗 .os-k/.os-v 要有个 gap 隔开才不粘字 */
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.4em;
   width: 7.6em;
   min-width: 7.6em;
   margin-left: 12px;
@@ -246,6 +251,9 @@ a:hover {
 #sfx-toggle.off { opacity: .6; }
 .os-opt {
   flex: 0 0 auto;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.42em;
   margin-left: 8px;
   padding: 1px 6px;
   border: 1px solid rgba(255, 255, 255, .45);
@@ -257,6 +265,12 @@ a:hover {
   white-space: nowrap;
   cursor: pointer;
 }
+/* 开关上「名」淡一点、「值」亮一点：分出层级，距离靠上面的 gap，
+   不再往字符串里塞全角空格把两段撑开。 */
+.os-opt > .os-k,
+#sfx-toggle > .os-k { opacity: .66; }
+.os-opt > .os-v,
+#sfx-toggle > .os-v { letter-spacing: 0.04em; }
 .os-opt:hover { background: rgba(255, 255, 255, .12); }
 /* 顶栏挤不下时先收地点：日子钟点、按钮都比它要紧，地点在房间条和底栏还写着 */
 @media (max-width: 740px) {
@@ -361,6 +375,10 @@ a:hover {
   letter-spacing: .08em;
   flex: 0 0 auto;
   white-space: nowrap;
+  /* — □ × 三颗各自成格，中间留 .55em，不再用全角空格撑 */
+  display: inline-flex;
+  align-items: center;
+  gap: .55em;
 }
 /* 标题长了（例如「VHU Portal - 維港大學」）窄屏下不许换行，直接省略号；
    否则右侧的 — □ × 会被挤到第二行。 */
@@ -512,6 +530,19 @@ a:hover {
   color: #555;
   font-size: 10px;
   white-space: nowrap;
+}
+/* 状态栏右侧那两格：Internet ／ 受保護模式，中间一根 IE 式的凹陷竖线 */
+.bs-right {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.bs-sep {
+  display: inline-block;
+  width: 1px;
+  height: 11px;
+  background: #b4b9be;
+  box-shadow: 1px 0 #fff;
 }
 
 .site-header {
@@ -1566,12 +1597,19 @@ a:hover {
 .phone-status,
 .sms-status {
   flex-shrink: 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
   padding: 6px 12px 4px;
   background: #000;
   color: #9aa7b3;
   font-size: 10px;
   letter-spacing: 0.04em;
 }
+/* 中间那格（来电／通话／信息）压暗一档，跟两头的运营商、钟点分开 */
+.phone-status > .ps-mode,
+.sms-status > .ps-mode { opacity: .78; }
 .phone-incoming,
 .phone-incall {
   flex: 1 1 auto;
@@ -3075,6 +3113,16 @@ button.mail-row:hover { background: #121a23; }
   text-shadow: 0 1px #17477f;
 }
 
+/* 标题栏：名、破折号、对方姓名各占一格。破折号压暗，
+   两侧的距离交给 gap，不在字符串里塞「　—　」。 */
+.chat-title {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 7px;
+}
+.chat-title > .chat-app { opacity: .82; font-weight: 400; }
+.chat-title > .chat-dash { opacity: .55; font-weight: 400; }
+
 .chat-close {
   margin-left: auto;
   width: 22px;
@@ -3217,12 +3265,25 @@ button.mail-row:hover { background: #121a23; }
 }
 
 .bubble-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
   margin-bottom: 5px;
   color: #527aa5;
   font-size: var(--who-chat);
   line-height: var(--lh-who-chat);
   letter-spacing: 0.02em;
 }
+/* 抬头里的时刻压暗一点，跟名字分开：以前是「陈美娟　21:40」，
+   一个全角空格既当分隔又当留白，看着像机器排的。 */
+.bubble-meta > .bm-time {
+  color: #8b9daf;
+  font-size: 0.94em;
+  letter-spacing: 0.04em;
+}
+.bubble-meta > .bm-day { color: #7e93a8; }
+.bubble.me .bubble-meta > .bm-time,
+.bubble.me .bubble-meta > .bm-day { color: #85a285; }
 
 .bubble.me .bubble-meta {
   color: #588358;
@@ -3286,11 +3347,21 @@ button.mail-row:hover { background: #121a23; }
 }
 
 .chat-status {
+  display: flex;
+  align-items: center;
   padding: 4px 8px;
   border-top: 1px solid #b8c1ca;
   background: linear-gradient(#f6f6f6, #dbdddf);
   color: #707980;
   font-size: 9px;
+}
+/* 状态栏里那根分隔：真的 1px 竖线，替代原来「　│　」的拼法 */
+.chat-status > .chat-st-sep {
+  display: inline-block;
+  width: 1px;
+  height: 8px;
+  margin: 0 6px;
+  background: #b0b9c0;
 }
 
 .clinic {
@@ -4446,7 +4517,16 @@ button.mail-row:hover { background: #121a23; }
   background: linear-gradient(#fff3e2, #f6d6b0);
   color: #8d3900;
 }
-.fav-row { margin: 2px 0 10px; text-align: right; }
+/* 收藏行：说明在左、「取消收藏」在右，距离用 gap——不在字符串尾巴挂全角空格顶 */
+.fav-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 4px 10px;
+  margin: 2px 0 10px;
+  text-align: right;
+}
 
 .hk-nav {
   display: flex;
@@ -4598,6 +4678,23 @@ button.mail-row:hover { background: #121a23; }
 .fine { color: #888; font-size: 11px; line-height: 1.65; overflow-wrap: anywhere; }
 .bbs-line { font-size: 11px; color: #555; padding: 4px 0; border-bottom: 1px dotted #ddd; line-height: 1.6; overflow-wrap: anywhere; }
 .mail-meta { color: #777; font-size: 11px; }
+/* 站内通知里「一句话　链接」那一行：两件东西各占一格，距离交给 gap */
+.notice-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+}
+/* 留言抬头：时刻、谁发给谁、什么状态各占一格。
+   主题那格用 margin-left:auto 顶到右边——原来靠两个全角空格把字顶过去。 */
+.mail-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 3px 9px;
+}
+.mail-meta-row > .mm-when { color: #8c8c8c; }
+.mail-meta-row > .mm-sub { margin-left: auto; color: #8c8c8c; }
 .mail-body {
   padding: 10px 12px;
   border: 1px solid #ead9c0;
@@ -4670,6 +4767,12 @@ button.mail-row:hover { background: #121a23; }
   line-height: 1.4;
   white-space: nowrap;
 }
+/* 版块行右下角「作者 时刻」：两条各自成格，间距交给 gap */
+.forum-row .fwho {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+}
 .forum-row .fpages {
   color: #b8845a;
   font-size: 10px;
@@ -4685,6 +4788,14 @@ button.mail-row:hover { background: #121a23; }
   color: #b84b00;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+}
+/* 楼层抬头「#2 用户 回复于 时间」：每段自成一格，间隔交给 gap，
+   不再在「#2」后面塞一个全角空格把后面顶开 */
+.mail-meta.floor-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
 }
 .news-row {
   grid-template-columns: max-content minmax(0, 1fr);
@@ -5349,7 +5460,7 @@ button.mail-row:hover { background: #121a23; }
   margin-top: var(--diary-cell, 28px);
   font-size: 15px;
 }
-.diary-folio-page > .task-hint::before { content: "提示　"; font-style: normal; font-weight: 700; }
+.diary-folio-page > .task-hint::before { content: "提示"; display: inline-block; margin-right: 0.85em; font-style: normal; font-weight: 700; }
 .diary-nav { display: flex; flex: 0 0 auto; align-items: center; gap: 4px; }
 .diary-btn.diary-flip {
   flex: 0 0 auto;
@@ -5783,7 +5894,14 @@ button.mail-row:hover { background: #121a23; }
 /* 分段测试目录 */
 .test-list { margin: 0; padding: 0; list-style: none; max-height: 62vh; overflow: auto; }
 .test-list li { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; padding: 6px 0; border-bottom: 1px solid #3a342c; }
-.test-list .test-lv { flex: 0 0 9em; color: #f4efe6; }
+/* 关号单独一档：小、灰、等宽，跟关名之间靠 gap 隔开，不在字符串里拼「 · 」 */
+.test-list .test-lv { flex: 0 0 9em; display: inline-flex; align-items: baseline; gap: 8px; color: #f4efe6; }
+.test-list .test-no {
+  color: #8a8076;
+  font: 11px/1 Consolas, "Courier New", monospace;
+  letter-spacing: .04em;
+}
+.test-list .test-name { flex: 1 1 auto; }
 .test-list a { color: #8eb0cc; font-size: var(--type-ui); text-decoration: none; }
 .test-list a:hover { text-decoration: underline; }
 
@@ -6357,14 +6475,40 @@ img.map-photo {
   letter-spacing: 0.28em;
   text-indent: 0.28em;
 }
-/* 进度：让他知道这一章还有多长，卡片上不出现数字以外的游戏词 */
+/* 进度：让他知道这一章还有多长，卡片上不出现数字以外的游戏词。
+   一行三件：段号＋段名、一根细线、第几关。线自己撑满，不靠空格和中点隔。 */
 .resume-progress {
-  margin: 6px 0 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: min(360px, 100%);
+  margin: 7px 0 0;
   color: var(--brand-mute);
   font-size: 11px;
   letter-spacing: 0.2em;
-  text-indent: 0.2em;
   opacity: .72;
+}
+.rp-part {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 7px;
+  flex: 0 0 auto;
+}
+.rp-no {
+  color: var(--brand-dim, #6e675f);
+  letter-spacing: 0.12em;
+}
+.rp-name { letter-spacing: 0.2em; }
+.rp-rule {
+  flex: 1 1 auto;
+  height: 1px;
+  min-width: 12px;
+  background: rgba(197, 184, 173, .22);
+}
+.rp-count {
+  flex: 0 0 auto;
+  color: var(--brand-dim, #6e675f);
+  letter-spacing: 0.14em;
 }
 .resume-where {
   position: relative;

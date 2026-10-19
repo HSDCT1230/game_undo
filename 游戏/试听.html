@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>暗度 · 声音试听</title>
+  <title>暗度｜声音试听</title>
   <!-- 不用 Google Fonts，避免国内网络卡住整页 -->
   <style>
     body {
@@ -17,7 +17,7 @@
     }
     header { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 8px; }
     h1 { margin: 0; font-size: 22px; color: #f1e3c4; }
-    h2 { margin: 34px 0 6px; font-size: 17px; color: #f1e3c4; border-bottom: 1px solid #3a3a44; padding-bottom: 4px; }
+    h2 { display: flex; align-items: baseline; gap: 10px; margin: 34px 0 6px; font-size: 17px; color: #f1e3c4; border-bottom: 1px solid #3a3a44; padding-bottom: 4px; }
     p.note { margin: 4px 0 12px; color: #a59d8f; font-size: 13px; }
     a { color: #9fc2ea; }
     button {
@@ -53,37 +53,37 @@
 </head>
 <body>
   <header>
-    <h1>暗度 · 声音试听</h1>
+    <h1>暗度｜声音试听</h1>
     <button type="button" id="stop-all" class="sfx-quiet">全部停</button>
     <button type="button" id="sfx-toggle">背景音　大</button>
   </header>
   <p class="note">音量和游戏里一样。右上角「背景音」切大／小／关，游戏里会跟着记住。环境声同一时间只放一条，点同一个按钮再点一次就停。</p>
 
-  <h2>环境声　<span class="tag bg">背景音</span></h2>
+  <h2>环境声 <span class="tag bg">背景音</span></h2>
   <p class="note">全是 assets/sfx/ 里的真实录音或音乐，游戏里放的就是它们；缺文件的地点就不放环境声。响度已对齐：街道 -28、天台／表姐家 -30、后座白天／候诊 -32、后座夜里／楼梯 -36、诊室各首 -38 LUFS。后座白天、后座夜里、诊室是音乐：白天那首和诊室几首头尾淡入淡出，循环时从头再来；夜里那首（Night Interior Background）更轻、更暗。其余都是首尾无缝循环的环境声。</p>
   <table>
     <thead><tr><th>地点</th><th>什么时候响</th><th>试听</th><th>素材来源</th></tr></thead>
     <tbody id="amb-rows"></tbody>
   </table>
 
-  <h2>界面操作　<span class="tag fx">操作音效</span></h2>
+  <h2>界面操作 <span class="tag fx">操作音效</span></h2>
   <div class="grid" id="ui-grid"></div>
 
-  <h2>候选：点击音　<span class="tag fx">操作音效</span></h2>
-  <p class="note">暂用 <strong>7　旧键帽</strong>。其余候选已撤。</p>
+  <h2>候选：点击音 <span class="tag fx">操作音效</span></h2>
+  <p class="note">暂用 <strong>第 7 号「旧键帽」</strong>。其余候选已撤。</p>
   <div class="grid" id="click-grid"></div>
 
-  <h2>候选：滴水声　<span class="tag fx">操作音效</span></h2>
-  <p class="note">滴水已选用 <strong>4　浴室漏水</strong>；<strong>1　短滴一下</strong>用作短讯收到。其余仍可试听对照。</p>
+  <h2>候选：滴水声 <span class="tag fx">操作音效</span></h2>
+  <p class="note">滴水已选用 <strong>第 4 号「浴室漏水」</strong>；<strong>第 1 号「短滴一下」</strong>用作短讯收到。其余仍可试听对照。</p>
   <div class="grid" id="drip-grid"></div>
 
-  <h2>手机、电脑　<span class="tag fx">操作音效</span></h2>
+  <h2>手机、电脑 <span class="tag fx">操作音效</span></h2>
   <div class="grid" id="dev-grid"></div>
 
-  <h2>字幕底乐、录音底噪　<span class="tag bg">背景音</span></h2>
+  <h2>字幕底乐、录音底噪 <span class="tag bg">背景音</span></h2>
   <div class="grid" id="layer-grid"></div>
 
-  <h2>备用音乐　<span class="tag bg">背景音</span></h2>
+  <h2>备用音乐 <span class="tag bg">背景音</span></h2>
   <p class="note">挑剩的音乐，游戏里暂时不用，留着以后配别的场景。文件在 assets/sfx/备用/。诊室那批 -38 LUFS，后座夜里那批 -36（Mysterious Ambient 是原来夜里用的，-35），后座白天那批 -34。若显示「缺文件」，多半是整夹 sfx 被清过，需要重新下载。</p>
   <table>
     <thead><tr><th>曲名</th><th>当初为哪里挑的</th><th>试听</th></tr></thead>
@@ -97,7 +97,7 @@
       ["rong-early", "后座入住（音乐）", "在荣汇街屋里：1～3 关刚入住、周生上门前，日夜都放它。Lonely – Beautiful Piano Music", "https://pixabay.com/music/modern-classical-lonely-beautiful-piano-music-233867/"],
       ["rong-day", "后座白天（音乐）", "第 5 关起晚上七点前。Documentary Mystery", "https://pixabay.com/music/modern-classical-documentary-mystery-313613/"],
       ["rong-night", "后座夜里（音乐）", "第 4 关整关；第 5～12 关晚上七点后、夜里那几关。Night Interior", "https://pixabay.com/music/ambient-night-interior-background-silent-suspense-underscore-464810/"],
-      ["rong-night-late", "后座夜里 · 后段（音乐）", "第 13 关起（第四次就诊之后的后座夜：上门、等他）。Hidden Hypothesis，响度对齐前一首", "https://pixabay.com/music/solo-piano-hidden-hypothesis-tension-suspense-piano-465801/"],
+      ["rong-night-late", "后座夜里（后段）", "第 13 关起（第四次就诊之后的后座夜：上门、等他）。Hidden Hypothesis，响度对齐前一首", "https://pixabay.com/music/solo-piano-hidden-hypothesis-tension-suspense-piano-465801/"],
       ["rong-stair", "楼梯走廊", "楼梯、4 楼平台、后楼梯", "https://pixabay.com/sound-effects/household-stairwell-ambient-noise-33146/"],
       ["rong-roof", "天台（风声 + 音乐）", "天台。风声拼成首尾无缝的长段，叠 Reflective Serious Piano (Rain On The Station)", [
         "https://pixabay.com/sound-effects/nature-wind-blowing-sfx-01-423673/",
@@ -105,11 +105,11 @@
       ]],
       ["rong-street", "深水埗街道", "荣汇街街上", "https://pixabay.com/sound-effects/city-street-sound-456586/"],
       ["clinic-wait", "澄心候诊", "诊所候诊", "https://pixabay.com/sound-effects/city-121116-bank-interior-ambience-office-doors-footstaps-printer-typing-voices-17642/"],
-      ["clinic-room", "澄心诊室 · 初诊（音乐）", "第 1 次就诊（第 6 关）：A Calm Soundtrack for Thoughtful Narration", "https://pixabay.com/music/modern-classical-a-calm-soundtrack-for-thoughtful-narration-364021/"],
-      ["clinic-room-8", "澄心诊室 · 第二次（音乐）", "第 2 次（第 8 关）：选用 8-2 Thoughtful Piano Calm", "https://pixabay.com/music/modern-classical-thoughtful-piano-calm-376008/"],
-      ["clinic-room-10", "澄心诊室 · 第三次（音乐）", "第 3 次（第 10 关）：选用 10-2 Quiet Suspicions", "https://pixabay.com/music/classical-string-quartet-quiet-suspicions-emotional-suspenseful-drama-453616/"],
-      ["clinic-room-12", "澄心诊室 · 第四次（音乐）", "第 4 次（第 12 关）：选用 10-3 Tense Sad Piano", "https://pixabay.com/music/modern-classical-tense-sad-piano-111679/"],
-      ["clinic-room-14", "澄心诊室 · 拿笔记（音乐）", "第 5 次／拿笔记（第 14 关）：选用 12-4 Echoes of Mystery", "https://pixabay.com/music/mystery-echoes-of-mystery-dark-ambient-underscore-360780/"],
+      ["clinic-room", "澄心诊室（初诊）", "第 1 次就诊（第 6 关）：A Calm Soundtrack for Thoughtful Narration", "https://pixabay.com/music/modern-classical-a-calm-soundtrack-for-thoughtful-narration-364021/"],
+      ["clinic-room-8", "澄心诊室（第二次）", "第 2 次（第 8 关）：选用 8-2 Thoughtful Piano Calm", "https://pixabay.com/music/modern-classical-thoughtful-piano-calm-376008/"],
+      ["clinic-room-10", "澄心诊室（第三次）", "第 3 次（第 10 关）：选用 10-2 Quiet Suspicions", "https://pixabay.com/music/classical-string-quartet-quiet-suspicions-emotional-suspenseful-drama-453616/"],
+      ["clinic-room-12", "澄心诊室（第四次）", "第 4 次（第 12 关）：选用 10-3 Tense Sad Piano", "https://pixabay.com/music/modern-classical-tense-sad-piano-111679/"],
+      ["clinic-room-14", "澄心诊室（拿笔记）", "第 5 次／拿笔记（第 14 关）：选用 12-4 Echoes of Mystery", "https://pixabay.com/music/mystery-echoes-of-mystery-dark-ambient-underscore-360780/"],
       ["mei", "表姐家", "美娟家", [
         "https://pixabay.com/sound-effects/household-sounds-at-home-65500/",
         "https://pixabay.com/sound-effects/household-sdta0033-kitchen-cutting-carrot-01-199900/",
@@ -211,7 +211,8 @@
         mk("a", { href: u, target: "_blank", rel: "noopener", text: all.length > 1 ? "第" + (i + 1) + "段" : "Pixabay" }));
       const srcCell = mk("td", { class: "src" });
       if (!links.length) srcCell.textContent = "还没有";
-      links.forEach((l, i) => { if (i) srcCell.append("　"); srcCell.append(l); });
+      // 多个来源之间空一格：给 .src 里的链接定 margin，不在字符串里塞全角空格
+      links.forEach((l, i) => { if (i) l.style.marginLeft = "10px"; srcCell.append(l); });
       if (links.length > 1) srcCell.append(mk("div", { text: "四段各自调到同一响度，再依次接起来" }));
       rows.append(mk("tr", {}, [
         mk("td", { text: name }),
@@ -276,7 +277,7 @@
       SFX_CLICK_CAND.forEach((c) => {
         const using = String(c.id) === String(SFX_CLICK_USE) ? "（游戏现用）" : "";
         const b = mk("button", { type: "button", class: "sfx-quiet" }, [
-          c.id + "　" + c.title + using,
+          "第 " + c.id + " 号：" + c.title + using,
           mk("span", { class: "stat", text: c.sub }),
           mk("small", { text: "听对白「往下一句」" }),
         ]);
@@ -302,7 +303,7 @@
         const len = mk("span", { class: "stat" });
         const label = prefix.indexOf("浏览器") === 0 ? (prefix.slice(-1) + " " + id) : (prefix + " " + id);
         const b = mk("button", { type: "button", class: "sfx-quiet" }, [
-          label + "　" + title, len, mk("small", { text: sub }),
+          label + "：" + title, len, mk("small", { text: sub }),
         ]);
         b.addEventListener("click", () => { const a = new Audio(src); a.play(); });
         const probe = new Audio();

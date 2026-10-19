@@ -431,7 +431,11 @@ function laptop(inner, opts) {
   ]);
   const status = el("div", { class: "browser-status" }, [
     el("span", { class: "bs-left" }, [loading ? webLoadLabel() : "完成"]),
-    el("span", {}, [opts.secure ? "Internet | 受保護模式：開啟" : "Internet　│　100%"]),
+    el("span", { class: "bs-right" }, [
+      el("span", {}, ["Internet"]),
+      el("span", { class: "bs-sep", "aria-hidden": "true" }),
+      el("span", {}, [opts.secure ? "受保護模式：開啟" : "100%"]),
+    ]),
   ]);
   screen.append(titlebar, chrome, tabs, inner, status);
   laptopBox.append(screen);
@@ -540,10 +544,16 @@ function browserOverRoom() {
 
 function browserCloseControls() {
   if (!browserOverRoom()) {
-    return el("span", { class: "window-controls", "aria-hidden": "true" }, ["—　□　×"]);
+    // 三颗窗控钮之间靠 CSS 的 gap 隔开——以前是「—　□　×」拿全角空格撑的
+    return el("span", { class: "window-controls", "aria-hidden": "true" }, [
+      el("span", {}, ["—"]),
+      el("span", {}, ["□"]),
+      el("span", {}, ["×"]),
+    ]);
   }
   return el("span", { class: "window-controls" }, [
-    el("span", { "aria-hidden": "true" }, ["—　□　"]),
+    el("span", { "aria-hidden": "true" }, ["—"]),
+    el("span", { "aria-hidden": "true" }, ["□"]),
     el("button", {
       type: "button",
       class: "window-x",
@@ -1099,17 +1109,15 @@ function viewHome() {
   const mainKids = [chips];
   if (postedHelp() && helpRepliesOpen() && !(typeof noted === "function" && noted("bbs-self"))) {
     mainKids.unshift(siteNotice(T("讨论区通知", "论坛通知"), [
-      el("p", {}, [
+      el("p", { class: "notice-line" }, [
         T("你在「求助」的帖子有新回复。", "你在「求助」的帖子有新回复。"),
-        "　",
         webLink(T("查看帖子", "查看帖子"), () => goWeb("thread", { forumId: "helpzhang" })),
       ]),
     ]));
   } else if (postedHelp() && !flag("sawOwnPost")) {
     mainKids.unshift(siteNotice(T("讨论区通知", "论坛通知"), [
-      el("p", {}, [
+      el("p", { class: "notice-line" }, [
         T("你在「求助」的帖子有新回复。", "你在「求助」的帖子有新回复。"),
-        "　",
         webLink(T("查看帖子", "查看帖子"), () => goWeb("thread", { forumId: "helpzhang" })),
       ]),
     ]));
@@ -1125,9 +1133,8 @@ function viewHome() {
   }
   if (flag("askedOld") && replyReady() && !flag("sawMail")) {
     mainKids.unshift(siteNotice(W("inbox"), [
-      el("p", {}, [
+      el("p", { class: "notice-line" }, [
         T("周先生回复了你。", "周先生回复了你。"),
-        "　",
         webLink(T("查看", "查看"), () => goWeb("inbox")),
       ]),
     ]));
@@ -1331,7 +1338,7 @@ function viewFavs() {
       const stuck = fourStuck(l);
       cards.append(listingCard(l));
       cards.append(el("p", { class: "fine fav-row" }, [
-        stuck.length ? el("span", {}, ["卡住：" + stuck.join("、") + "　"]) : (l.id === "ssp" && S.known && S.known.rong ? el("span", {}, ["四条都过。　"]) : ""),
+        stuck.length ? el("span", {}, ["卡住：" + stuck.join("、")]) : (l.id === "ssp" && S.known && S.known.rong ? el("span", {}, ["四条都过。"]) : ""),
         webLink(W("unfav"), () => {
           S.favs = S.favs.filter((x) => x !== l.id);
           draw();
@@ -1407,7 +1414,7 @@ function detailTk() {
         [T("交通", "交通"), Ty(l, "walk")],
         [T("租约", "租约"), T("最短一年", "最短一年")],
         [T("睇楼", "看房"), T("须先过一个月订金", "须先交一个月订金")],
-        [T("放盘", "发布"), [l.date, "　", T("浏览", "浏览"), " ", l.views]],
+        [T("放盘", "发布"), [l.date, "，", T("浏览", "浏览"), " ", l.views]],
         [T("业主", "房东"), l.owner],
       ]),
       el("p", {}, [T("上手住客评语只剩一句：「夜里听得到隔壁。」天花有水渍。相片是空房。", "上一位住客评语只剩一句：「夜里能听到隔壁。」天花板有水渍。照片是空房。")]),
@@ -1434,7 +1441,7 @@ function detailTw() {
     el("div", { class: "kv" }, [
       el("h2", {}, [Ty(l, "title")]),
       el("p", { class: "rent-line" }, [rentLabel(l)]),
-      el("p", { class: "fine" }, [T("编号", "编号"), " 28WU-20140730-088　", W("agent")]),
+      el("p", { class: "fine" }, [T("编号", "编号"), " 28WU-20140730-088，", W("agent")]),
       specTable([
         [T("地区", "地区"), l.area],
         [T("面积", "面积"), Ty(l, "nfa")],
@@ -1464,11 +1471,11 @@ function detailTw() {
 
 function detailGeneric(l) {
   const rows = [
-    [T("地区", "地区"), l.district + "　／　" + l.area],
+    [T("地区", "地区"), l.district + "／" + l.area],
     [T("面积", "面积"), Ty(l, "nfa")],
     [T("楼龄", "楼龄"), Ty(l, "age")],
     [T("交通", "交通"), Ty(l, "walk")],
-    [T("放盘", "发布"), [l.date, "　", T("浏览", "浏览"), " ", l.views]],
+    [T("放盘", "发布"), [l.date, "，", T("浏览", "浏览"), " ", l.views]],
     [T("业主", "房东"), l.owner],
   ].concat((l.specs || []).map(([k, v]) => [k, v]));
   const kids = [
@@ -1476,7 +1483,7 @@ function detailGeneric(l) {
     el("div", { class: "kv" }, [
       el("h2", {}, [Ty(l, "title")]),
       el("p", { class: "rent-line" }, [rentLabel(l)]),
-      el("p", { class: "fine" }, [T("编号", "编号"), " ", l.code, "　", l.agent ? W("agent") : W("ownerLet")]),
+      el("p", { class: "fine" }, [T("编号", "编号"), " ", l.code, "，", l.agent ? W("agent") : W("ownerLet")]),
       specTable(rows),
       el("p", {}, [Ty(l, "blurb")]),
       el("p", { class: "fine" }, [T("本站不负责口头协议。条款以业主或代理回覆为准。", "本站不负责口头协议。条款以房东或中介回复为准。")]),
@@ -1510,19 +1517,22 @@ function detailSsp() {
     el("div", { class: "kv" }, [
       el("h2", {}, [l.title]),
       el("p", { class: "rent-line" }, [rentLabel(l)]),
-      el("p", { class: "fine" }, ["编号 28WU-20140728-004　业主自让"]),
+      el("p", { class: "fine" }, ["编号 28WU-20140728-004，业主自让"]),
       specTable([
-        ["地址", "九龙深水埗荣汇街 28 号　4 楼后座"],
-        ["面积", l.nfa + "　／　建筑约 380 呎（业主自报，未量）"],
-        ["楼龄", l.age + "　无电梯　铁窗"],
+        ["地址", "九龙深水埗荣汇街 28 号 4 楼后座"],
+        ["面积", l.nfa + "／建筑约 380 呎（业主自报，未量）"],
+        ["楼龄", l.age + "，无电梯，铁窗"],
         ["交通", l.walk],
         ["同层", "业主自住前座。后座独立厨厕。"],
-        ["放盘", l.date + "　浏览 " + l.views],
+        ["放盘", l.date + "，浏览 " + l.views],
       ]),
-      el("p", {}, [
-        "业主",
+      el("p", { class: "notice-line" }, [
+        el("span", {}, ["业主"]),
         webLink("周先生", () => goWeb("landlord")),
-        "　独居　自己放盘　上次上线 " + (flag("sawMail") ? "08-01 09:12" : "07-28 22:17") + "　浏览 " + l.views,
+        el("span", {}, ["独居"]),
+        el("span", {}, ["自己放盘"]),
+        el("span", {}, ["上次上线 " + (flag("sawMail") ? "08-01 09:12" : "07-28 22:17")]),
+        el("span", {}, ["浏览 " + l.views]),
       ]),
       sspRented() ? siteNotice("盘源状态", [el("p", {}, ["业主已标示：已租出（08-01）。"])]) : "",
       el("div", { class: "actions" }, [
@@ -1666,7 +1676,10 @@ function viewPm() {
   box.addEventListener("input", () => { S.pmBody = box.value; });
   return houseShell([
     el("h2", { class: "sec-h" }, [W("writePmTitle")]),
-    el("p", { class: "mail-meta" }, ["收件人：周先生　　主旨：荣汇街 28 号后座　预约睇楼"]),
+    el("p", { class: "mail-meta mail-meta-row" }, [
+      el("span", {}, ["收件人：周先生"]),
+      el("span", {}, ["主旨：荣汇街 28 号后座，预约睇楼"]),
+    ]),
     el("p", { class: "hint" }, ["业主夜间常不在线，回复要到翌日上午才送到。"]),
     el("label", {}, ["留言正文", box]),
       el("div", { class: "actions" }, [
@@ -1693,11 +1706,19 @@ function viewInbox() {
   if (flag("sawMail")) {
     body.push(
       el("div", { class: "site-msg pending" }, [
-        el("p", { class: "mail-meta" }, ["07-31 23:14　你 → 周先生　　预约睇楼"]),
+        el("p", { class: "mail-meta mail-meta-row" }, [
+          el("span", { class: "mm-when" }, ["07-31 23:14"]),
+          el("span", {}, ["你 → 周先生"]),
+          el("span", { class: "mm-sub" }, ["预约睇楼"]),
+        ]),
         el("div", { class: "mail-body" }, [S.pmSent || pmDraftText()]),
       ]),
       el("div", { class: "site-msg in" }, [
-        el("p", { class: "mail-meta" }, ["08-01 09:12　周先生　回复了你"]),
+        el("p", { class: "mail-meta mail-meta-row" }, [
+          el("span", { class: "mm-when" }, ["08-01 09:12"]),
+          el("span", {}, ["周先生"]),
+          el("span", { class: "mm-sub" }, ["回复了你"]),
+        ]),
         el("div", { class: "mail-body" }, ["今日下昼得。我喺度等。简介写过屋内有旧嘢，你见过怕就同我讲，相可以收起一部分。"]),
       ]),
       el("div", { class: "actions" }, [
@@ -1708,7 +1729,11 @@ function viewInbox() {
   } else if (flag("askedOld")) {
     body.push(
       el("div", { class: "site-msg pending" }, [
-        el("p", { class: "mail-meta" }, ["07-31 23:14　你 → 周先生　　未读"]),
+        el("p", { class: "mail-meta mail-meta-row" }, [
+          el("span", { class: "mm-when" }, ["07-31 23:14"]),
+          el("span", {}, ["你 → 周先生"]),
+          el("span", { class: "mm-sub" }, ["未读"]),
+        ]),
         el("div", { class: "mail-body" }, [S.pmSent || pmDraftText()]),
         el("p", { class: "hint" }, ["对方状态：不在线。请勿重复发送。"]),
       ])
@@ -1755,7 +1780,10 @@ function viewForum() {
         prev ? el("span", { class: "fprev" }, [T("末回：", "末回："), prev]) : "",
       ]),
       el("span", { class: "fmeta" }, [
-        el("span", { class: "fwho" }, [who, "　", when]),
+        el("span", { class: "fwho" }, [
+          el("span", {}, [who]),
+          el("span", {}, [when]),
+        ]),
         el("span", { class: "fpages", "aria-hidden": "true" }, [forumPageMarks(replies.length)]),
       ]),
     ]);
@@ -1770,7 +1798,7 @@ function viewForum() {
     kids.push(siteNotice(flag("sawOwnPost") ? W("myPost") : T("我的帖子（有新回复）", "我的帖子（有新回复）"), [
       el("p", {}, [
         webLink(Ty(hp, "title"), () => goWeb("thread", { forumId: "helpzhang" })),
-        "　", boardLabel(hp.board), T("　回复 ", "　回复 "), n,
+        "，", boardLabel(hp.board), T("，回复 ", "，回复 "), n,
       ]),
     ]));
   }
@@ -1780,7 +1808,7 @@ function viewForum() {
     kids.push(siteNotice(T("杂谈有新回复", "闲聊有新回复"), [
       el("p", {}, [
         webLink(Ty(t, "title"), () => goWeb("thread", { forumId: fresh })),
-        "　" + threadTime(fresh),
+        "，" + threadTime(fresh),
       ]),
     ]));
   }
@@ -1816,10 +1844,10 @@ function viewThread() {
     note("serial3", "第三帖底下，藤先生又没有出声。");
   }
   const floorBlock = (no, metaKids, bodyKids) => el("div", { class: "mail-body floor" }, [
-    el("p", { class: "mail-meta" }, [
+    el("p", { class: "mail-meta floor-head" }, [
       el("span", { class: "floor-no" }, ["#" + no]),
-      "　",
-      ...metaKids,
+      // 每段自带一格：字符串会被 flex 并成一个匿名项，间距就丢了
+      ...metaKids.map((k) => (typeof k === "string" ? el("span", {}, [k]) : k)),
     ]),
     ...bodyKids,
   ]);
@@ -1830,7 +1858,7 @@ function viewThread() {
         webLink(T("连结：深水埗荣汇街 28 号 4 楼后座", "链接：深水埗荣汇街 28 号 4 楼后座"), () => goWeb("detail", { listing: r.listing })),
       ]));
     }
-    return floorBlock(i + 2, [r.user, T("　回复于 ", "　回复于 "), r.time], bodyKids);
+    return floorBlock(i + 2, [r.user, T("回复于 ", "回复于 "), r.time], bodyKids);
   });
   return houseShell([
     el("h2", { class: "sec-h thread-h" }, [
@@ -1838,7 +1866,7 @@ function viewThread() {
       " ",
       Ty(t, "title"),
     ]),
-    floorBlock(1, [t.user, T("　发表于 ", "　发表于 "), threadTime(tid)], [
+    floorBlock(1, [t.user, T("发表于 ", "发表于 "), threadTime(tid)], [
       el("p", {}, [Ty(t, "body")]),
     ]),
     el("p", { class: "fine" }, [T("回复（", "回复（"), replies.length, "）"]),
@@ -1918,7 +1946,7 @@ function viewNewsItem() {
     || ((id === "kimon" || id === "yu04") && typeof flag === "function" && flag("askedFishLuo"));
   return houseShell([
     el("h2", { class: "sec-h" }, [n.title]),
-    el("p", { class: "mail-meta" }, [n.date + "　来源：本站编辑部／公开文件节录"]),
+    el("p", { class: "mail-meta" }, [n.date + "，来源：本站编辑部／公开文件节录"]),
     el("div", { class: "mail-body" }, [n.body]),
     canKeep ? el("div", { class: "actions" }, [
         el("button", {
@@ -1937,15 +1965,14 @@ function viewNewsItem() {
 function viewLogin() {
   return houseShell([
     el("h2", { class: "sec-h" }, ["账户"]),
-    el("p", {}, ["你已登入：章慧琪　（vicky_c　注册 2013）"]),
-    el("p", {}, ["上次登入：" + (clockHasHm() ? webAgo(new Date(clockDate().getTime() - 4 * 60000)) : "今天") + "　IP 已隐藏"]),
+    el("p", {}, ["你已登入：章慧琪（vicky_c，注册 2013）"]),
+    el("p", {}, ["上次登入：" + (clockHasHm() ? webAgo(new Date(clockDate().getTime() - 4 * 60000)) : "今天") + "（IP 已隐藏）"]),
     el("p", { class: "hint" }, ["此浏览器已记住登入状态。"]),
     postedHelp()
       ? siteNotice("刊登记录", [
-        el("p", {}, [
+        el("p", { class: "notice-line" }, [
           "求助帖 1 篇。"
-            + (flag("serial1") ? "　杂谈 " + ["serial1", "serial2", "serial3"].filter((k) => flag(k)).length + " 篇。" : ""),
-          "　",
+            + (flag("serial1") ? "杂谈 " + ["serial1", "serial2", "serial3"].filter((k) => flag(k)).length + " 篇。" : ""),
           webLink("到讨论区查看", () => goWeb("forum")),
         ]),
       ])
@@ -1983,9 +2010,9 @@ function viewSerialDraft() {
   const t = THREADS[S.pendingPost];
   const board = T(t.board, ({ 求助: "求助", 租务: "租房", 地区: "地区", 杂谈: "闲聊" })[t.board] || t.board);
   return houseShell([
-    el("h2", { class: "sec-h" }, [W("forum"), "　", board]),
+    el("h2", { class: "sec-h" }, [W("forum") + "／" + board]),
     el("p", { class: "hint" }, [W("draftHint")]),
-    el("p", { class: "mail-meta" }, [T("版块：", "版块："), board, T("　署名：", "　署名："), "阿琪V"]),
+    el("p", { class: "mail-meta" }, [T("版块：", "版块："), board, T("，署名：", "，署名："), "阿琪V"]),
     el("div", { class: "post-draft" }, [
       el("h3", { style: "margin:0 0 8px;font-size:15px;color:#1f4f96" }, [Ty(t, "title")]),
       el("div", { class: "mail-body" }, [Ty(t, "body")]),
@@ -2008,7 +2035,7 @@ function viewPost() {
     return houseShell([
       el("h2", { class: "sec-h" }, [W("myPost")]),
       el("p", { class: "mail-meta" }, [
-        T("版块：", "版块："), board, T("　署名：", "　署名："), "阿琪V", T("　刊登：", "　发布："), hp.time,
+        T("版块：", "版块："), board, T("，署名：", "，署名："), "阿琪V", T("，刊登：", "，发布："), hp.time,
       ]),
       el("div", { class: "post-draft" }, [
         el("h3", { style: "margin:0 0 8px;font-size:15px;color:#1f4f96" }, [Ty(hp, "title")]),
@@ -2020,7 +2047,7 @@ function viewPost() {
     ], [{ text: W("home"), go: () => goWeb("home") }, { text: W("myPost") }]);
   }
   return houseShell([
-    el("h2", { class: "sec-h" }, [W("myPost"), "　", W("bump")]),
+    el("h2", { class: "sec-h" }, [W("myPost") + "／" + W("bump")]),
     siteNotice(T("系统通知", "系统通知"), [
       el("p", {}, [T("已顶帖。求助帖重新排在讨论区「求助」版上方，可查看原文及回复。", "已顶帖。求助帖重新排在论坛「求助」版上方，可查看原文及回复。")]),
       el("p", {}, [webLink(T("查看帖子", "查看帖子"), () => goWeb("thread", { forumId: "helpzhang" }))]),
@@ -2030,7 +2057,7 @@ function viewPost() {
 
 function viewLandlord() {
   return houseShell([
-    el("h2", { class: "sec-h" }, ["业主档案　周先生"]),
+    el("h2", { class: "sec-h" }, ["业主档案：周先生"]),
     specTable([
       ["身份", "业主自让，非代理"],
       ["放盘", sspRented() ? "1 个（已租出）" : "1 个（现正上架）"],
@@ -2592,7 +2619,7 @@ function wallAdShell(kids) {
 function viewAdLin() {
   return wallAdShell([
     el("p", { class: "wall-ad-sponsor" }, [T("赞助内容", "赞助内容")]),
-    el("p", { class: "wall-ad-meta" }, [T("外站广告商　电邮已失效", "外站广告商　邮箱已失效")]),
+    el("p", { class: "wall-ad-meta" }, [T("外站广告商，电邮已失效", "外站广告商，邮箱已失效")]),
     el("div", { class: "wall-ad-floor" }, [
       imgSlot(pic(1, "墙簿/藤先生-空头像"), "avatar-slot", "藤先生"),
       el("h2", { class: "wall-ad-h" }, [T("把你的故事交给能懂的人", "把你的故事交给能懂的人")]),
@@ -2610,7 +2637,7 @@ function hkAd(s) {
 function viewAdShop(a) {
   return wallAdShell([
     el("p", { class: "wall-ad-sponsor" }, [T("赞助内容", "赞助内容")]),
-    el("p", { class: "wall-ad-meta" }, [T("外站广告　非墙簿官方", "外站广告　非墙簿官方")]),
+    el("p", { class: "wall-ad-meta" }, [T("外站广告，非墙簿官方", "外站广告，非墙簿官方")]),
     el("div", { class: "wall-ad-floor" }, [
       el("h2", { class: "wall-ad-h" }, [hkAd(a.head)]),
       el("p", { class: "wall-ad-sub" }, [hkAd(a.sub)]),
@@ -2631,7 +2658,7 @@ function viewAdLead(a) {
   );
   return wallAdShell([
     el("p", { class: "wall-ad-sponsor" }, [T("赞助内容", "赞助内容")]),
-    el("p", { class: "wall-ad-meta" }, [T("外站广告　非墙簿官方", "外站广告　非墙簿官方")]),
+    el("p", { class: "wall-ad-meta" }, [T("外站广告，非墙簿官方", "外站广告，非墙簿官方")]),
     el("div", { class: "wall-ad-floor" }, [
       el("h2", { class: "wall-ad-h" }, [hkAd(a.head)]),
       el("p", { class: "wall-ad-sub" }, [hkAd(a.sub)]),
@@ -2710,7 +2737,7 @@ function viewWallMe() {
     status,
     livingIn() ? "最近：廿八屋　深水埗 唐楼" : "最近：廿八屋　元朗 天水围",
     "好友：12",
-    wallAlbum("相册「手机」　2 张", [
+    wallAlbum("相册「手机」（2 张）", [
       { id: pic(1, "墙簿/章慧琪-茶餐厅"), cap: "茶餐厅" },
       { id: pic(1, "墙簿/章慧琪-出街"), cap: "出街" },
     ]),
@@ -2784,13 +2811,13 @@ function viewWallUser() {
   if (S.wallWho === "mei") {
     return wallProfile("陈美娟", [
       "文职。已婚。",
-      wallAlbum("相册「年夜饭」　3 张", [
+      wallAlbum("相册「年夜饭」（3 张）", [
         { id: pic(1, "墙簿/陈美娟-开席"), cap: "开席" },
         { id: pic(1, "墙簿/陈美娟-敬茶"), cap: "敬茶" },
         { id: pic(1, "墙簿/陈美娟-水果"), cap: "水果" },
       ]),
       wallShown(WALL_FEED).some((x) => x.e.id === "mei-meal")
-        ? wallAlbum("相册「星期日」　1 张", [{ id: pic(9, "示意-午饭"), cap: "星期日" }])
+        ? wallAlbum("相册「星期日」（1 张）", [{ id: pic(9, "示意-午饭"), cap: "星期日" }])
         : "",
       wallTimeline("mei"),
     ]);
@@ -2801,7 +2828,7 @@ function viewWallUser() {
       "上次上线：" + lokOnline(),
       "签名档：" + (sig ? "唔好再打嚟。" : ""),
       "关系：无",
-      wallAlbum("相册「旧相」　2 张", [
+      wallAlbum("相册「旧相」（2 张）", [
         { id: pic(1, "墙簿/阿乐-夜里"), cap: "夜里" },
         { id: pic(1, "墙簿/阿乐-落街"), cap: "落街" },
       ]),
@@ -2819,7 +2846,7 @@ function viewWallUser() {
     return wallProfile("陈家豪", [
       "姐夫。督察。已婚。",
       "妻子：陈美娟",
-      wallAlbum("相册「旅行」　2 张", [
+      wallAlbum("相册「旅行」（2 张）", [
         { id: pic(1, "墙簿/陈家豪-渡轮"), cap: "渡轮" },
         { id: pic(1, "墙簿/陈家豪-沙滩"), cap: "沙滩" },
       ]),

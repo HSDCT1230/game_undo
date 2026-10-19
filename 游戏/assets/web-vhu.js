@@ -293,6 +293,12 @@ function vhuLogout() {
   goWeb("vhu-login", { replace: true });
 }
 
+/* 元信息之间的竖线：用一根真的细线画，不在字符串里塞「　│　」。
+   2014 年的内联网站本来就用这种细竖线分栏，比空格拼出来的更像那时的东西。 */
+function vhuSep() {
+  return el("span", { class: "vhu-sep", "aria-hidden": "true" });
+}
+
 function vhuPage(id) {
   const st = vhuSt();
   if (!st.authed) {
@@ -384,7 +390,13 @@ function vhuSubbar() {
 
 function vhuFoot() {
   return el("div", { class: "vhu-foot" }, [
-    el("p", {}, ["© 2014 维港大学　资讯科技服务中心　│　查询：itsc@vhu.edu.hk"]),
+    el("p", { class: "vhu-foot-line" }, [
+      el("span", {}, ["© 2014 维港大学"]),
+      vhuSep(),
+      el("span", {}, ["资讯科技服务中心"]),
+      vhuSep(),
+      el("span", {}, ["查询：itsc@vhu.edu.hk"]),
+    ]),
     el("p", {}, ["内联网只供本校成员使用。建议以 Internet Explorer 8 或以上浏览。"]),
   ]);
 }
@@ -396,7 +408,7 @@ function vhuShell(body, page) {
     kids.push(vhuNav(page), vhuSubbar());
     kids.push(el("div", { class: "vhu-crumb" }, [
       webLink("首页", () => vhuPage("home")),
-      "　›　",
+      el("span", { class: "vhu-crumb-mark", "aria-hidden": "true" }, ["›"]),
       el("span", {}, [VHU_PAGE_LABEL[page] || ""]),
     ]));
   }
@@ -449,7 +461,7 @@ function viewNewTab() {
       el("div", { class: "vhu-fav" }, [
         el("h3", {}, ["我的最爱"]),
         el("ul", {}, [
-          el("li", {}, [webLink("廿八屋　香港租盘", () => goWeb("home"))]),
+          el("li", {}, [webLink("廿八屋（香港租盘）", () => goWeb("home"))]),
           el("li", {}, [webLink("墙簿", () => goWeb("wall"))]),
         ]),
       ]),
@@ -477,7 +489,10 @@ function viewWebError() {
         el("li", {}, ["检查网络连线是否正常。"]),
       ]),
       el("hr"),
-      el("p", { class: "vhu-fine" }, ["找不到伺服器或 DNS 错误　　Internet Explorer"]),
+      el("p", { class: "vhu-fine vhu-ie-foot" }, [
+        el("span", {}, ["找不到伺服器或 DNS 错误"]),
+        el("span", { class: "vhu-ie-brand" }, ["Internet Explorer"]),
+      ]),
       el("p", {}, [webLink("回到空白分页", () => goWeb("newtab"))]),
     ]),
   ]);
@@ -519,15 +534,15 @@ function viewVhuLogin() {
     st.need ? el("p", { class: "vhu-msg" }, ["请先登入，方可使用校园网上服务。"]) : "",
     st.out ? el("p", { class: "vhu-msg" }, ["你已登出。"]) : "",
     st.err ? el("p", { class: "vhu-err", role: "alert" }, [st.err]) : "",
-    el("label", { for: "vhu-id" }, ["学生编号　Student ID"]),
+    el("label", { for: "vhu-id" }, ["学生编号（Student ID）"]),
     idIn,
-    el("label", { for: "vhu-pw" }, ["密码　Password"]),
+    el("label", { for: "vhu-pw" }, ["密码（Password）"]),
     pwIn,
     el("button", { type: "submit", class: "vhu-btn vhu-login-btn" }, ["登入"]),
     el("p", { class: "vhu-fine" }, ["首次登入的密码为学生编号，英文字母不分大小写。登入后请即时更改。"]),
     el("p", { class: "vhu-login-links" }, [
       webLink("忘记密码", vhuForgot),
-      "　│　",
+      vhuSep(),
       webLink("帐户查询", vhuAccountHelp),
     ]),
   ]);
@@ -554,7 +569,11 @@ function viewVhuLogin() {
     el("div", { class: "vhu-login-foot" }, [
       el("h3", {}, ["系统讯息"]),
       el("ul", {}, VHU_NOTICES.slice(0, 2).map((n) =>
-        el("li", {}, [el("span", { class: "vhu-date" }, [n.date]), "　", n.title])
+        // 日子与标题各占一格，靠 li 的 gap 分开，不用全角空格当分隔
+        el("li", {}, [
+          el("span", { class: "vhu-date" }, [n.date]),
+          el("span", { class: "vhu-date-title" }, [n.title]),
+        ])
       )),
     ]),
   ], "login");
@@ -565,7 +584,7 @@ function vhuAlreadyIn() {
   return vhuShell([
     el("div", { class: "vhu-panel" }, [
       el("h2", { class: "vhu-h2" }, ["你已登入"]),
-      el("p", {}, ["罗启明　（" + VHU_ID + "）"]),
+      el("p", {}, ["罗启明（" + VHU_ID + "）"]),
       el("p", { class: "vhu-actions" }, [
         el("button", { type: "button", class: "vhu-btn", onclick: () => vhuPage("home") }, ["进入首页"]),
         el("button", { type: "button", class: "vhu-btn ghost", onclick: vhuLogout }, ["登出"]),
@@ -584,7 +603,7 @@ function viewVhuHome() {
     ["帐户类别", "校友（Alumni）"],
     ["学籍", "已毕业（2005）"],
     ["上次登入", "2005年6月28日 16:12"],
-    ["登入位置", "校园网络　图书馆地下（10.12.4.87）"],
+    ["登入位置", "校园网络，图书馆地下（10.12.4.87）"],
     ["未读邮件", unread ? String(unread) + " 封" : "0 封"],
   ].map(([k, v]) => el("tr", {}, [el("th", {}, [k]), el("td", {}, [v])])));
 
@@ -611,7 +630,13 @@ function viewVhuHome() {
 
   return vhuShell([
     el("h2", { class: "vhu-h2" }, ["欢迎回来，罗启明"]),
-    el("p", { class: "vhu-lead" }, ["LAW Kai Ming (Kimon)　·　医学院　·　内外全科医学士"]),
+    el("p", { class: "vhu-lead vhu-meta-line" }, [
+      el("span", {}, ["LAW Kai Ming (Kimon)"]),
+      vhuSep(),
+      el("span", {}, ["医学院"]),
+      vhuSep(),
+      el("span", {}, ["内外全科医学士"]),
+    ]),
     el("div", { class: "vhu-alert" }, [
       "你的帐户为校友帐户。选科、eLearn 及宿舍服务已停用，学业纪录及电邮仍可查阅。",
     ]),
@@ -673,7 +698,9 @@ function viewVhuProfile() {
 function viewVhuAcademic() {
   const blocks = VHU_YEARS.map((y) => el("section", { class: "vhu-year" }, [
     el("h3", {}, [
-      y.year + "　" + y.label,
+      // 学年与年级各占一格：h3 是 flex，gap 就是那道空，不用全角空格撑
+      el("span", { class: "vhu-year-no" }, [y.year]),
+      el("span", {}, [y.label]),
       el("span", { class: "vhu-gpa" }, ["平均积点 " + y.gpa]),
     ]),
     el("table", { class: "vhu-table" }, [
@@ -802,7 +829,8 @@ function viewVhuMail() {
       ]),
       el("h2", { class: "vhu-h2" }, [mail.subject]),
       el("table", { class: "vhu-kv vhu-kv-wide vhu-mail-head" }, [
-        ["寄件人", mail.from + "　<" + mail.addr + ">"],
+        // 电邮抬头照 RFC 的写法：名字半角空格接尖括号地址，不用全角空格
+        ["寄件人", mail.from + " <" + mail.addr + ">"],
         ["收件人", "91024656e@vhu.edu.hk"],
         ["日期", mail.date],
         ["主旨", mail.subject],
@@ -824,8 +852,12 @@ function viewVhuMail() {
   });
   return vhuShell([
     el("h2", { class: "vhu-h2" }, ["电邮"]),
-    el("p", { class: "vhu-lead" }, [
-      "91024656e@vhu.edu.hk　·　容量 500MB　·　未读 " + vhuUnread() + " 封",
+    el("p", { class: "vhu-lead vhu-meta-line" }, [
+      el("span", { class: "vhu-mono" }, ["91024656e@vhu.edu.hk"]),
+      vhuSep(),
+      el("span", {}, ["容量 500MB"]),
+      vhuSep(),
+      el("span", {}, ["未读 " + vhuUnread() + " 封"]),
     ]),
     el("table", { class: "vhu-table vhu-mail-list" }, [
       el("thead", {}, [el("tr", {}, [
@@ -850,7 +882,11 @@ function viewVhuNotice() {
         webLink("« 返回公告", () => { goWeb("vhu-notice", { noticeId: "" }); }),
       ]),
       el("h2", { class: "vhu-h2" }, [one.title]),
-      el("p", { class: "vhu-meta" }, [one.date + "　·　" + one.tag]),
+      el("p", { class: "vhu-meta vhu-meta-line" }, [
+        el("span", {}, [one.date]),
+        vhuSep(),
+        el("span", {}, [one.tag]),
+      ]),
       el("div", { class: "vhu-article" }, one.body.map((p) => el("p", {}, [p]))),
     ], "notice");
   }

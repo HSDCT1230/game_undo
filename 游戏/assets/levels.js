@@ -1,6 +1,9 @@
 /* ---------- 关卡：十六关的表、开场卡、结束卡、清单、存档、跳关 ---------- */
 
-const PARTS = ["", "一 · 住进来", "二 · 夜里", "三 · 星期六", "四 · 上门"];
+/* 章内分段。号和名分开存：排版交给 CSS（号小、名正），不在字符串里拼「一 · 住进来」
+   这种靠空格和中点撑出来的分隔——那是生成的痕迹，不是排版。 */
+const PARTS = ["", "住进来", "夜里", "星期六", "上门"];
+const PART_NO = ["", "一", "二", "三", "四"];
 
 const noted = (id) => Array.isArray(S.notes) && S.notes.some((n) => n.id === id);
 const ev = (id) => hasEvidence(id);
@@ -432,8 +435,8 @@ const SEGS = {
   ],
   14: [
     { key: "b", name: "邮件", go: () => { S.miss = { desk: true, chen: "quiet" }; seedNotes([["stolen", "上门行程被删了。现场笔记不见。"]]); enterHub("miss", "room"); } },
-    { key: "c", name: "二次走廊·钱夹", go: () => { S.miss = { desk: true, chen: "quiet", leftCorr: true, att1: true, att2: true }; seedNotes([["stolen", "上门行程被删了。现场笔记不见。"]]); seedItems(["mail-dirt"]); enterHub("miss", "corridor"); } },
-    { key: "d", name: "空抽屉·鱼牌", go: () => { S.miss = { desk: true, chen: "quiet", drawer1: true, att1: true, att2: true, mail: true }; seedNotes([["stolen", "上门行程被删了。现场笔记不见。"], ["metro-gone", "空抽屉。节拍器不见了。"]]); seedItems(["mail-dirt"]); enterHub("miss", "room"); } },
+    { key: "c", name: "二次走廊／钱夹", go: () => { S.miss = { desk: true, chen: "quiet", leftCorr: true, att1: true, att2: true }; seedNotes([["stolen", "上门行程被删了。现场笔记不见。"]]); seedItems(["mail-dirt"]); enterHub("miss", "corridor"); } },
+    { key: "d", name: "空抽屉／鱼牌", go: () => { S.miss = { desk: true, chen: "quiet", drawer1: true, att1: true, att2: true, mail: true }; seedNotes([["stolen", "上门行程被删了。现场笔记不见。"], ["metro-gone", "空抽屉。节拍器不见了。"]]); seedItems(["mail-dirt"]); enterHub("miss", "room"); } },
   ],
   15: [
     { key: "b", name: "等阿明，翻新闻", go: () => { seg15(); goSearch(); } },
@@ -442,12 +445,12 @@ const SEGS = {
     { key: "e", name: "屋里等", go: () => { seg15(); seg15b(); roofWait(); } },
   ],
   16: [
-    { key: "b", name: "结算·陈轻伤", go: () => { LEVELS[16].gives(); S.flags.endHurt = "chen"; ending(); } },
-    { key: "c", name: "结算·罗轻伤", go: () => { LEVELS[16].gives(); S.flags.endHurt = "ming"; ending(); } },
-    { key: "d", name: "结算·女主险坠", go: () => { LEVELS[16].gives(); S.flags.endHurt = "zhang"; ending(); } },
-    { key: "e", name: "天台夜·按发现重算", go: () => { LEVELS[16].gives(); delete S.flags.endHurt; roofNight(); } },
-    { key: "f", name: "天台·钱夹线", go: () => { LEVELS[16].gives(); seedItems(["chen-wallet"]); delete S.flags.endHurt; roofNight(); } },
-    { key: "g", name: "天台·鱼牌线", go: () => { LEVELS[16].gives(); seedItems(["fish-tag"]); flag("askedFishLuo", true); seedNotes([["fish-cv", "履历干净，校报对不上。另有隐情。"]]); delete S.flags.endHurt; roofNight(); } },
+    { key: "b", name: "结算／陈轻伤", go: () => { LEVELS[16].gives(); S.flags.endHurt = "chen"; ending(); } },
+    { key: "c", name: "结算／罗轻伤", go: () => { LEVELS[16].gives(); S.flags.endHurt = "ming"; ending(); } },
+    { key: "d", name: "结算／女主险坠", go: () => { LEVELS[16].gives(); S.flags.endHurt = "zhang"; ending(); } },
+    { key: "e", name: "天台夜／按发现重算", go: () => { LEVELS[16].gives(); delete S.flags.endHurt; roofNight(); } },
+    { key: "f", name: "天台／钱夹线", go: () => { LEVELS[16].gives(); seedItems(["chen-wallet"]); delete S.flags.endHurt; roofNight(); } },
+    { key: "g", name: "天台／鱼牌线", go: () => { LEVELS[16].gives(); seedItems(["fish-tag"]); flag("askedFishLuo", true); seedNotes([["fish-cv", "履历干净，校报对不上。另有隐情。"]]); delete S.flags.endHurt; roofNight(); } },
   ],
 };
 
@@ -626,7 +629,7 @@ function finishLevel(n) {
   S.talk = null;
   S.paused = null;
   const mark = S.levelMark || { ev: [], skip: {} };
-  const kept = (S.evidence || []).filter((e) => !mark.ev.includes(e.id)).map((e) => e.kind + "　" + e.title);
+  const kept = (S.evidence || []).filter((e) => !mark.ev.includes(e.id)).map((e) => e.kind + "：" + e.title);
   const missed = Object.entries(mark.skip || {}).filter(([id]) => !hasEvidence(id)).map(([, t]) => t);
   if (LEVELS[n + 1]) return enterLevel(n + 1, { from: n, kept, missed });
   S.mode = "card";
@@ -637,9 +640,9 @@ function finishLevel(n) {
 function noteSkip(it) {
   if (!it || !it.id) return;
   S.levelMark = S.levelMark || { ev: [], skip: {} };
-  S.levelMark.skip[it.id] = it.kind + "　" + it.title;
+  S.levelMark.skip[it.id] = it.kind + "：" + it.title;
   S.skipAll = S.skipAll || {};
-  S.skipAll[it.id] = it.kind + "　" + it.title;
+  S.skipAll[it.id] = it.kind + "：" + it.title;
 }
 
 const CARD_NIGHT = [3, 4, 7, 9, 11, 13, 15];
@@ -755,7 +758,10 @@ function drawCard() {
         el("ul", { class: "test-list" }, LEVELS.slice(1).map((lv, i) => {
           const n = i + 1;
           return el("li", {}, [
-            el("span", { class: "test-lv" }, [n + " · " + lv.title]),
+            el("span", { class: "test-lv" }, [
+              el("span", { class: "test-no" }, [String(n).padStart(2, "0")]),
+              el("span", { class: "test-name" }, [lv.title]),
+            ]),
             el("a", { href: testHref(n) }, ["从关头"]),
             ...(SEGS[n] || []).map((s) => el("a", { href: testHref(n, s.key) }, [n + s.key + " " + s.name])),
           ]);
@@ -1353,7 +1359,12 @@ function resumeCaption(c, L, go, leave) {
     ]),
     el("p", { class: "resume-sub" }, ["第一章：章慧琪"]),
     el("p", { class: "resume-progress" }, [
-      (PARTS[cur.part] || "") + "　·　" + curN + " / " + (LEVELS.length - 1),
+      el("span", { class: "rp-part" }, [
+        el("span", { class: "rp-no" }, [PART_NO[cur.part] || ""]),
+        el("span", { class: "rp-name" }, [PARTS[cur.part] || ""]),
+      ]),
+      el("span", { class: "rp-rule", "aria-hidden": "true" }),
+      el("span", { class: "rp-count" }, [curN + " / " + (LEVELS.length - 1)]),
     ]),
     el("div", { class: "resume-where", role: "group", "aria-label": "存档" }, [
       el("span", { class: "resume-ribbon", "aria-hidden": "true" }),
@@ -1383,7 +1394,7 @@ function resumeCaption(c, L, go, leave) {
       const ns = [];
       for (let n = 1; n <= max; n++) if (LEVELS[n] && LEVELS[n].part === p) ns.push(n);
       if (!ns.length) continue;
-      list.append(el("h4", { class: "resume-part" }, [PARTS[p].split("·").pop().trim()]));
+      list.append(el("h4", { class: "resume-part" }, [PARTS[p]]));
       ns.forEach((n) => {
         const lv = LEVELS[n];
         const now = n === curN;
