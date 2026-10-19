@@ -59,7 +59,8 @@ let langMode = "yue";
 let sizeStep = 0;
 /* 自动播放：默认关；和语言、字号一样只存本地，不进存档 */
 const AUTO_KEY = "undo-auto";
-const AUTO_LABEL = { off: "自动　关", on: "自动　开" };
+/* 开画勾、关画叉：两个字换成两个符号，顶栏一下短了一截，也不再用文字报开关。 */
+const AUTO_LABEL = { off: "自动　×", on: "自动　√" };
 let autoMode = false;
 try {
   autoMode = localStorage.getItem(AUTO_KEY) === "1";
@@ -128,7 +129,12 @@ function redrawForLang() {
   if (S.mode === "talk" || S.mode === "web" || S.mode === "hub" || S.mode === "map") draw();
 }
 
-/* 顶栏开关的字：写法是「名　值」——「环境音　大」「字　中」「自动　关」。
+/* 开关的「值」有一半是符号：开是勾、关是叉。
+   勾和叉跟旁边的汉字不是一个模子刻出来的，字宽、粗细、基线都得单独调，
+   所以给它们各挂一个 class，样式在 .os-yes / .os-no。 */
+const OS_SYM = { "√": "os-yes", "×": "os-no" };
+
+/* 顶栏开关的字：写法是「名　值」——「环境音　大」「字　中」「自动　√」。
    以前把两段拼进一个字符串、中间塞个全角空格撑着，看着像空格排版而不是排版。
    现在拆成两格：名淡一点、值亮一点，距离交给 CSS 的 gap，字里不再有撑出来的空。
    传进来的还是原来那个带全角空格的标签，split 一次就散开，标签表不用动。 */
@@ -139,9 +145,11 @@ function setPairLabel(node, label) {
     node.textContent = full;
     return;
   }
+  const val = full.slice(cut + 1);
+  const sym = OS_SYM[val];
   node.replaceChildren(
     el("span", { class: "os-k" }, [full.slice(0, cut)]),
-    el("span", { class: "os-v" }, [full.slice(cut + 1)]),
+    el("span", { class: sym ? "os-v " + sym : "os-v" }, [val]),
   );
 }
 
@@ -208,7 +216,7 @@ document.addEventListener("DOMContentLoaded", optButtons);
    按钮只报状态、不猜状态，进出都由 fullscreenchange 回来同步，
    这样玩家按 Esc、按 F11、用浏览器菜单退出，顶栏那颗都会跟着变。
    不支持的浏览器（iPhone 上的 Safari）整颗不出现，不留一颗按了没反应的按钮。 */
-const FS_LABEL = { on: "全屏　开", off: "全屏　关" };
+const FS_LABEL = { on: "全屏　√", off: "全屏　×" };
 function fsEnabled() {
   return !!(document.fullscreenEnabled || document.webkitFullscreenEnabled);
 }

@@ -3,7 +3,9 @@
 // 右上角按钮只关环境声（地点循环的那一首）。操作音、字幕底乐、录音底噪都不走它
 const SFX_KEY = "undo-sfx";
 const BG_VOL = [1, 0.4, 0];
-const BG_LABEL = ["环境音　大", "环境音　小", "环境音　关"];
+/* 关档不写「关」，画个叉，和顶栏另外两颗一致。读屏另有一份带字的说法（BG_SAY）。 */
+const BG_LABEL = ["环境音　大", "环境音　小", "环境音　×"];
+const BG_SAY = ["环境音：大", "环境音：小", "环境音：关"];
 
 let bgLevel = 0;
 try { bgLevel = Math.min(2, Math.max(0, Number(localStorage.getItem(SFX_KEY)) || 0)); } catch (e) { /* 无 */ }
@@ -696,7 +698,7 @@ function sfxButton() {
   if (typeof setPairLabel === "function") setPairLabel(b, BG_LABEL[bgLevel]);
   else b.textContent = BG_LABEL[bgLevel];
   b.classList.toggle("off", !BG_VOL[bgLevel]);
-  b.setAttribute("aria-label", BG_LABEL[bgLevel] + "，点按切换。只影响环境声");
+  b.setAttribute("aria-label", BG_SAY[bgLevel] + "，点按切换。只影响环境声");
 }
 
 document.addEventListener("DOMContentLoaded", () => {

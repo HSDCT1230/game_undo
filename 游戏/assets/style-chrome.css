@@ -225,15 +225,15 @@ a:hover {
   text-overflow: ellipsis;
 }
 #sfx-toggle {
-  flex: 0 0 7.6em;
+  flex: 0 0 5.7em;
   box-sizing: border-box;
   /* 和环境音一样是「名＋值」两格：里面那颗 .os-k/.os-v 要有个 gap 隔开才不粘字 */
   display: flex;
   align-items: baseline;
   justify-content: center;
   gap: 0.4em;
-  width: 7.6em;
-  min-width: 7.6em;
+  width: 5.7em;
+  min-width: 5.7em;
   margin-left: 12px;
   padding: 1px 6px;
   border: 1px solid rgba(255, 255, 255, .45);
@@ -248,7 +248,6 @@ a:hover {
   cursor: pointer;
 }
 #sfx-toggle:hover { background: rgba(255, 255, 255, .12); }
-#sfx-toggle.off { opacity: .6; }
 .os-opt {
   flex: 0 0 auto;
   display: inline-flex;
@@ -271,6 +270,22 @@ a:hover {
 #sfx-toggle > .os-k { opacity: .66; }
 .os-opt > .os-v,
 #sfx-toggle > .os-v { letter-spacing: 0.04em; }
+/* 值有时是符号：开＝√、关＝×。
+   勾和叉跟旁边的汉字不是一个模子：勾偏高、叉只到半人高，同一个字号看着不齐。
+   所以勾加粗提亮、叉略微放大再压暗——扫一眼就知道「亮的是开，灰的是关」。
+   这两个符号 GBK 就带着，不靠图标字体，也不用另画 svg。 */
+.os-opt > .os-v.os-yes,
+#sfx-toggle > .os-v.os-yes {
+  font-size: 1.3em;
+  letter-spacing: 0;
+}
+.os-opt > .os-v.os-no,
+#sfx-toggle > .os-v.os-no {
+  font-size: 1.28em;
+  line-height: 1;
+  letter-spacing: 0;
+  opacity: .62;
+}
 .os-opt:hover { background: rgba(255, 255, 255, .12); }
 /* 顶栏挤不下时先收地点：日子钟点、按钮都比它要紧，地点在房间条和底栏还写着 */
 @media (max-width: 740px) {
@@ -278,7 +293,7 @@ a:hover {
 }
 @media (max-width: 640px) {
   .os-opt { margin-left: 4px; padding: 1px 4px; }
-  #sfx-toggle { flex-basis: 6.4em; width: 6.4em; min-width: 6.4em; margin-left: 4px; }
+  #sfx-toggle { margin-left: 4px; }
   /* 顶栏到 640 已经四颗，再塞「全屏」会把日期挤断；竖屏手机本来也没有浏览器边框可去，
      键盘上按 F 一样能进全屏，所以这颗在窄屏收起来 */
   #fs-toggle { display: none; }
@@ -289,7 +304,7 @@ a:hover {
   /* 390px 竖屏：日期不再断成两行，四个按钮收窄，一行放得下 */
   #clock { font-size: 10.5px; }
   .os-opt { margin-left: 3px; padding: 1px 3px; }
-  #sfx-toggle { flex-basis: 5.8em; width: 5.8em; min-width: 5.8em; margin-left: 3px; }
+  #sfx-toggle { margin-left: 3px; }
 }
 
 #stage {
