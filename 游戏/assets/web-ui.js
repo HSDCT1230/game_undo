@@ -2700,7 +2700,7 @@ function showWallPhoto(title, id) {
   };
   const sheet = el("div", { class: "sheet prompt wall-photo-sheet" }, [
     el("h3", {}, [title]),
-    imgSlot(id, "photo-lg", title),
+    imgSlot(id, "photo-lg wall-photo-lg", title),
     el("button", { class: "wall-ad-cta ghost", type: "button", onclick: close }, ["合上"]),
   ]);
   S.modal = el("div", {
@@ -2824,6 +2824,9 @@ function viewWallUser() {
         { id: pic(1, "墙簿/陈美娟-敬茶"), cap: "敬茶" },
         { id: pic(1, "墙簿/陈美娟-水果"), cap: "水果" },
       ]),
+      wallAlbum("相册「生日」（1 张）", [
+        { id: pic(1, "墙簿/陈美娟-生日"), cap: "切蛋糕" },
+      ]),
       wallShown(WALL_FEED).some((x) => x.e.id === "mei-meal")
         ? wallAlbum("相册「星期日」（1 张）", [{ id: pic(9, "示意-午饭"), cap: "星期日" }])
         : "",
@@ -2857,6 +2860,9 @@ function viewWallUser() {
       wallAlbum("相册「旅行」（2 张）", [
         { id: pic(1, "墙簿/陈家豪-渡轮"), cap: "渡轮" },
         { id: pic(1, "墙簿/陈家豪-沙滩"), cap: "沙滩" },
+      ]),
+      wallAlbum("相册「生日」（1 张）", [
+        { id: pic(1, "墙簿/陈家豪-生日"), cap: "生日" },
       ]),
       wallTimeline("howard"),
     ]);

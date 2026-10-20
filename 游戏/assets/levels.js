@@ -98,7 +98,6 @@ const LEVELS = [
   {
     part: 2, title: "异样", date: "8月14日 夜～8月15日 凌晨", place: "后座（夜）",
     clock: "2014年8月14日 周四 夜",
-    goal: "今晚，留意这间屋。",
     tasks: [
       { text: "夜里再看一遍这间屋", after: "三组不一样的，摆在一起", need: true, count: () => (nightOn() ? [pairCount(), 3] : null), done: () => pairCount() >= 3, hint: () => (nightOn() ? "先在屋里找出跟搬进来那晚不一样的东西，再点「摆在一起」。" : "") },
       { text: "天光之前做个决定：敲门，或者忍到天亮", after: "这一夜的两种走法", need: true, show: nightOn, done: () => flag("knockedZhou") || noted("whisper"), hint: "摆好之后，门在那边——敲，或者不敲。" },

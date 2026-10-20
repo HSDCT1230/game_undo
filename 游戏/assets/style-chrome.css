@@ -4972,6 +4972,12 @@ button.mail-row:hover { background: #121a23; }
   aspect-ratio: 4 / 3;
   min-height: 0;
 }
+/* 墙簿相册原图都是 4:3，大图不要按 16:9 裁——裁掉底边会切掉右下角的时间码 */
+.wall-photo-sheet .img-slot.wall-photo-lg {
+  aspect-ratio: 4 / 3;
+}
+/* 弹窗里已经是放大图，不用「点图放大」角标——它会盖住照片右下角的时间码 */
+body .wall-photo-sheet .img-slot.wall-photo-lg::after { content: none; }
 .wall-shot .img-slot.wall-thumb img {
   position: absolute;
   inset: 0;
