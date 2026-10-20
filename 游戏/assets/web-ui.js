@@ -284,8 +284,9 @@ function isWallScreen(screen) {
 }
 
 function holdForPost(screen) {
-  // 空白分页与校园网是另外两个站，不受廿八屋发帖门禁管。
-  if (screen === "newtab" || screen === "web-error" || String(screen).indexOf("vhu-") === 0) return false;
+  // 空白分页、搜索结果、维基、校园网都是另外几个站，不受廿八屋发帖门禁管。
+  // 判法跟 goWeb／browseFromScene／分页标题同一套，别再各写一份白名单。
+  if (isBlankSite(screen)) return false;
   const onWall = isWallScreen(S.screen);
   if (S.pendingPost) {
     if (screen === "post") return false;
@@ -527,7 +528,7 @@ function browseFromScene(screen) {
     if (S.mode === "night") stopNightClock();
     S.mode = "web";
   }
-  const keep = screen === "newtab" || screen === "web-error" || String(screen).startsWith("wall") || String(screen).indexOf("vhu-") === 0;
+  const keep = isBlankSite(screen) || String(screen).startsWith("wall");
   goWeb(keep ? screen : (postedHelp() ? "home" : "post"));
 }
 
@@ -631,6 +632,13 @@ document.addEventListener("keydown", (e) => {
   closeRental();
 });
 
+// 落「新分页」那一格的都是外来站：空白页、打不开的网址、搜索结果、维基、整个校园网。
+// 三处（goWeb／browseFromScene／分页标题）都得用同一套判法，不然分页高亮会跟页面对不上。
+function isBlankSite(screen) {
+  const s = String(screen || "");
+  return s === "newtab" || s === "web-error" || s === "engine" || s === "wiki" || s.indexOf("vhu-") === 0;
+}
+
 function goWeb(screen, extra) {
   extra = extra || {};
   if (screen === "district") {
@@ -661,7 +669,7 @@ function goWeb(screen, extra) {
   S.wallFresh = null;
   S.wallNav = (S.wallNav || 0) + 1;
   if (extra.tab) S.tab = extra.tab;
-  else if (screen === "newtab" || screen === "web-error" || String(screen).indexOf("vhu-") === 0) S.tab = "blank";
+  else if (isBlankSite(screen)) S.tab = "blank";
   else if (screen === "ad" || screen === "wall" || String(screen).indexOf("wall-") === 0) S.tab = "wall";
   else S.tab = "house";
   if ("listing" in extra) S.listing = extra.listing;
@@ -894,6 +902,8 @@ function webAddr() {
     "wall-user": "http://wallbook.hk/profile/" + (S.wallWho || ""),
     newtab: "about:blank",
     "web-error": (S.vhu && S.vhu.errUrl) || "http://",
+    engine: "http://" + SE_SITE.host + "/search?q=" + encodeURIComponent(seQueryText()),
+    wiki: "http://zh.wikipedia.org/wiki/" + encodeURIComponent("維港大學"),
     "vhu-login": "https://" + VHU_HOST + "/login",
     "vhu-home": "https://" + VHU_HOST + "/home",
     "vhu-profile": "https://" + VHU_HOST + "/profile",
@@ -939,6 +949,8 @@ function webInner() {
     "wall-user": viewWallUser,
     newtab: viewNewTab,
     "web-error": viewWebError,
+    engine: viewSearchEngine,
+    wiki: viewWiki,
     "vhu-login": viewVhuLogin,
     "vhu-home": viewVhuHome,
     "vhu-profile": viewVhuProfile,

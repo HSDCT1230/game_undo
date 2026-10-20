@@ -1,9 +1,10 @@
 /* ---------- 关卡：十六关的表、开场卡、结束卡、清单、存档、跳关 ---------- */
 
 /* 章内分段。号和名分开存：排版交给 CSS（号小、名正），不在字符串里拼「一 · 住进来」
-   这种靠空格和中点撑出来的分隔——那是生成的痕迹，不是排版。 */
+   这种靠空格和中点撑出来的分隔——那是生成的痕迹，不是排版。
+   PART_NO 只在旧的开局卡上出现过（编号 + 部名 + 「5 / 16」那一行元信息）。
+   开局卡要的是「上次停在哪」，不是进度条；那一行已经拿掉，编号也就没有地方用了。 */
 const PARTS = ["", "住进来", "夜里", "星期六", "上门"];
-const PART_NO = ["", "一", "二", "三", "四"];
 
 const noted = (id) => Array.isArray(S.notes) && S.notes.some((n) => n.id === id);
 const ev = (id) => hasEvidence(id);
@@ -323,7 +324,8 @@ const LEVELS = [
       seedNotes([
         ["forget", "他说本子不在，却讲得出一串细节。"],
         ["stolen", "上门行程被删了。现场笔记不见。"],
-        ["dirt", "二〇〇四年十一月，维港大学，女学生坠楼。名字涂掉，露出一个鱼。"],
+        ["dirt", "二〇〇四年十一月，维港大学，女学生坠楼。剪报报头上印着校名。名字涂掉，露出一个鱼。"],
+        ["vhu-school", "剪报上印着「维港大学　二〇〇四年十一月」。阿明读的是这一间。"],
         ["zhou-day", "周说他白天来过。他下午明明在诊所。"],
         ["day-trace", "铁闸差一格。门垫挪过。储物室门底多一截干水印。"],
       ]);
@@ -339,6 +341,8 @@ const LEVELS = [
       { text: "有人敲门，听他要什么", after: "周来要天台钥匙", show: () => noted("countbreath"), done: () => flag("roofKeyAsked"), hint: "" },
       { text: "还没看完廿八屋的旧闻", after: "翻了站内那两篇旧闻", show: () => flag("calledMing2") && !noted("twofiles"), done: () => noted("twofiles") },
       { text: "想想天台白天的样子", after: "想起天台白天的样子", show: () => flag("calledMing2"), done: () => !!S.searchRoof },
+      { text: "搜维港大学，用他的学号登入", after: "进了他的校友帐户，翻他的信箱", show: () => flag("calledMing2"), done: () => noted("vhu-chen-id"), hint: "笔电在桌底。那间学校的名字，剪报上写着。" },
+      { text: "再用家豪的学号登入一次", after: "登入陈家豪的帐户，看见他和阿明的四年", show: () => noted("vhu-chen-id"), done: () => noted("vhu-chen-in"), hint: "他的信箱里有家豪的地址。地址就是学号。" },
       { text: "上楼前问他白天", after: "他认：站在楼梯口，没有按门铃", show: () => noted("countbreath"), done: () => noted("day-admit") },
       { text: "他上去之后，打给家豪", after: "零点二十分打给家豪，他说马上到", show: () => noted("roofpause"), done: () => flag("calledChen") },
     ],
@@ -1370,14 +1374,6 @@ function resumeCaption(c, L, go, leave) {
       el("span", { class: "resume-undo", "aria-hidden": "true" }, "undo".split("").map((ch) => el("span", {}, [ch]))),
     ]),
     el("p", { class: "resume-sub" }, ["第一章：章慧琪"]),
-    el("p", { class: "resume-progress" }, [
-      el("span", { class: "rp-part" }, [
-        el("span", { class: "rp-no" }, [PART_NO[cur.part] || ""]),
-        el("span", { class: "rp-name" }, [PARTS[cur.part] || ""]),
-      ]),
-      el("span", { class: "rp-rule", "aria-hidden": "true" }),
-      el("span", { class: "rp-count" }, [curN + " / " + (LEVELS.length - 1)]),
-    ]),
     el("div", { class: "resume-where", role: "group", "aria-label": "存档" }, [
       el("span", { class: "resume-ribbon", "aria-hidden": "true" }),
       el("p", { class: "resume-when" }, [shortDay(savedTime)]),

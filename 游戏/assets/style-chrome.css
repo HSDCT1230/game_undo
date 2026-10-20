@@ -6496,41 +6496,8 @@ img.map-photo {
   letter-spacing: 0.28em;
   text-indent: 0.28em;
 }
-/* 进度：让他知道这一章还有多长，卡片上不出现数字以外的游戏词。
-   一行三件：段号＋段名、一根细线、第几关。线自己撑满，不靠空格和中点隔。 */
-.resume-progress {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: min(360px, 100%);
-  margin: 7px 0 0;
-  color: var(--brand-mute);
-  font-size: 11px;
-  letter-spacing: 0.2em;
-  opacity: .72;
-}
-.rp-part {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 7px;
-  flex: 0 0 auto;
-}
-.rp-no {
-  color: var(--brand-dim, #6e675f);
-  letter-spacing: 0.12em;
-}
-.rp-name { letter-spacing: 0.2em; }
-.rp-rule {
-  flex: 1 1 auto;
-  height: 1px;
-  min-width: 12px;
-  background: rgba(197, 184, 173, .22);
-}
-.rp-count {
-  flex: 0 0 auto;
-  color: var(--brand-dim, #6e675f);
-  letter-spacing: 0.14em;
-}
+/* 「二　夜裏　5／16」那一行删掉了：段号、段名、第几关，玩家看不出来是什么意思，
+   还占掉卡片最贵的一行。现在只剩日子、地方、这一关要做的事。 */
 .resume-where {
   position: relative;
   width: min(360px, 100%);

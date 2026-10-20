@@ -1,5 +1,6 @@
-/* style-vhu.css — 维港大学校园入门网站（2014）与浏览器空白分页
-   只作用于 .vhu-*，不改廿八屋／墙簿的样式。load 在 style-chrome.css 之后。 */
+/* style-vhu.css — 浏览器里「别的站」的样式：维港大学校园入门网站（2014）、
+   空白分页、打不开的网址、通搜（搜索结果）、维基（维港大学条）。
+   只作用于 .vhu-* / .se-* / .wk-*，不改廿八屋／墙簿的样式。load 在 style-chrome.css 之后。 */
 
 .vhu-site {
   --vhu-ink: #22302f;
@@ -518,4 +519,210 @@
   .vhu-tile { min-height: 46px; }
   .vhu-mail-list tbody tr,
   .vhu-notice-list tbody tr { min-height: 34px; }
+}
+
+/* ---------- 草稿箱 ---------- */
+
+/* 那封没寄出的信。空行要占住一整行——删掉的字没留下，地方还留着。 */
+.vhu-draft-mark {
+  display: inline-block;
+  margin: 0 0 8px;
+  padding: 2px 8px;
+  border: 1px solid #d8c9a6;
+  background: #fbf6e8;
+  color: #7a6432;
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+}
+.vhu-mail-draft { background: #fffdf6; }
+.vhu-mail-draft p:empty { min-height: 1.85em; }
+
+/* ==================================================================
+   浏览器里的另外两个站：通搜（搜索结果）、维基（维港大学条）
+   两者都自带配色，不碰 .vhu-* / .site-*；高度、滚动交给
+   .laptop-screen > .hk-site 那条通用规则，别在这里写死高度。
+   ================================================================== */
+
+/* ---------- 通搜 ---------- */
+
+.se-site {
+  --se-ink: #1c1c1c;
+  --se-line: #dcdcdc;
+  --se-link: #1a3f9c;
+  --se-green: #0a6b35;
+  --se-mute: #666;
+  background: #fff;
+  color: var(--se-ink);
+  font: 12.5px/1.7 Arial, "Microsoft JhengHei", "Microsoft YaHei", sans-serif;
+}
+.se-site a { color: var(--se-link); }
+
+.se-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 9px 18px 7px;
+  border-bottom: 1px solid var(--se-line);
+  background: #f5f5f5;
+}
+.se-brand { display: flex; align-items: baseline; gap: 6px; }
+.se-logo {
+  color: #1f5fbf;
+  font: 700 21px/1 "Microsoft JhengHei", "Microsoft YaHei", sans-serif;
+  letter-spacing: .18em;
+}
+.se-brand small { color: #d4551c; font-size: 10px; letter-spacing: .12em; }
+.se-nav { display: flex; gap: 12px; margin-left: auto; color: var(--se-mute); font-size: 11.5px; }
+.se-nav .on { color: var(--se-ink); font-weight: 700; }
+
+.se-form {
+  display: flex;
+  gap: 6px;
+  padding: 12px 18px 10px;
+  border-bottom: 1px solid var(--se-line);
+}
+.se-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 6px 8px;
+  border: 1px solid #9aa6b5;
+  font: 13px "Microsoft JhengHei", "Microsoft YaHei", sans-serif;
+}
+.se-input:focus { outline: 1px solid #1f5fbf; }
+.se-btn {
+  flex: 0 0 auto;
+  padding: 0 16px;
+  border: 1px solid #8c99a8;
+  background: linear-gradient(#fdfdfd, #e7eaee);
+  color: #23303d;
+  font: 12px "Microsoft JhengHei", "Microsoft YaHei", sans-serif;
+  cursor: pointer;
+}
+.se-btn:hover { background: linear-gradient(#fff, #d9dee4); }
+
+.se-body { padding: 10px 18px 26px; }
+.se-stat { margin: 4px 0 12px; color: var(--se-mute); font-size: 11px; }
+.se-list { margin: 0; padding: 0; list-style: none; }
+.se-item { margin: 0 0 16px; }
+.se-title { font-size: 14px; line-height: 1.5; }
+.se-title a { text-decoration: underline; }
+.se-url { color: var(--se-green); font-size: 11.5px; }
+.se-snip { margin: 2px 0 0; color: #333; line-height: 1.85; }
+.se-picks { margin: 6px 0 0; padding: 0; list-style: none; color: var(--se-mute); font-size: 12px; }
+.se-picks li { padding: 3px 0; }
+.se-fine { margin: 18px 0 0; color: #999; font-size: 10.5px; }
+
+/* ---------- 维基 ---------- */
+
+.wk-site {
+  --wk-ink: #14141a;
+  --wk-line: #a2a9b1;
+  --wk-link: #0b4f9e;
+  --wk-mute: #54595d;
+  background: #fff;
+  color: var(--wk-ink);
+  font: 12.5px/1.75 Georgia, "Times New Roman", "Microsoft JhengHei", serif;
+}
+.wk-site a { color: var(--wk-link); }
+
+.wk-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 8px 18px;
+  border-bottom: 1px solid var(--wk-line);
+  background: #f6f6f6;
+}
+.wk-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: 1px solid #333;
+  border-radius: 50%;
+  font: 700 12px/1 Georgia, serif;
+  align-self: center;
+}
+.wk-word { font: 15px/1.2 "Microsoft JhengHei", serif; letter-spacing: .04em; }
+.wk-head small { color: var(--wk-mute); font-size: 10.5px; }
+
+.wk-cols { display: flex; align-items: flex-start; }
+.wk-side {
+  flex: 0 0 132px;
+  padding: 12px 10px 24px 14px;
+  border-right: 1px solid #eaecf0;
+  color: var(--wk-mute);
+  font: 11px/1.8 "Microsoft JhengHei", sans-serif;
+}
+.wk-side h3 {
+  margin: 0 0 2px;
+  padding-bottom: 2px;
+  border-bottom: 1px solid #eaecf0;
+  color: #333;
+  font-size: 10.5px;
+  font-weight: 400;
+  letter-spacing: .06em;
+}
+.wk-side ul { margin: 0 0 12px; padding: 0; list-style: none; }
+.wk-side li { padding: 1px 0; }
+.wk-dead { color: #7c8a99; }
+
+.wk-article { flex: 1 1 auto; min-width: 0; padding: 10px 18px 30px; }
+.wk-crumb { color: var(--wk-mute); font-size: 10.5px; }
+.wk-title {
+  margin: 0 0 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--wk-line);
+  font: 400 23px/1.3 "Microsoft JhengHei", Georgia, serif;
+  letter-spacing: .02em;
+}
+.wk-warn {
+  margin: 0 0 10px;
+  padding: 6px 9px;
+  border: 1px solid #c8ccd1;
+  background: #fbfbfb;
+  color: var(--wk-mute);
+  font: 10.5px/1.6 "Microsoft JhengHei", sans-serif;
+}
+.wk-info {
+  float: right;
+  width: 224px;
+  margin: 2px 0 10px 14px;
+  border: 1px solid var(--wk-line);
+  border-collapse: collapse;
+  background: #f8f9fa;
+  font: 11px/1.6 "Microsoft JhengHei", sans-serif;
+}
+.wk-info caption {
+  padding: 4px 6px;
+  border: 1px solid var(--wk-line);
+  border-bottom: 0;
+  background: #e8eef4;
+  font-size: 12px;
+  font-weight: 700;
+}
+.wk-info th,
+.wk-info td { padding: 3px 7px; border-top: 1px solid #e2e5e9; text-align: left; vertical-align: top; }
+.wk-info th { width: 62px; color: #333; font-weight: 700; }
+.wk-lead { margin: 0 0 10px; }
+.wk-article p { margin: 0 0 9px; }
+.wk-h2 {
+  margin: 14px 0 6px;
+  padding-bottom: 3px;
+  border-bottom: 1px solid var(--wk-line);
+  font: 400 15px/1.4 "Microsoft JhengHei", Georgia, serif;
+}
+.wk-fine { margin-top: 16px; color: #7c8a99; font-size: 10.5px; }
+.wk-foot {
+  padding: 8px 18px;
+  border-top: 1px solid var(--wk-line);
+  color: var(--wk-mute);
+  font: 10.5px/1.6 "Microsoft JhengHei", sans-serif;
+}
+
+@media (max-width: 720px) {
+  .wk-side { display: none; }
+  .wk-info { float: none; width: auto; margin: 0 0 10px; }
+  .se-nav { display: none; }
 }

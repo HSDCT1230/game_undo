@@ -32,11 +32,12 @@ function clinicSpots(visit) {
         note("metro4", "第四次。抽屉里只有铜色节拍器，摆杆停在最左。");
         showModal("抽屉", "铜色节拍器还在，摆杆停在最左一格。抽屉里没有别的。", "", null, () => drawClinic());
       }, pic(12, "示意-抽屉"), L.drawer4),
-      hot("预约表", L.sched ? "连着四个星期六。" : "前台螢幕没有关。", () => {
-        L.sched = true;
-        note("sched", "预约表：阿文下一行是我。四个星期六，他都排在我前面。");
-        showModal("预约表", "常客一栏写着阿文。下一行是你的名字。连着四个星期六，他都排在你前面。", "", null, () => drawClinic());
-      }, pic(12, "示意-预约表"), L.sched),
+      // 预约表本来就在前台，不在这间房。看到它的那一眼放在门外（见 CLINIC_WAIT[4]）。
+      hot("桌角", "两只纸杯。", () => {
+        L.cups4 = true;
+        note("cups4", "桌角两只纸杯。一只干了，一只还有半杯水。他不喝，杯子照留。");
+        showModal("桌角", "两只纸杯。一只干了，杯口按扁；一只还有半杯水。\n他每次都问要不要水。自己那杯，从来没见少过。", "", null, () => drawClinic());
+      }, "", L.cups4),
     ];
   }
   const drawerText = "缝里露出节拍器的摆杆——上一号刚走，没推严。";
@@ -90,10 +91,173 @@ function clinicActions(visit) {
   return box;
 }
 
-function drawClinic() {
+/* ---------- 进诊室之前：门外那几分钟 ----------
+   四次诊室如果都从同一扇门走进去，玩家到第三次就背得出流程了：候诊有人低头、门一开、
+   坐下、交纸。要拆的不是台词，是这串手势。所以第二／三／四次先在门外待一会儿——
+   候诊、走廊、前台，各看各的三样，各自再走进去。
+   这一小段不设门槛：看与不看都能进去，看完只是多几条只能在这天记下的东西。 */
+let clinicRoomNext = null;
+
+const CLINIC_WAIT = {
+  2: {
+    time: "2014年8月23日 周六 15:55",
+    name: "澄心候诊",
+    img: () => pic(8, "场景-候诊"),
+    line: "候诊。上一节还没完，门关着。",
+    hint: "门还没开。要进去，点「入去」。",
+    spots: () => [
+      {
+        title: "阿文坐过的那张椅",
+        sub: "刚起身。垫子还凹着。",
+        go: () => {
+          note("wenChair", "阿文坐过的那张椅，垫子还凹着。他每次都坐同一张。");
+          showModal("椅子", "左边第二张。垫子凹下去还没弹回来，皮面上留着一点温度。\n三张椅子，他只坐这一张。", "", null);
+        },
+      },
+      {
+        title: "茶几上的杂志",
+        sub: "三本，全部倒着。",
+        go: () => {
+          note("magsUpside", "茶几上三本杂志，全部倒着。翻到的那一页是同一张图。");
+          showModal("杂志", "三本，全部倒着放。翻到的是同一页——一栋旧楼的外墙，拍了很多年。\n像是有人翻完，照原样放回去，放反了。", "", null);
+        },
+      },
+      {
+        title: "诊室的门",
+        sub: "门缝里有笔尖的声音。",
+        go: () => {
+          note("penStops", "门缝里有人在写字。写两下，停很久，再写两下。");
+          showModal("门", "笔尖落在纸上，两下，停很久，再两下。\n不是写字。是把话压短。", "", null);
+        },
+      },
+    ],
+  },
+  3: {
+    time: "2014年8月30日 周六 15:55",
+    name: "澄心走廊",
+    img: () => pic(14, "场景-诊所走廊"),
+    line: "走廊。四张椅，一块空白的牌子。",
+    hint: "他在里面等。要进去，点「入去」。",
+    spots: () => [
+      {
+        title: "洗手间的门",
+        sub: "水开了很久。",
+        go: () => {
+          note("tapLong", "洗手间的水开了很久。他在里面，不在洗手。");
+          showModal("洗手间", "水一直开着。不是洗手的那种开法——开到底，让声音盖住外面的。\n你在走廊站了一会儿。他也没有关。", "", null);
+        },
+      },
+      {
+        title: "墙上那块牌子",
+        sub: "白框里没有字。",
+        go: () => {
+          note("blankSign", "走廊墙上那块牌子是空的。澄心在这里，没有名字。");
+          showModal("牌子", "一块白框。上一手租客留下的，搬来就没换过。\n前台姑娘说，医生讲过唔使挂。", "", null);
+        },
+      },
+      {
+        title: "走廊尽头",
+        sub: "还有一间，门关着。",
+        go: () => {
+          note("endRoom", "走廊尽头还有一间诊室。门关着，门把上落了一层灰。");
+          showModal("走廊尽头", "门关着。门把手上落了一层灰，指印都没有。\n整层两间在用。这一间不是。", "", null);
+        },
+      },
+    ],
+  },
+  4: {
+    time: "2014年9月6日 周六 15:55",
+    name: "澄心前台",
+    img: () => pic(12, "场景-候诊"),
+    line: "前台。姑娘在翻预约表，一页一页翻。",
+    hint: "抽屉在诊室里。要进去，点「入去」。",
+    spots: () => [
+      {
+        // 标题只用三个字：这一格带缩图，五个字会被挤成两行（候诊那一格八个字反而不断，是没缩图的宽格）
+        title: "预约表",
+        sub: "前台螢幕没关。",
+        img: () => pic(12, "示意-预约表"),
+        go: () => {
+          S.clinicLooked = S.clinicLooked || {};
+          S.clinicLooked.sched = true;
+          note("sched", "预约表：阿文下一行是我。四个星期六，他都排在我前面。");
+          showModal("预约表", "常客一栏写着阿文。下一行是你的名字。连着四个星期六，他都排在你前面。", "", null);
+        },
+      },
+      {
+        title: "搁在前台的杂志",
+        sub: "还是倒着。",
+        go: () => {
+          note("magsFront", "前台搁着一本杂志，还是倒着的。他连放下都要倒着放。");
+          showModal("杂志", "一本，搁在前台角上，倒着。\n他连放下都要倒着放。", "", null);
+        },
+      },
+      {
+        title: "前台姑娘",
+        sub: "她认得我。",
+        person: true,
+        go: () => {
+          note("girlSays", "前台姑娘说：阿文不是迟到，是每次都坐满。");
+          showModal("前台", "「阿文先生今日又迟？」\n「唔系迟。佢每次都坐满。」姑娘说完，把预约表翻过一页，不再看你。", "", null);
+        },
+      },
+    ],
+  },
+};
+
+function clinicWait(visit, next) {
+  if (next) clinicRoomNext = next;
+  S.talk = null;
+  S.clinic = Object.assign({}, S.clinic, { visit, seg: 0, wait: true });
+  S.mode = "clinic";
+  drawClinic();
+}
+
+function clinicRoomEnter() {
+  const visit = (S.clinic && S.clinic.visit) || 1;
+  if (S.clinic) S.clinic.wait = false;
+  const next = clinicRoomNext;
+  clinicRoomNext = null;
+  // 只剩刷新／读档之后那条路：门外那截没了，就直接进房，别让人卡在门口
+  if (next) return next();
+  enterClinic(visit);
+}
+
+function drawClinicWait(visit, w) {
   baseView("clinic");
   clearStage();
+  if (w.time) setTime(w.time);
+  const box = el("div", { class: "room scene-fit hub-room" });
+  box.append(
+    imgSlot(val(w.img), "room-bg", w.name),
+    el("p", { class: "room-note" }, [val(w.line) || ""]),
+    el("div", { class: "room-dock" }, [
+      el("div", { class: "room-map" }, val(w.spots).map((s) => hot(
+        s.title,
+        val(s.sub) || "",
+        s.go,
+        val(s.img),
+        hotClicked(s.title),
+        s.person ? "" : undefined
+      ))),
+    ])
+  );
+  const wrap = el("div", { class: "desk night-desk" });
+  wrap.append(box);
+  stage.append(wrap);
+  const acts = el("div", { class: "scene-actions fork hub-acts" });
+  acts.append(forkChoice("入", "scene-act primary", clinicRoomEnter, "入去"));
+  if (w.hint) acts.append(el("p", { class: "hub-hint" }, [val(w.hint)]));
+  stage.append(acts);
+  renderPlaybar();
+}
+
+function drawClinic() {
   const visit = (S.clinic && S.clinic.visit) || 1;
+  if (S.clinic && S.clinic.wait && CLINIC_WAIT[visit]) return drawClinicWait(visit, CLINIC_WAIT[visit]);
+  baseView("clinic");
+  clearStage();
+
   const box = el("div", { class: "clinic scene-fit" });
   box.append(
     imgSlot(lvPic("场景-诊室"), "clinic-bg", "澄心诊室"),
@@ -156,7 +320,9 @@ function clinicArrival(visit, next) {
       { note: ["linWait", "阿文刚走，又坐满一个时段。电梯合上前，眼镜又闪一下。"] },
     ],
   };
-  startTalk([...(beats[visit] || []), { goto: next }], "澄心候诊", "face");
+  // 第二／三／四次：候诊过场完了先在门外站一会儿，看点东西再进去
+  const tail = () => (CLINIC_WAIT[visit] ? clinicWait(visit, next) : next());
+  startTalk([...(beats[visit] || []), { goto: tail }], "澄心候诊", "face");
 }
 
 function clinic1Intro() {
@@ -1339,6 +1505,25 @@ function clinic4Talk() {
     line("章慧琪", "你只手……", { zh: "你的手……" }),
     line("罗启明", "笔帽滑咗。", { zh: "笔帽滑了。" }),
     line("", "他没有把笔帽拧回去，只握在掌心。"),
+    {
+      prompt: "他答得太快了。你还可以再问一次。",
+      choices: [
+        {
+          label: "再问一次",
+          then: [
+            line("章慧琪", "你只手，几时开始……", { zh: "你的手，什么时候开始……" }),
+            line("罗启明", "唔记得。", { zh: "不记得。" }),
+            line("", "三个字。比刚才那句「笔帽滑了」还短。他答「唔记得」的时候，眼睛没有离开你的纸。"),
+          ],
+        },
+        {
+          label: "不问",
+          then: [
+            line("", "你把话咽回去。刚才那句「家豪话你精神唔好」，你吞了三次才敢吐出来。第四次没有力气。"),
+          ],
+        },
+      ],
+    },
     line("罗启明", "佢成日话我健忘。车祸。锁匙都系佢留——差人都系咁碎嘴。……你当佢碎嘴就得。我哋继续听你讲。", { zh: "他老说我健忘。车祸。钥匙都是他留的——警察都这么碎嘴。……你当他碎嘴就好。我们接着听你的。" }),
     line("", "手抖的事，他一句就带过了。你忽然觉得，自己又被挡在门外。"),
     {
@@ -1391,8 +1576,26 @@ function clinic4Talk() {
     line("章慧琪", "我同意你嚟。我仍然觉得你一入门就会见到——见到，你就信。……你嚟，我就顶得住。", { zh: "我同意你来。我仍然觉得你进门就会看见——看见，你就信。……你来，我就撑得住。" }),
     line("章慧琪", "……我知你唔想听「顶得住」三个字挂喺你身上。但我净系识咁讲。", { zh: "……我知道你不想听「撑得住」三个字挂在你身上。可我只能这么说。" }),
     line("罗启明", "我上门，系为咗听清门底。你唔好再讲「开心」——开心唔系上门嘅理由。", { zh: "我上门，是为听清门底。你别再讲「高兴」——高兴不是上门的理由。" }),
-    line("章慧琪", "……我知。你肯嚟，我已经……", { zh: "……我知道。你肯来，我已经……" }),
-    line("", "她把后半句咽回去。诊室只剩笔帽在他掌心轻轻碰了一下。"),
+    {
+      prompt: "后半句已经到舌头上。他刚叫过你别讲「开心」。",
+      choices: [
+        {
+          label: "说完",
+          then: [
+            line("章慧琪", "……我知。你肯嚟，我已经当你系……", { zh: "……我知道。你肯来，我已经当你是……" }),
+            line("罗启明", "唔好讲落去。", { zh: "别说下去。" }),
+            line("", "他把笔帽收进掌心，握得比刚才紧。诊室里只剩那一下轻响。他讲得很轻，但讲得快——像早就准备好要拦这一句。"),
+          ],
+        },
+        {
+          label: "咽回去",
+          then: [
+            line("章慧琪", "……我知。你肯嚟，我已经……", { zh: "……我知道。你肯来，我已经……" }),
+            line("", "她把后半句咽回去。诊室只剩笔帽在他掌心轻轻碰了一下。"),
+          ],
+        },
+      ],
+    },
     line("罗启明", "带锁匙。今晚收工之后。唔过夜。", { zh: "带钥匙。今晚收工后。不过夜。" }),
     line("章慧琪", "好。我等。", { zh: "好。我等。" }),
     { note: ["clinic4", "第四次。先问美娟和家豪。他打过督导，讲知情同意，查过新闻，才约今晚上门。观察，不是治疗。"], goto: () => finishLevel(12) },

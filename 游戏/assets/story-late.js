@@ -266,18 +266,25 @@ const MAIL_DIRT = {
   title: "你信紧嗰个医生",
   key: "名字涂掉，露出一个鱼",
   time: "2014年9月7日",
-  body: "二〇〇四年十一月，维港大学，女学生坠楼。新闻写男友罗某，自称有责任。名字涂掉，露出一个鱼。偷拍：年轻的罗，旁边长发女生望住他。没有全名。",
+  body: "二〇〇四年十一月，维港大学，女学生坠楼。剪报报头印着校名。新闻写男友罗某，自称有责任。名字涂掉，露出一个鱼。偷拍：年轻的罗，旁边长发女生望住他。没有全名。",
   img: pic(14, "证据-你信紧的医生"),
 };
 
+/* 他的工作台只看得到两样：被删掉的那条行程、不见了的本子。
+   屏幕别的什么都没有——他那台机器睡下去要密码，他倒水随时回来。
+   所以校园网、网址、学号，一样都不从这里出去：她的笔电在后座，回家才用得上。 */
 function missDesk() {
+  S.miss = S.miss || {};
   S.miss.desk = true;
   showModal(
     "他的工作台",
-    "电脑螢幕上的日历：九月六日晚「荣汇街上门」那一条被删掉了，回收站是空的。不是墙挂日历。",
-    "桌上那只金属夹子还在。本子不见了——上门那晚夹子里有本，你见过他写。",
+    "电脑螢幕沒关。日历里九月六日晚「荣汇街上门」那一条被删掉了，回收站是空的。不是墙挂日历。",
+    "杯子搁在鼠标垫旁边，水汽还没散。桌上那只金属夹子还在，本子不见了。你连键盘都没碰——他随时会端着水回来。",
     "scene",
-    () => { note("stolen", "上门行程被删了。现场笔记不见。他不是不记得去过。"); backToHub(); }
+    () => {
+      note("stolen", "上门行程被删了。现场笔记不见。他不是不记得去过。");
+      backToHub();
+    }
   );
 }
 
@@ -437,12 +444,17 @@ function missAttach(n, back) {
   S.miss["att" + n] = true;
   const done = () => (S.miss.att1 && S.miss.att2 && !ev("mail-dirt") ? missMailKeep() : (back || backToHub)());
   if (n === 1) {
+    // 校名就在这张剪报上，白纸黑字。她是从这里、也只有从这里把它抄进簿里的——
+    // 不是从谁的电脑屏幕上。前一行先说清楚：报头那行是印出来的。
     withClue(pic(14, "示意-附件一新闻扫描"), () => showModal(
       "附件一　新闻扫描",
       "二〇〇四年十一月，维港大学，一名女学生坠楼。新闻写她的男友姓罗，自称有责任。",
-      "名字被黑笔涂掉，涂不干净，露出一个「鱼」字。页脚一行小字：旺印文仪店。",
+      "报头那行是印出来的，不是手写：維港大學　二〇〇四年十一月。你把「维港大学」四个字抄进簿里。名字被黑笔涂掉，涂不干净，露出一个「鱼」字。页脚一行小字：旺印文仪店。",
       "scene",
-      done
+      () => {
+        note("vhu-school", "剪报上印着「维港大学　二〇〇四年十一月」。阿明读的是这一间。");
+        done();
+      }
     ));
   } else {
     withClue(pic(14, "示意-附件二偷拍照片"), () => showModal(
@@ -456,7 +468,7 @@ function missAttach(n, back) {
 }
 
 function missMailKeep() {
-  note("dirt", "二〇〇四年十一月，维港大学，女学生坠楼。新闻写男友罗某。名字涂掉，露出一个鱼。偷拍里年轻的他，旁边女生望住他。");
+  note("dirt", "二〇〇四年十一月，维港大学，女学生坠楼。剪报报头上印着校名。新闻写男友罗某。名字涂掉，露出一个鱼。偷拍里年轻的他，旁边女生望住他。");
   // 两个附件都看过＝证物已到手；门关靠 ev("mail-dirt")，不能只靠点下划线（手机上容易漏）
   if (!hasEvidence(MAIL_DIRT.id)) fileEvidence(MAIL_DIRT);
   keepThen(MAIL_DIRT, () => hubTalk([
@@ -493,6 +505,8 @@ function missShow() {
   ], "澄心诊室", "face");
 }
 
+/* 诊室里上网用的是他那台机器——她的笔电在后座，白天不跟她出门。
+   他把椅子让出来，人去了倒水；这台机器他从来不锁。 */
 function missOpenNews() {
   if (S.mode !== "web") {
     S.paused = { mode: S.mode, talk: null, wait: null };
@@ -558,9 +572,16 @@ function missAskFish() {
 function missWallet() {
   startTalk([
     line("", "椅脚边一只黑色钱夹，拉链没拉严。陈家豪刚才站过这里。", { clue: pic(14, "示意-钱夹") }),
-    line("", "打开。透明套里一张合照：表姐陈美娟，旁边是他。两个人靠得很近。", { clue: pic(14, "证据-钱夹合照") }),
-    line("", "夹层里还有一张发黄的学生证照片。年轻的罗医生。证件上的字糊了，脸你认得。", { clue: pic(14, "证据-钱夹罗证件照") }),
-    { note: ["wallet-chen", "钱夹里表姐和他的合照。夹层还有发黄的罗医生学生证。"], goto: () => keepThen(item("chen-wallet"), backToHub) },
+    line("", "打开。透明套里一张合照：表姐陈美娟，旁边是他。两个人靠得很近。", {
+      clue: pic(14, "证据-钱夹合照"),
+      note: ["wallet-chen", "钱夹里表姐和他的合照。夹层还有发黄的罗医生学生证。"],
+    }),
+    // 相纸旧了，字还看得清——第 15 关登入用的就是这一串学号，所以这里不能写成「糊了」。
+    line("", "夹层里还有一张发黄的学生证照片。年轻的罗医生，医学院，二〇〇〇年入学。相纸旧了，字倒还看得清：学号 91024656E。", {
+      clue: pic(14, "证据-钱夹罗证件照"),
+      note: ["vhu-id", "学生证照片：罗启明，医学院，二〇〇〇年入学，学号 91024656E。"],
+    }),
+    { goto: () => keepThen(item("chen-wallet"), backToHub) },
   ], "澄心走廊", "face");
 }
 
@@ -570,13 +591,17 @@ HUBS.miss = {
     {
       id: "room", name: "诊室", map: "clinic-room", img: pic(14, "场景-诊室"),
       line: () => (missDirtReady()
-        ? (noted("fish-cv") ? "履历和校报对不上。他倒的那杯水还在桌上。" : noted("twofiles") ? "他回来了。西贡同荣汇街，我都看过。" : "他回来了。手机还能开廿八屋。")
+        ? (noted("fish-cv") ? "履历和校报对不上。他倒的那杯水还在桌上。" : noted("twofiles") ? "他回来了。西贡同荣汇街，我都看过。" : "他回来了。他那台机器上还能开廿八屋。")
         : "他去倒水了。"),
       spots: () => [
         {
-          title: "他的工作台", sub: () => (noted("stolen") ? "行程被删，本子不见。" : "日历、夹子。"), img: pic(14, "示意-他的工作台"),
+          title: "他的工作台",
+          sub: () => (noted("stolen") ? "日历那条被删了。本子不在。" : "日历、夹子。"),
+          img: pic(14, "示意-他的工作台"),
           seen: () => noted("stolen"),
-          go: () => (noted("stolen") ? showModal("工作台", "电脑日历被删了。夹子还在。本子不见了。") : missDesk()),
+          go: () => (noted("stolen")
+            ? showModal("工作台", "他回来了，杯子放回原位。本子还是不见。")
+            : missDesk()),
         },
         {
           title: "空抽屉", sub: () => (missHasFish() ? "鱼牌已经在日记簿里。" : S.miss.drawer1 ? "节拍器不在。再拉一次。" : "缝开着。"), img: pic(14, "示意-空抽屉"),
@@ -699,6 +724,7 @@ function callMing() {
     line("罗启明", "晏昼喺诊所，我谂唔起佢。返到呢条走廊，先算数。", { zh: "下午在诊所，我想不起她。回到这条走廊，才算数。" }),
     line("章慧琪", "你……惊乜嘢？", { zh: "你……怕什么？" }),
     line("罗启明", "我惊再听第二次。听过第二次，人就会企喺度。", { zh: "我怕再听第二遍。听过第二遍，人就会站在那儿。" }),
+    line("", "电话断了。你把笔电从桌底拖出来——它一直在这间屋里，白天不跟你出门。屏幕亮起来，屋里只有这一点白。"),
     { note: ["fearreplay", "他说怕再听第二遍。"], goto: goSearch },
   ], "拨出 罗启明", "phone", { contact: "罗启明", number: "澄心／私人", dialout: true });
 }
@@ -706,24 +732,76 @@ function callMing() {
 function goSearch() {
   S.talk = null;
   S.mode = "search";
-  S.tab = "house";
-  S.screen = noted("twofiles") ? "home" : "news";
+  S.tab = "blank";
+  S.screen = "newtab";
   setTime("2014年9月7日 周日 夜");
   drawSearch();
+}
+
+/* 第 15 关，后座，她自己的笔电。笔电白天不跟她出门，夜里回来才开——
+   所以第 14 关在诊所翻网页用的是罗那台机器，这里才是她第一次用自己的机器上网。
+   校名是黑料上抄下来的，学号是钱夹里那张学生证上的，两样都在手，才搜得成。 */
+function vhuKnowsSchool() {
+  return noted("vhu-school") || noted("dirt");
+}
+
+function vhuHasId() {
+  return noted("vhu-id");
+}
+
+/* 会搜，才有「从搜索结果里点进校园网」这一步；不会搜，码头只有一个「搜」按钮。 */
+function vhuForkReady() {
+  return vhuKnowsSchool();
+}
+
+function goCampus() {
+  if (typeof vhuSt === "function" && vhuSt().authed) {
+    vhuPage("home");
+    return;
+  }
+  vhuReset();
+  browseFromScene("vhu-login");
+}
+
+/* 码头那颗「搜」：她先搜「维港大学」，第一条才是校园网。 */
+function goEngine() {
+  S.engineQ = S.engineQ || "維港大學";
+  S.seSearched = true;
+  if (S.mode === "search") {
+    S.tab = "blank";
+    goWeb("engine");
+    return;
+  }
+  browseFromScene("engine");
 }
 
 function drawSearch() {
   baseView("search");
   if (typeof rememberWebScroll === "function") rememberWebScroll();
   clearStage();
-  const wallish = S.tab === "wall" || S.screen === "ad" || String(S.screen).indexOf("wall-") === 0;
+  const sc = String(S.screen || "");
+  const blankish =
+    sc === "newtab" ||
+    sc === "web-error" ||
+    sc === "engine" ||
+    sc === "wiki" ||
+    sc.indexOf("vhu-") === 0;
+  const wallish = !blankish && (S.tab === "wall" || sc === "ad" || sc.indexOf("wall-") === 0);
   const desk = laptop(webInner(), {
-    tab: wallish ? "wall" : "house",
+    tab: blankish ? "blank" : wallish ? "wall" : "house",
     addr: webAddr(),
   });
   desk.classList.add("search-desk");
   const dock = el("div", { class: "scene-actions fork task-note" }, [
-    el("p", { class: "hub-hint" }, ["站内新闻可以再翻。语音还在手机里。"]),
+    el("p", { class: "hub-hint" }, [
+      noted("vhu-chen-in")
+        ? "站内新闻可以再翻。语音还在手机里。他那边的帐户还开着。"
+        : vhuForkReady()
+          ? (vhuHasId()
+            ? "站内新闻可以再翻。语音还在手机里。剪报上那个校名，学生证上那个学号——都在簿里。"
+            : "站内新闻可以再翻。语音还在手机里。剪报上那个校名，还在簿里。")
+          : "站内新闻可以再翻。语音还在手机里。",
+    ]),
     forkChoice(
       "☎",
       "scene-act" + (S.searchHeard ? " done" : " primary"),
@@ -745,6 +823,14 @@ function drawSearch() {
       },
       S.searchRoof ? "天台　想过了" : "想想天台的样子"
     ),
+    vhuForkReady()
+      ? forkChoice(
+        "搜",
+        "scene-act" + (noted("vhu-chen-in") ? " done" : " primary"),
+        goEngine,
+        noted("vhu-chen-in") ? "那间学校的网　上过了" : "搜「维港大学」"
+      )
+      : "",
   ]);
   stage.append(desk, dock);
   if (S.modal) stage.append(S.modal);
