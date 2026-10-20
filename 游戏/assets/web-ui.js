@@ -160,6 +160,10 @@ function newsIds(limit) {
     const rest = ids.filter((id) => !pin.includes(id));
     ids = rest.slice(0, 2).concat(pin, rest.slice(2));
   }
+  // 入住那晚是带着「重建」两个字进站的，第一条就该是它
+  if (typeof flag === "function" && flag("uraGate") && S.level < 14) {
+    ids = ["urb"].concat(ids.filter((id) => id !== "urb"));
+  }
   if (typeof flag === "function" && flag("askedFishLuo")) {
     const pin = ["yu04", "kimon"].filter((id) => ids.includes(id));
     ids = pin.concat(ids.filter((id) => !pin.includes(id)));
@@ -1943,11 +1947,15 @@ function viewNewsItem() {
   S.newsSeen = S.newsSeen || {};
   S.newsSeen[id] = true;
   const canKeep = ((id === "mud" || id === "urb") && S.level >= 14)
+    || (id === "urb" && !!flag("uraGate"))
     || ((id === "kimon" || id === "yu04") && typeof flag === "function" && flag("askedFishLuo"));
   return houseShell([
     el("h2", { class: "sec-h" }, [n.title]),
     el("p", { class: "mail-meta" }, [n.date + "，来源：本站编辑部／公开文件节录"]),
     el("div", { class: "mail-body" }, [n.body]),
+    id === "urb" && flag("uraGate") && !hasEvidence("news-urb")
+      ? el("p", { class: "hint" }, ["这一条我得留下。光看过，回头就记不清了。"])
+      : "",
     canKeep ? el("div", { class: "actions" }, [
         el("button", {
           type: "button",

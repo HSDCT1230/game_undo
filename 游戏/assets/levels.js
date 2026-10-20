@@ -59,6 +59,7 @@ const LEVELS = [
       { text: "问周生一句", need: true, done: () => !!(S.view && S.view.asked), hint: "问他一句再说。" },
       { text: "跟他一起看主房窗台", after: "他的手盖住窗台那圈水印", done: () => flag("sawSillTour") },
       { text: "问他一个人住怕不怕", done: () => flag("debtSlip") },
+      { text: "上廿八屋，看清市建局那条「持续研究」", after: "市建局：深水埗指定范围持续研究", need: true, show: () => !!flag("uraGate"), done: () => noted("web-ura"), hint: "廿八屋新闻中心，七月廿二那条。看过不算，得按「记下来」留在簿里。" },
     ],
     advance: { when: "8月1日", where: "交定金，拿钥匙", fn: () => payDeposit() },
     next: "当晚　后座",
