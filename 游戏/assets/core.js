@@ -153,6 +153,46 @@ function setPairLabel(node, label) {
   );
 }
 
+/* ---- 顶栏按钮的动作 ----
+   语言、字号、自动、环境音、全屏，五颗按钮只有五个动作。
+   以前每个动作都写成 addEventListener 塞进建按钮的那段里，谁看都得先找绑在哪。
+   抽出来之后，点击由一个统一的入口分派（见下面的 osBarClick），加按钮、换位置都只动一处。 */
+function cycleLang() {
+  langMode = LANG_MODES[(LANG_MODES.indexOf(langMode) + 1) % LANG_MODES.length];
+  try { localStorage.setItem(LANG_KEY, langMode); } catch (err) { /* 无 */ }
+  optButtons();
+  redrawForLang();
+  if (langMode === "both" && typeof showPrompt === "function") {
+    const hk = (s) => (typeof toHkTrad === "function" ? toHkTrad(s) : s);
+    showPrompt(
+      hk("粤＋普"),
+      hk("网页与长文只出粤语。人物对白下面，会加一行普通话小字。想整页转普通话，再点一次语言按钮。")
+    );
+  }
+}
+
+function cycleSize() {
+  sizeStep = (sizeStep + 1) % SIZE_STEPS.length;
+  try { localStorage.setItem(SIZE_KEY, String(sizeStep)); } catch (err) { /* 无 */ }
+  applySize();
+  optButtons();
+}
+
+function toggleAuto() {
+  autoMode = !autoMode;
+  try { localStorage.setItem(AUTO_KEY, autoMode ? "1" : "0"); } catch (err) { /* 无 */ }
+  optButtons();
+  // 开着的时候如果正停在一句对白上，立刻排下一次；关掉就撤掉定时器
+  if (typeof clearAuto === "function") clearAuto();
+  if (autoMode && S && S.mode === "talk" && typeof drawTalk === "function") drawTalk();
+}
+
+function cycleBg() {
+  if (typeof sfxSetLevel !== "function" || typeof BG_VOL === "undefined") return;
+  sfxSetLevel((bgLevel + 1) % BG_VOL.length);
+  if (typeof sfx === "function") sfx("tap");
+}
+
 function optButtons() {
   const bar = $("#os-bar");
   const sfxBtn = $("#sfx-toggle");
@@ -167,36 +207,6 @@ function optButtons() {
     bar.insertBefore(auto, sfxBtn || null);
     bar.insertBefore(lang, sfxBtn || null);
     bar.insertBefore(size, sfxBtn || null);
-    lang.addEventListener("click", (e) => {
-      e.stopPropagation();
-      langMode = LANG_MODES[(LANG_MODES.indexOf(langMode) + 1) % LANG_MODES.length];
-      try { localStorage.setItem(LANG_KEY, langMode); } catch (err) { /* 无 */ }
-      optButtons();
-      redrawForLang();
-      if (langMode === "both" && typeof showPrompt === "function") {
-        const hk = (s) => (typeof toHkTrad === "function" ? toHkTrad(s) : s);
-        showPrompt(
-          hk("粤＋普"),
-          hk("网页与长文只出粤语。人物对白下面，会加一行普通话小字。想整页转普通话，再点一次语言按钮。")
-        );
-      }
-    });
-    size.addEventListener("click", (e) => {
-      e.stopPropagation();
-      sizeStep = (sizeStep + 1) % SIZE_STEPS.length;
-      try { localStorage.setItem(SIZE_KEY, String(sizeStep)); } catch (err) { /* 无 */ }
-      applySize();
-      optButtons();
-    });
-    auto.addEventListener("click", (e) => {
-      e.stopPropagation();
-      autoMode = !autoMode;
-      try { localStorage.setItem(AUTO_KEY, autoMode ? "1" : "0"); } catch (err) { /* 无 */ }
-      optButtons();
-      // 开着的时候如果正停在一句对白上，立刻排下一次；关掉就撤掉定时器
-      if (typeof clearAuto === "function") clearAuto();
-      if (autoMode && S && S.mode === "talk" && typeof drawTalk === "function") drawTalk();
-    });
   }
   lang.textContent = shellText(LANG_LABEL[langMode]);
   lang.setAttribute("aria-label", shellText("对白与网站：" + LANG_LABEL[langMode] + "，点按切换"));
@@ -210,6 +220,51 @@ function optButtons() {
 }
 applySize();
 document.addEventListener("DOMContentLoaded", optButtons);
+
+/* ---------- 顶栏按钮的统一入口 ----------
+   以前每颗按钮各自 addEventListener，三个坑都踩过：
+   ① 按钮是脚本建出来的，节点一旦被换掉，绑在旧节点上的监听就跟着没了，按下去没反应；
+   ② 按钮里其实是 .os-k/.os-v 两个 span，点到的是子节点，不是按钮本身；
+   ③ 顶栏 32px 高，按钮只有 19px，上下各有六七像素空白。鼠标点偏一点点就落在
+      空白里，横坐标明明还在按钮范围内，却什么都不发生——玩家只会说「开关坏了」。
+   所以改成一个入口：先从点到的东西往上找按钮，找不到再按坐标就近认一次。
+   注册在 document 的捕获阶段，比任何冒泡里的 handler 都早，也不会被关卡那层
+   「点画面往下走」抢走。 */
+const OS_IDS = ["auto-toggle", "lang-toggle", "size-toggle", "sfx-toggle", "fs-toggle"];
+
+/* 横坐标落在哪颗按钮的范围里、纵坐标还在顶栏这一行，就算点了它 */
+function osBarByPoint(x, y) {
+  const bar = $("#os-bar");
+  if (!bar) return null;
+  const br = bar.getBoundingClientRect();
+  if (!br.height || y < br.top || y > br.bottom) return null;
+  for (const id of OS_IDS) {
+    const b = document.getElementById(id);
+    if (!b || b.hidden || !b.offsetParent) continue;
+    const r = b.getBoundingClientRect();
+    if (r.width && x >= r.left - 4 && x <= r.right + 4) return b;
+  }
+  return null;
+}
+
+function osBarClick(e) {
+  const t = e.target;
+  const hit = (t && t.closest ? t.closest("#" + OS_IDS.join(", #")) : null) || osBarByPoint(e.clientX, e.clientY);
+  if (!hit || !hit.id) return;
+  const run = {
+    "sfx-toggle": cycleBg,
+    "auto-toggle": toggleAuto,
+    "lang-toggle": cycleLang,
+    "size-toggle": cycleSize,
+    "fs-toggle": fsToggle,
+  }[hit.id];
+  if (!run) return;
+  // 顶栏不该把点击漏给下面的画面（对白是「点一下往下走」的）
+  e.stopPropagation();
+  e.preventDefault();
+  run();
+}
+document.addEventListener("click", osBarClick, true);
 
 /* ---------- 全屏 ----------
    走浏览器全屏（不是 F11：那个脚本管不到，退出也只能靠浏览器自己）。
@@ -252,10 +307,6 @@ document.addEventListener("DOMContentLoaded", () => {
   if (!bar || $("#fs-toggle") || !fsEnabled()) return;
   const b = el("button", { type: "button", id: "fs-toggle", class: "os-opt" });
   bar.append(b);
-  b.addEventListener("click", (e) => {
-    e.stopPropagation();
-    fsToggle();
-  });
   fsSync();
 });
 /* F 进出全屏。这一颗登记在 window 捕获阶段、core.js 又先于 levels.js 加载，

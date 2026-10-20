@@ -1284,8 +1284,12 @@ function choiceLock(card) {
   choiceUnlock();
   const app = document.getElementById("app");
   const shut = [];
+  /* 记住「已经关过一次」用 shut 判断，不要用 node.inert 判断：
+     节点可能是被别处先设成 inert 的（或者上一次解锁漏了它），这时如果看到 inert
+     就 return，它永远进不了 shut，解锁时也就永远轮不到它——顶栏那颗环境音开关
+     会从此按下去毫无反应，连悬停都没有。 */
   const seal = (node) => {
-    if (!node || node.inert || node.tagName === "SCRIPT") return;
+    if (!node || node.tagName === "SCRIPT" || shut.includes(node)) return;
     node.inert = true;
     shut.push(node);
   };
@@ -1327,6 +1331,14 @@ function choiceLock(card) {
 function choiceUnlock() {
   if (choiceRelease) choiceRelease();
   choiceRelease = null;
+  /* 兜底：顶栏和底栏是常驻节点，全项目只有这里碰 inert。
+     不管 shut 有没有漏记，退出卡片时把它们再扫一遍，绝不把一颗死按钮留给玩家。 */
+  ["os-bar", "playbar"].forEach((id) => {
+    const n = document.getElementById(id);
+    if (!n) return;
+    if (n.inert) n.inert = false;
+    Array.from(n.children).forEach((c) => { if (c.inert) c.inert = false; });
+  });
 }
 
 // 开局存档：标题 → 上次停在（日子、地方、要做的事）→ 继续／选关／重来。

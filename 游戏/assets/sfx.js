@@ -698,19 +698,16 @@ function sfxButton() {
   if (typeof setPairLabel === "function") setPairLabel(b, BG_LABEL[bgLevel]);
   else b.textContent = BG_LABEL[bgLevel];
   b.classList.toggle("off", !BG_VOL[bgLevel]);
-  b.setAttribute("aria-label", BG_SAY[bgLevel] + "，点按切换。只影响环境声");
+  // 读屏那句话跟界面同一套繁简（shellText 在 core.js），别一边繁体一边简体
+  const say = typeof shellText === "function" ? shellText(BG_SAY[bgLevel]) : BG_SAY[bgLevel];
+  b.setAttribute("aria-label", say + (typeof shellText === "function" ? shellText("，点按切换。只影响环境声") : "，点按切换。只影响环境声"));
+  b.setAttribute("aria-pressed", bgLevel === 2 ? "false" : "true");
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  const b = document.getElementById("sfx-toggle");
-  if (!b) return;
-  sfxButton();
-  b.addEventListener("click", (e) => {
-    e.stopPropagation();
-    sfxSetLevel((bgLevel + 1) % BG_VOL.length);
-    sfx("tap");
-  });
-});
+/* 这颗按钮的点击不在这里绑：顶栏五颗统一由 core.js 的 osBarClick 分派
+   （绑在节点上的监听，节点一换就丢；点在按钮上下那几像素空白里也接不到）。
+   这里只管把档位画出来。 */
+document.addEventListener("DOMContentLoaded", sfxButton);
 
 /* 普通按钮的「嗒」：有专门声音的按钮在各自的地方响，这里跳过 */
 const SFX_QUIET = "#sfx-toggle, .sfx-quiet, .phone-answer, .diary-btn, #playbar-notes, #playbar-map, #map-close, .map-walk";
