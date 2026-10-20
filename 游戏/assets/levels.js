@@ -306,7 +306,8 @@ const LEVELS = [
       { text: "手机响了，看完", show: () => !!(S.miss && S.miss.chen), after: "打开邮件，两个附件都看", need: true, count: () => (S.miss && (S.miss.att1 || S.miss.att2) ? [cnt(["att1", "att2"], S.miss), 2] : null), done: () => typeof missDirtReady === "function" ? missDirtReady() : ev("mail-dirt"), hint: "" },
       { text: "把那封信给他看", after: "给他看", show: () => typeof missDirtReady === "function" ? missDirtReady() : ev("mail-dirt"), done: () => flag("showedDirt") },
       { text: "空抽屉再拉一次", after: "空抽屉掉出鱼牌", show: () => !!(S.miss && S.miss.chen) && !ev("chen-wallet"), done: () => ev("fish-tag") },
-      { text: "问他那块鱼，再上网对履历", after: "问过。履历和校报对不上", show: () => ev("fish-tag"), done: () => flag("askedFishLuo") && noted("fish-cv") },
+      // 后半截「上网对履历」要等校名从剪报上抄下来之后才露面（履历上就印着校名）。
+      { text: "问他那块鱼，再上网对履历", after: "问过。履历和校报对不上", show: () => ev("fish-tag") && (typeof vhuKnowsSchool === "function" ? vhuKnowsSchool() : true), done: () => flag("askedFishLuo") && noted("fish-cv") },
       { text: "再出走廊，看椅脚边", after: "钱夹：合照，夹层是他的学生证", show: () => !!(S.miss && S.miss.leftCorr) && !ev("fish-tag"), done: () => ev("chen-wallet") },
       { text: "回家，听周一句，看门口", after: "楼梯口周一句；铁闸差一格；门底干水印", show: () => typeof missDirtReady === "function" ? missDirtReady() : ev("mail-dirt"), done: () => noted("day-trace") },
     ],
@@ -341,8 +342,10 @@ const LEVELS = [
       { text: "有人敲门，听他要什么", after: "周来要天台钥匙", show: () => noted("countbreath"), done: () => flag("roofKeyAsked"), hint: "" },
       { text: "还没看完廿八屋的旧闻", after: "翻了站内那两篇旧闻", show: () => flag("calledMing2") && !noted("twofiles"), done: () => noted("twofiles") },
       { text: "想想天台白天的样子", after: "想起天台白天的样子", show: () => flag("calledMing2"), done: () => !!S.searchRoof },
-      { text: "搜维港大学，用他的学号登入", after: "进了他的校友帐户，翻他的信箱", show: () => flag("calledMing2"), done: () => noted("vhu-chen-id"), hint: "笔电在桌底。那间学校的名字，剪报上写着。" },
-      { text: "再用家豪的学号登入一次", after: "登入陈家豪的帐户，看见他和阿明的四年", show: () => noted("vhu-chen-id"), done: () => noted("vhu-chen-in"), hint: "他的信箱里有家豪的地址。地址就是学号。" },
+      { text: "搜维港大学，登入校园网", after: "进了维港大学的校园网，登入第一个帐户", show: () => flag("calledMing2"), done: () => noted("vhu-law-in") || noted("vhu-chen-in"), hint: () => (noted("vhu-id")
+        ? "笔电在桌底。校名在剪报上，学号在钱夹那张学生证上。"
+        : "笔电在桌底。校名在剪报上；学号在墙簿那张毕业相的右下角。") },
+      { text: "两个人的学号，各登进去看一次", after: "两个帐户都进去了，看过他们的信箱", show: () => noted("vhu-law-in") || noted("vhu-chen-in"), done: () => noted("vhu-law-in") && noted("vhu-chen-in"), hint: "他们之间那封「唔该晒」——信头那行地址就是另一个人的学号。" },
       { text: "上楼前问他白天", after: "他认：站在楼梯口，没有按门铃", show: () => noted("countbreath"), done: () => noted("day-admit") },
       { text: "他上去之后，打给家豪", after: "零点二十分打给家豪，他说马上到", show: () => noted("roofpause"), done: () => flag("calledChen") },
     ],

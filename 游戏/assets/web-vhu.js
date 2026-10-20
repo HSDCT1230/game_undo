@@ -374,6 +374,21 @@ const CHEN_MAILS = [
   },
 ];
 
+/* 他的寄件备份。里面那封「唔该晒」就是罗信箱里那一封——同一封信的另一头，
+   正文一个字都没有另写，只是抬头从「寄件人陈家豪」换成「收件人 91024656e@vhu.edu.hk」。
+   这一条是「没捡到钱夹」那条路的第二步：她已经从毕业照上有了家豪的学号，
+   登进来，看寄件备份，收件地址就是阿明的学号。 */
+const CHEN_SENT = [
+  Object.assign({}, VHU_MAILS.find((m) => m.id === "howard03"), {
+    // 换个 id：已读纪录是按 id 记的，跟罗信箱里那一封分开，不然在那边读过这边就变灰。
+    id: "chen-sent01",
+    folder: "sent",
+    to: "91024656e@vhu.edu.hk",
+    unread: false,
+    gives: ["vhu-law-id", "寄件备份的收件地址：91024656E@vhu.edu.hk。阿明的学号——学校电邮就是学号。"],
+  }),
+];
+
 const CHEN_YEARS = [
   {
     year: "2001/02",
@@ -434,6 +449,12 @@ function vhuMails() {
   return vhuSt().who === "chen" ? CHEN_MAILS : VHU_MAILS;
 }
 
+// 寄件备份只有家豪那个帐户有。罗那边不给：他自己寄出去的信跟她要找的东西无关，
+// 多一列只会让人以为漏了什么。
+function vhuSent() {
+  return vhuSt().who === "chen" ? CHEN_SENT : [];
+}
+
 function vhuYears() {
   return vhuSt().who === "chen" ? CHEN_YEARS : VHU_YEARS;
 }
@@ -457,9 +478,10 @@ function vhuUnread() {
   return vhuMails().filter((m) => m.unread && !st.read[m.id]).length;
 }
 
-function blankTabTitle() {
+function blankTabTitle(id) {
   // 人在别的分页时，分页标题也要显示这一页最后停在哪，而不是退回「新分页」。
-  const mem = typeof tabMemory === "function" && S.tab !== "blank" ? tabMemory("blank") : null;
+  const key = id === "blank2" ? "blank2" : "blank";
+  const mem = typeof tabMemory === "function" && S.tab !== key ? tabMemory(key) : null;
   const s = String((mem && mem.screen) || S.screen || "");
   if (s.indexOf("vhu-") === 0) return "VHU Portal - 维港大学";
   if (s === "engine") return "通搜　搜尋";
@@ -732,8 +754,25 @@ function seHit(q) {
   return s.indexOf("維港") >= 0 || s.indexOf("维港") >= 0 || s.indexOf("vhu") >= 0;
 }
 
+// 第一次点开维基时，第四格才出现：维基是站外的页，左上角那个后退键不显眼，
+// 与其让她去角落里找，不如多开一格空白页——要再搜一次，点那一格就行。
+function openForthTab() {
+  if (S.wikiOpened) return;
+  S.wikiOpened = true;
+  S.tabMem = S.tabMem || { house: null, wall: null, blank: null, blank2: null };
+  if (!S.tabMem.blank2) {
+    S.tabMem.blank2 = Object.assign(snapWeb(), {
+      screen: "newtab",
+      tab: "blank2",
+      vhuMail: "",
+      vhuNotice: "",
+    });
+  }
+}
+
 function seResultGo(kind) {
   if (kind === "wiki") {
+    openForthTab();
     goWeb("wiki");
     return;
   }
@@ -820,8 +859,9 @@ function viewSearchEngine() {
 /* ---------- 维基：维港大学条 ---------- */
 
 /* 与现实不同：本港没有这一间。年份、学院、舍堂都要跟站内已经出现过的一致
-   （海宁堂、医学院、社会科学院、二〇〇四年十一月）。事故那一段只在黑料到手后才出现，
-   免得玩家在第一章就先把第三章的事读掉。 */
+   （海宁堂、医学院、社会科学院、二〇〇四年十一月）。
+   事故写在「歷史」最后一句，不单独立节、不加粗、不提细节：她要是已经把黑料抄进簿里，
+   读到这一句会停一下；没抄过的人，只当是校史里一件旧事划过去。 */
 const WIKI_VHU = {
   title: "維港大學",
   lead: "維港大學（英語：Victoria Harbour University，縮寫 VHU）是一所位於香港香港島西部的公立大學，一九六二年由香港政府創辦，一九七〇年獲准頒授學位並正名為大學。校訓為「求真」，全校設五個學院、十三間舍堂，學生約一萬四千人。",
@@ -833,32 +873,38 @@ const WIKI_VHU = {
     ["學生人數", "約 14,000"],
     ["校址", "香港島西區"],
     ["校園", "約 11 公頃"],
+    ["代表色", "深青、米白"],
   ],
   sections: [
     ["歷史", [
       "一九六二年，政府在西區撥出一幅官地，開辦維港夜間學院，首年借用一所官立中學的課室上課，取錄學生一百八十人。",
-      "一九七〇年，學院獲准頒授學位，改名維港大學，並於原址以北的山坡興建主校舍。一九八五年增設醫學院，一九九三年增設工程學院。",
+      "一九七〇年，學院獲准頒授學位，改名維港大學，並於原址以北的山坡興建主校舍。一九八五年增設醫學院，一九九三年增設工程學院。二〇〇四年十一月，一名醫學院女生被發現倒臥於主校舍東翼平台，送院後不治，校方其後加高東翼天台圍欄。",
     ]],
     ["學院與學系", [
-      "大學設文學院、理學院、社會科學院、醫學院及工程學院。醫學院下設臨床醫學、公共衞生及護理三個學系，另設教學醫院。",
-      "社會科學院以社會學系及社會工作學系歷史最久，早年為本地社會服務機構培訓前線人員。",
+      "大學設文學院、理學院、社會科學院、醫學院及工程學院，另設通識教育部，負責全校共同必修課。",
+      "醫學院下設臨床醫學、公共衞生及護理三個學系，另設教學醫院，五年制課程的最後兩年全部在醫院上課。社會科學院以社會學系及社會工作學系歷史最久，早年為本地社會服務機構培訓前線人員。",
     ]],
     ["校園與舍堂", [
-      "主校舍依山而建，由山下入口至山頂圖書館共七層，校內以樓梯及升降機連接。",
-      "十三間舍堂分佈於校園南北兩翼，其中海寧堂、觀海堂及思源堂歷史最久。舍堂設導師制度，一年級學生一般須住宿一年。",
+      "主校舍依山而建，由山下入口至山頂圖書館共七層，校內以樓梯、斜坡及兩部升降機連接，中間幾層是課室與實驗室，最上兩層是圖書館和行政樓。",
+      "十三間舍堂分佈於校園南北兩翼，其中海寧堂、觀海堂及思源堂歷史最久。舍堂設導師制度，一年級學生一般須住宿一年；舍堂不按學院分配，醫科生與社會科學院學生常常住在同一層。",
+    ]],
+    ["校園生活", [
+      "舍堂是大學生活的主幹。每間舍堂有自己的堂色、堂歌和堂訓，一年級入宿第一晚要在飯堂唱一次堂歌，唱錯歌詞會被同層的舊生留下來再唱。",
+      "每年九月開學第一週，各舍堂舉行迎新晚宴，新生穿堂袍出席，席間由舍監介紹舍堂歷史。十月最後一個星期五是「回堂日」，畢業生穿回當年的堂袍回舍堂吃飯。",
+      "圖書館總館位於山頂，藏書約一百二十萬冊，另有醫學院及工程學院兩間分館。考試期間總館通宵開放，座位先到先得，醫科生習慣在上課前先去佔位。",
+    ]],
+    ["傳統與術語", [
+      "校園依山，學生口中的「上山」是指去圖書館，「下山」是指去碼頭坐車；遲到的人說「等埋升降機」，意思是要多等五分鐘。",
+      "總館地下有一道一九七〇年代留下的銅牌，刻着創校時一百八十名學生的名字。考試前摸一下銅牌，是校內流傳最久的一個小迷信。",
+      "校歌以粵語演唱，一九七〇年由校內一名中文科講師填詞，共四段，畢業禮只唱第一段。",
     ]],
     ["校友", [
-      "校友約六萬人，分佈於醫療、教育、社會服務及工商界。校友事務處每年十月舉辦返校日。",
+      "校友約六萬人，分佈於醫療、教育、社會服務及工商界。校友事務處每年十月舉辦返校日，畢業禮多在十二月舉行。",
     ]],
-  ],
-  // 只有在她已经拿到黑料之后才写出来。
-  incident: [
-    "二〇〇四年十一月，一名醫學院女生被發現倒臥於主校舍東翼平台，送院後不治。校方其後加高東翼天台圍欄，並收緊夜間開放時間。",
   ],
 };
 
 function viewWiki() {
-  const show = (id) => typeof noted === "function" && noted(id);
   const body = [];
   body.push(el("div", { class: "wk-crumb" }, ["維基百科，自由的百科全書"]));
   body.push(el("h1", { class: "wk-title" }, [WIKI_VHU.title]));
@@ -875,10 +921,6 @@ function viewWiki() {
     body.push(el("h2", { class: "wk-h2" }, [h]));
     paras.forEach((p) => body.push(el("p", {}, [p])));
   });
-  if (show("dirt") || show("vhu-school")) {
-    body.push(el("h2", { class: "wk-h2" }, ["校園事故"]));
-    WIKI_VHU.incident.forEach((p) => body.push(el("p", {}, [p])));
-  }
   body.push(el("p", { class: "wk-fine" }, [
     "本頁最後修訂於 2014年8月30日 (星期六) 14:07。",
   ]));
@@ -933,16 +975,42 @@ function viewNewTab() {
       el("button", { type: "submit", class: "vhu-btn" }, ["转到"]),
     ]),
   ]);
+  // 第四个分页开出来是空白的。空白页上得有一个能打字的地方，「开新一页再搜」才不是空话。
+  const seForm = !S.wikiOpened ? "" : el("form", {
+    class: "se-form se-form-blank",
+    onsubmit: (e) => {
+      e.preventDefault();
+      const live = document.getElementById("vhu-blank-q");
+      const q = ((live ? live.value : "") || "").trim() || SE_HOME_Q;
+      S.engineQ = q;
+      S.seSearched = true;
+      goWeb("engine");
+    },
+  }, [
+    el("span", { class: "se-form-label" }, ["通搜"]),
+    el("input", {
+      id: "vhu-blank-q",
+      type: "text",
+      class: "se-input",
+      value: "",
+      placeholder: "搜尋",
+      autocomplete: "off",
+      spellcheck: "false",
+      "aria-label": "搜尋",
+    }),
+    el("button", { type: "submit", class: "se-btn" }, ["搜尋"]),
+  ]);
   setTimeout(() => {
-    const box = document.getElementById("vhu-url");
+    const box = document.getElementById("vhu-blank-q") || document.getElementById("vhu-url");
     if (box && document.activeElement !== box) {
       box.focus();
-      box.setSelectionRange(box.value.length, box.value.length);
+      if (box.setSelectionRange) box.setSelectionRange(box.value.length, box.value.length);
     }
   }, 0);
   return el("div", { class: "hk-site vhu-site vhu-blank" }, [
     el("div", { class: "vhu-blank-inner" }, [
       el("p", { class: "vhu-blank-mark" }, ["about:blank"]),
+      seForm,
       form,
       el("p", { class: "vhu-fine" }, ["输入网址后按 Enter。也可从下面「我的最爱」开启。"]),
       el("div", { class: "vhu-fav" }, [
@@ -1317,23 +1385,33 @@ function viewVhuMail() {
   const st = vhuSt();
   const u = vhuWho();
   const list = vhuMails();
-  const mail = st.mail ? list.find((m) => m.id === st.mail) : null;
+  const sent = vhuSent();
+  const mail = st.mail ? list.concat(sent).find((m) => m.id === st.mail) : null;
   if (mail) {
     if (mail.gives && typeof note === "function") note(mail.gives[0], mail.gives[1]);
     const draft = mail.folder === "draft";
+    const sentItem = mail.folder === "sent";
     const head = draft
       ? [
         ["收件人", mail.addr + "（未寄出）"],
         ["日期", mail.date + "（最后修改）"],
         ["主旨", mail.subject],
       ]
-      : [
-        // 电邮抬头照 RFC 的写法：名字半角空格接尖括号地址，不用全角空格
-        ["寄件人", mail.from + " <" + mail.addr + ">"],
-        ["收件人", u.email],
-        ["日期", mail.date],
-        ["主旨", mail.subject],
-      ];
+      : sentItem
+        ? [
+          // 寄件备份的抬头：自己寄出去的，收件人那一行才是她要看的。
+          ["寄件人", u.email],
+          ["收件人", mail.to || ""],
+          ["日期", mail.date],
+          ["主旨", mail.subject],
+        ]
+        : [
+          // 电邮抬头照 RFC 的写法：名字半角空格接尖括号地址，不用全角空格
+          ["寄件人", mail.from + " <" + mail.addr + ">"],
+          ["收件人", u.email],
+          ["日期", mail.date],
+          ["主旨", mail.subject],
+        ];
     return vhuShell([
       el("p", { class: "vhu-back" }, [
         webLink("« 返回信箱", () => { goWeb("vhu-mail", { mailId: "" }); }),
@@ -1354,11 +1432,12 @@ function viewVhuMail() {
   const row = (m) => {
     const read = !!st.read[m.id];
     const draft = m.folder === "draft";
+    const first = m.folder === "draft" || m.folder === "sent" ? (m.folder === "draft" ? m.addr : m.to || "") : m.from;
     return el("tr", {
       class: (m.unread && !read ? "vhu-unread" : "") + " vhu-mail-row",
       onclick: () => { st.read[m.id] = true; goWeb("vhu-mail", { mailId: m.id }); },
     }, [
-      el("td", {}, [draft ? m.addr : m.from]),
+      el("td", {}, [first]),
       el("td", {}, [m.unread && !read ? el("b", {}, ["● "]) : "", m.subject]),
       el("td", { class: "vhu-num" }, [m.date]),
     ]);
@@ -1392,6 +1471,19 @@ function viewVhuMail() {
             el("th", { class: "vhu-num" }, ["日期"]),
           ])]),
           el("tbody", {}, drafts.map(row)),
+        ]),
+      ])
+      : "",
+    sent.length
+      ? el("div", {}, [
+        el("h3", { class: "vhu-h3" }, ["寄件備份"]),
+        el("table", { class: "vhu-table vhu-mail-list" }, [
+          el("thead", {}, [el("tr", {}, [
+            el("th", {}, ["收件人"]),
+            el("th", {}, ["主旨"]),
+            el("th", { class: "vhu-num" }, ["日期"]),
+          ])]),
+          el("tbody", {}, sent.map(row)),
         ]),
       ])
       : "",

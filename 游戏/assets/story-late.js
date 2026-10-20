@@ -634,7 +634,10 @@ HUBS.miss = {
         },
         {
           title: "网上：旧闻和履历", sub: () => (noted("fish-cv") ? "对不上。应该另有隐情。" : "校报，和他的公开履历。"), img: pic(14, "示意-罗履历"),
-          show: () => flag("askedFishLuo") && missHasFish(),
+          // 履历上印着「維港大學醫學院」。她得先从附件一那张剪报上把校名抄下来，
+          // 才轮到这里对着看——不然她就在他的屏幕上先知道了那间学校。
+          // 不会卡死：黑料是这一关升级的必经（day-trace 挂在 missDirtReady 上）。
+          show: () => flag("askedFishLuo") && missHasFish() && vhuKnowsSchool(),
           seen: () => noted("fish-cv"),
           go: () => (noted("fish-cv") ? showModal("网上", "履历干净。校报那则旧闻对不上。应该另有隐情。") : missOpenNews()),
         },
@@ -754,6 +757,22 @@ function vhuForkReady() {
   return vhuKnowsSchool();
 }
 
+/* 两个帐户都进去过——两条路最后都落在这里：钱夹那条是罗→家豪，毕业照那条是家豪→罗。 */
+function vhuBothIn() {
+  return noted("vhu-law-in") && noted("vhu-chen-in");
+}
+
+/* 码头那句提示分四层：没搜过／搜了没登入／登了一个／两个都登了。
+   两条路（学生证上的学号、毕业照右下角的学号）在哪一层都对得上，不用分成两套话。 */
+function vhuDockHint() {
+  if (vhuBothIn()) return "站内新闻可以再翻。语音还在手机里。两个帐户都还开着。";
+  if (noted("vhu-law-in") || noted("vhu-chen-in")) return "站内新闻可以再翻。语音还在手机里。另一个人的信箱还没看。";
+  if (!vhuForkReady()) return "站内新闻可以再翻。语音还在手机里。";
+  if (noted("vhu-id")) return "站内新闻可以再翻。语音还在手机里。剪报上那个校名，学生证上那个学号——都在簿里。";
+  if (noted("vhu-chen-id")) return "站内新闻可以再翻。语音还在手机里。剪报上那个校名，毕业照右下角那个学号——都在簿里。";
+  return "站内新闻可以再翻。语音还在手机里。剪报上那个校名，还在簿里。";
+}
+
 function goCampus() {
   if (typeof vhuSt === "function" && vhuSt().authed) {
     vhuPage("home");
@@ -788,20 +807,12 @@ function drawSearch() {
     sc.indexOf("vhu-") === 0;
   const wallish = !blankish && (S.tab === "wall" || sc === "ad" || sc.indexOf("wall-") === 0);
   const desk = laptop(webInner(), {
-    tab: blankish ? "blank" : wallish ? "wall" : "house",
+    tab: blankish ? (S.tab === "blank2" ? "blank2" : "blank") : wallish ? "wall" : "house",
     addr: webAddr(),
   });
   desk.classList.add("search-desk");
   const dock = el("div", { class: "scene-actions fork task-note" }, [
-    el("p", { class: "hub-hint" }, [
-      noted("vhu-chen-in")
-        ? "站内新闻可以再翻。语音还在手机里。他那边的帐户还开着。"
-        : vhuForkReady()
-          ? (vhuHasId()
-            ? "站内新闻可以再翻。语音还在手机里。剪报上那个校名，学生证上那个学号——都在簿里。"
-            : "站内新闻可以再翻。语音还在手机里。剪报上那个校名，还在簿里。")
-          : "站内新闻可以再翻。语音还在手机里。",
-    ]),
+    el("p", { class: "hub-hint" }, [vhuDockHint()]),
     forkChoice(
       "☎",
       "scene-act" + (S.searchHeard ? " done" : " primary"),
@@ -826,9 +837,9 @@ function drawSearch() {
     vhuForkReady()
       ? forkChoice(
         "搜",
-        "scene-act" + (noted("vhu-chen-in") ? " done" : " primary"),
+        "scene-act" + (vhuBothIn() ? " done" : " primary"),
         goEngine,
-        noted("vhu-chen-in") ? "那间学校的网　上过了" : "搜「维港大学」"
+        vhuBothIn() ? "那间学校的网　上过了" : "搜「维港大学」"
       )
       : "",
   ]);

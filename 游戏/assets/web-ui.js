@@ -364,8 +364,8 @@ function laptop(inner, opts) {
   const title = opts.title
     || (tab === "wall"
       ? wallCountLabel("墙簿", wallUnread().n)
-      : tab === "blank"
-        ? blankTabTitle()
+      : tab === "blank" || tab === "blank2"
+        ? blankTabTitle(tab)
         : wallCountLabel("廿八屋", houseForumUnread().length));
   const titlebar = el("div", { class: "browser-titlebar" }, [
     el("span", { class: "ie-icon", "aria-hidden": "true" }, ["e"]),
@@ -432,7 +432,8 @@ function laptop(inner, opts) {
   const tabs = el("div", { class: "browser-tabs" }, [
     btnTab(wallCountLabel("廿八屋", houseForumUnread().length) + " - 香港租盘", "house", tab, scene),
     btnTab(wallCountLabel("墙簿", wallUnread().n) + " - 我的首页", "wall", tab, scene),
-    btnTab(blankTabTitle(), "blank", tab, scene),
+    btnTab(blankTabTitle("blank"), "blank", tab, scene),
+    tab4Open() ? btnTab(blankTabTitle("blank2"), "blank2", tab, scene) : "",
   ]);
   const status = el("div", { class: "browser-status" }, [
     el("span", { class: "bs-left" }, [loading ? webLoadLabel() : "完成"]),
@@ -454,7 +455,7 @@ function btnTab(label, id, on, scene) {
     class: id === on ? "on" : "",
     onclick: () => {
       if (scene) {
-        browseFromScene(id === "wall" ? "wall" : id === "blank" ? "newtab" : "home");
+        browseFromScene(id === "wall" ? "wall" : id === "blank" || id === "blank2" ? "newtab" : "home");
         return;
       }
       // 点自己所在的分页不重载——真实浏览器只是把这一页提到前面。
@@ -463,6 +464,7 @@ function btnTab(label, id, on, scene) {
       const mem = id === "house" && (S.pendingPost || !postedHelp()) ? null : tabMemory(id);
       if (mem) {
         if (holdForPost(mem.screen)) return;
+        swapTabHist(S.tab, id);
         restoreWebSnap(mem);
         S.tab = id;
         webAddrDraft = null;
@@ -470,10 +472,20 @@ function btnTab(label, id, on, scene) {
         draw();
         return;
       }
-      if (id === "wall") goWeb("wall");
-      else if (id === "blank") goWeb("newtab");
-      else if (S.pendingPost || !postedHelp()) goWeb("post");
-      else goWeb(flag("searched") ? "list" : "home");
+      if (id === "wall") {
+        swapTabHist(S.tab, id);
+        goWeb("wall", { noHist: true });
+      } else if (id === "blank" || id === "blank2") {
+        // 第四格第一次点开是一张空白页，前面不接任何历史。
+        swapTabHist(S.tab, id);
+        goWeb("newtab", { tab: id, noHist: true });
+      } else {
+        // 换去廿八屋／墙簿也各算一格：不换历史的话，在那边按后退会退进
+        // 第四格刚才那间校园网——四个分页却共用一个后退栈。
+        swapTabHist(S.tab, id);
+        if (S.pendingPost || !postedHelp()) goWeb("post", { noHist: true });
+        else goWeb(flag("searched") ? "list" : "home", { noHist: true });
+      }
     },
   }, [label]);
 }
@@ -507,19 +519,36 @@ function snapWeb() {
   };
 }
 
-/* 分页记忆：浏览器窗口里三个分页各自记得自己停在那一页。 */
+/* 分页记忆：浏览器窗口里每个分页各自记得自己停在那一页。
+   第四格（blank2）只在看过维基那一条之后才出现，见 tab4Open()。 */
 function tabKey() {
-  return S.tab === "wall" || S.tab === "blank" ? S.tab : "house";
+  const t = String(S.tab || "");
+  return t === "wall" || t === "blank" || t === "blank2" ? t : "house";
 }
 
 function rememberTab() {
-  S.tabMem = S.tabMem || { house: null, wall: null, blank: null };
+  S.tabMem = S.tabMem || { house: null, wall: null, blank: null, blank2: null };
   S.tabMem[tabKey()] = snapWeb();
 }
 
 function tabMemory(id) {
   const mem = S.tabMem && S.tabMem[id];
   return mem && mem.screen ? mem : null;
+}
+
+// 四个分页各有自己的「上一页」：在第四个分页里按后退，不该退到第三个分页的维基去。
+function swapTabHist(from, to) {
+  S.tabHist = S.tabHist || {};
+  if (from && from !== to) S.tabHist[from] = { hist: S.webHist || [], fwd: S.webFwd || [] };
+  const got = S.tabHist[to];
+  S.webHist = got ? (got.hist || []).slice() : [];
+  S.webFwd = got ? (got.fwd || []).slice() : [];
+}
+
+// 看过维基之后，浏览器里多一格空白分页：她不必去找左上角那个后退键，
+// 开新一页再搜一次就行。第四个分页只在第 15 关的搜索台上出现。
+function tab4Open() {
+  return S.wikiOpened === true;
 }
 
 function browseFromScene(screen) {
@@ -655,7 +684,8 @@ function goWeb(screen, extra) {
     extra.filter = "share";
   }
   if (holdForPost(screen)) return;
-  if (!extra.replace) {
+  // noHist：换分页那一下不算「在新分页里走了一步」，不必把旧分页那一页塞进来。
+  if (!extra.replace && !extra.noHist) {
     S.webHist = S.webHist || [];
     const cur = snapWeb();
     const last = S.webHist[S.webHist.length - 1];
@@ -669,7 +699,8 @@ function goWeb(screen, extra) {
   S.wallFresh = null;
   S.wallNav = (S.wallNav || 0) + 1;
   if (extra.tab) S.tab = extra.tab;
-  else if (isBlankSite(screen)) S.tab = "blank";
+  // 站内页之间走动时留在自己这一格：她要是从第四个分页搜进去，就一直在第四个分页里。
+  else if (isBlankSite(screen)) S.tab = S.tab === "blank2" ? "blank2" : "blank";
   else if (screen === "ad" || screen === "wall" || String(screen).indexOf("wall-") === 0) S.tab = "wall";
   else S.tab = "house";
   if ("listing" in extra) S.listing = extra.listing;
@@ -859,7 +890,9 @@ function renderWeb() {
   sfxWebOpen();
   clearStage();
   const inner = webInner();
-  const tab = S.tab === "wall" || S.tab === "blank" ? S.tab : "house";
+  // 分页高亮照 tabKey() 走：多出第四格之后，这里再手写一份白名单就会把它
+  // 当成廿八屋——第四格上亮着第一格，点第一格又因为「点的是自己」不理人。
+  const tab = tabKey();
   stage.append(laptop(inner, {
     tab,
     addr: webAddr(),

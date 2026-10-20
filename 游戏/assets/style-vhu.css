@@ -612,6 +612,25 @@
 .se-picks li { padding: 3px 0; }
 .se-fine { margin: 18px 0 0; color: #999; font-size: 10.5px; }
 
+/* 第四格空白分页上的通搜小格：不占满，贴在 about:blank 行下面，
+   她把学校名字打进这一格就行。样式与通搜首页那一行同源。 */
+.se-form-blank {
+  margin: 0 0 16px;
+  padding: 0;
+  gap: 6px;
+  align-items: stretch;
+  border: 0;
+}
+.se-form-label {
+  flex: 0 0 auto;
+  align-self: center;
+  color: #1f5fbf;
+  font: 700 14px "Microsoft JhengHei", "Microsoft YaHei", sans-serif;
+}
+.se-form-blank .se-input { padding: 8px 9px; border-color: #7f9db9; }
+.se-form-blank .se-input:focus { outline: 1px solid #7f9db9; }
+.se-form-blank .se-btn { padding: 0 14px; }
+
 /* ---------- 维基 ---------- */
 
 .wk-site {
