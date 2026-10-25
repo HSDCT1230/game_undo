@@ -2,14 +2,18 @@
 """家豪的毕业照（2004 届，维港大学社会科学院）—— 墙簿「青春」相簿那一张。
 
 底图是生成的，白边、印字、右下角那行手写名号都在这里压上去：
-    · 先切掉底图最下面那条（生成器的水印在那儿，切掉比涂掉干净）
     · 按 4:3 补白边，下边留够放一行印字
     · 中间一行是相馆印的：維港大學社會科學院　二〇〇四屆畢業同學合影
     · 右下角是家豪自己用原子笔写的：陳家豪　01038472H（第 15 关那条替代线的学号就出在这里）
-    · 最后整张压旧：降饱和、抬黑、暖偏、颗粒、低质 JPEG
+    · 最后整张压旧：降饱和、暖偏、颗粒、低质 JPEG
+
+做旧的分寸（2026-10-23 调过一轮）：
+    上一版把暗部抬到 +12、饱和压到 0.86，三十个人的脸在 1152px 下被糊成一模一样。
+    这一版抬黑只到 +8、饱和 0.90，缩图后补一道轻锐化，脸的结构才留得住；
+    颗粒也从 σ3.1 降到 2.2，不然细五官全被噪点吃掉。
 
 用法（仓库根目录）：
-    python tools/img/毕业照.py 底图.png
+    python tools/img/毕业照.py 底图.png [切掉底部像素数]
 """
 from __future__ import annotations
 
@@ -26,7 +30,6 @@ W, H = 1152, 864            # 与热点图同一规格
 PAD_X, PAD_TOP, PAD_BOT = 18, 16, 68
 INNER_W, INNER_H = W - PAD_X * 2, H - PAD_TOP - PAD_BOT   # 1116 × 780
 
-CHOP_BOTTOM = 90            # 切掉底图最下面这一条（水印在 1097 起）
 PAPER = (246, 244, 238)     # 相纸白边，不是纯白
 INK = (62, 58, 52)          # 相馆印字
 PEN = (44, 52, 86)          # 原子笔
@@ -53,22 +56,24 @@ def cover(im: Image.Image, w: int, h: int) -> Image.Image:
 
 
 def aged(im: Image.Image, seed: int = 7) -> Image.Image:
-    """2004 年晒出来、2014 年用手机翻拍的那张：褪一点色，暗部抬起来。"""
-    im = ImageEnhance.Color(im).enhance(0.86)
-    im = ImageEnhance.Contrast(im).enhance(0.94)
+    """2004 年晒出来、2014 年用手机翻拍的那张：褪一点色，暗部抬起来，但不糊脸。"""
+    im = im.filter(ImageFilter.UnsharpMask(radius=1.4, percent=52, threshold=3))
+    im = ImageEnhance.Color(im).enhance(0.90)
+    im = ImageEnhance.Contrast(im).enhance(0.96)
     a = np.asarray(im).astype(np.float32)
-    a = a * 0.94 + 12.0                     # 抬黑
+    a = a * 0.96 + 8.0                      # 抬黑（比上一版轻，保住眼窝和法令线）
     a[..., 0] *= 1.012                      # 暖
     a[..., 2] *= 0.982
     rng = np.random.default_rng(seed)
-    grain = rng.normal(0.0, 3.1, a.shape[:2])[..., None]
+    grain = rng.normal(0.0, 2.2, a.shape[:2])[..., None]
     a = a + grain
     return Image.fromarray(np.clip(a, 0, 255).astype(np.uint8))
 
 
-def main(src: str) -> None:
+def main(src: str, chop_bottom: int = 0) -> None:
     base = Image.open(src).convert("RGB")
-    base = base.crop((0, 0, base.width, max(1, base.height - CHOP_BOTTOM)))
+    if chop_bottom > 0:
+        base = base.crop((0, 0, base.width, max(1, base.height - chop_bottom)))
     photo = aged(cover(base, INNER_W, INNER_H))
 
     sheet = Image.new("RGB", (W, H), PAPER)
@@ -101,4 +106,5 @@ def main(src: str) -> None:
 
 
 if __name__ == "__main__":
-    main(sys.argv[1] if len(sys.argv) > 1 else "")
+    main(sys.argv[1] if len(sys.argv) > 1 else "",
+         int(sys.argv[2]) if len(sys.argv) > 2 else 0)

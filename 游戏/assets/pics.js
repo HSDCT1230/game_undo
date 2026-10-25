@@ -1,5 +1,5 @@
 const PIC_ROOT = "../图/游戏/";
-const PIC_VER = "20261022-grad1";
+const PIC_VER = "20261023-grad1";
 // 图库里一律 .jpg（2026-10-19 全库由 PNG 转出，见 tools/压图.py）。
 // 为什么不留 PNG：这批图是照片，PNG 存等于没压缩，193.7MB→26.7MB，首屏才拉得动。
 // 换图流程不变：照旧往同名路径放图，但放完跑一遍 `python tools/压图.py`，它会转好并删掉原 .png；
