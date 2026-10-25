@@ -4,13 +4,16 @@
 旧图不动，新图另存为 `图/人物/学生证/0X-中文名-重製.jpg`。
 证件照用 `图/人物/证件照/` 里的原脸，按 _organize_and_ids.py 的 paper_print 思路做旧：
 降采样、抬黑、暖偏、颗粒、低质 JPEG —— 不是套一层滤镜。
+`--outline` 出的是另一版：证件照只留一圈黑轮廓（0X-中文名-輪廓.jpg），版式一个像素不动。
 
 用法（仓库根目录）：
     python tools/img/学生证.py
-    python tools/img/学生证.py --sid-lam 91024130K   改林伟森学号后重出 04
-    python tools/img/学生证.py --check               只量字块，不出图
+    python tools/img/学生证.py --outline               三张的证件照换成黑轮廓
+    python tools/img/学生证.py --sid-lam 91024130K     改林伟森学号后重出 04
+    python tools/img/学生证.py --check                 只量字块，不出图
 
-版式量自 `图/人物/学生证/02-羅啟明.jpg`：卡面 24..1130 / 44..820，
+版式量自初版 `图/人物/学生证/02-羅啟明.jpg`（该图做坏，2026-10-21 已删除；下面这组数
+是删除前量的，重出照用）：卡面 24..1130 / 44..820，
 深青横条 87..205，证件照 62..428 / 219..738（横条和照片之间留 14px 米色卡面）。
 右栏两列：标签墨迹右缘 668、值墨迹左缘 712，五行间距一律 44；
 五行字顶 258/350/441/533/624，页脚 739，右边距 1108。
@@ -31,6 +34,7 @@ from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont
 
 ROOT = Path(__file__).resolve().parents[2]
 IDPHOTO = ROOT / "图" / "人物" / "证件照"
+AVA = ROOT / "图" / "游戏" / "00-通用"
 OUT = ROOT / "图" / "人物" / "学生证"
 
 SS = 2                      # 超采样倍数，出图再降回 1152×864
@@ -80,13 +84,15 @@ PEOPLE = [
         "dept": "醫學院　內外全科醫學",
         "sid": "91024656E", "issue": "二〇〇〇年九月",
         "light": "flat", "seed": 21,
+        "sil": "头像-罗启明.jpg",
     },
     {
         "n": "03", "file": "03-陳家豪-重製.jpg", "photo": "03-陳家豪.png",
         "name_zh": "陳家豪", "name_en": "Howard Chan",
         "dept": "社會科學院　社會學",
         "sid": "01038472H", "issue": "二〇〇一年九月",
-        "light": "sideshadow", "seed": 33,
+        "light": "flat", "seed": 33,
+        "sil": "头像-陈家豪.jpg",
     },
     {
         "n": "04", "file": "04-林偉森-重製.jpg", "photo": "04-林偉森.png",
@@ -94,6 +100,8 @@ PEOPLE = [
         "dept": "醫學院　內外全科醫學",
         "sid": "91024130K", "issue": "二〇〇〇年九月",
         "light": "flat", "seed": 47,
+        # 对话里没有他的人影（他从不上镜）：从证件照抠，按冷偏分背景
+        "sil": None,
     },
 ]
 
@@ -268,6 +276,174 @@ def age_photo(im: Image.Image, seed: int, mode: str) -> Image.Image:
     return Image.open(buf).convert("RGB")
 
 
+# ---------------------------------------------------------------- 剪影证件照：只留一道黑轮廓
+#
+# 版面上只换照片：卡、横条、五行字一个像素都不动。
+# 人影照原始剪影拓：罗、陈取对话头像，林伟森从不上镜，改从证件照抠。
+# 出来的是「空相」：米灰背景上一圈手描似的黑线，没有五官、没有明暗。
+
+SIL_HEAD = 0.46         # 头高占照片高度（跟重製版证件照同一机位）
+SIL_TOP = 0.14          # 冠顶到照片上边
+SIL_LINE = 2.4          # 轮廓线宽（1× px）
+SIL_INK = (24, 22, 20)
+SIL_BG_HI = (172, 171, 166)
+SIL_BG_LO = (146, 145, 141)
+
+
+def binary(m):
+    return m >= 127
+
+
+def row_runs(m: np.ndarray, cx: float) -> np.ndarray:
+    """逐行只留盖住中线的这一段：飘出去的发尖、背景噪点都不跟。
+
+    中线那一点不在人影里，这一行就整行丢掉 —— 头顶以上那些碎点就是这么没的。
+    """
+    out = np.zeros_like(m)
+    h, w = m.shape
+    x0c = min(max(int(cx), 0), w - 1)
+    for y in range(h):
+        row = m[y]
+        if not row[x0c]:
+            continue
+        x0 = x1 = x0c
+        while x0 > 0 and row[x0 - 1]:
+            x0 -= 1
+        while x1 < w - 1 and row[x1 + 1]:
+            x1 += 1
+        out[y, x0:x1 + 1] = True
+    return out
+
+
+def head_metrics(m: np.ndarray) -> dict:
+    """冠顶、颈、头宽、头中线。
+
+    颈取头段里逐行宽度最窄的一行（窗口只放头，不放到肩）：
+    头像和证件照两边都吃得下；从头往下硬扫会把刘海那道凹口、眼镜那一行当颈。
+    """
+    h, w = m.shape
+    ys = np.where(m.sum(axis=1) > 2)[0]
+    crown = int(ys[0])
+    wid = np.zeros(h, np.float32)
+    for y in range(h):
+        c = np.where(m[y])[0]
+        if len(c):
+            wid[y] = c[-1] - c[0] + 1
+    sm = np.convolve(wid, np.ones(17) / 17, mode="same")
+
+    lo = int(crown + 0.18 * (h - crown))
+    hi = max(int(crown + 0.72 * (h - crown)), lo + 8)
+    neck = lo + int(np.argmin(sm[lo:hi]))
+
+    head_h = max(neck - crown, 8)
+    band = wid[int(crown + 0.30 * head_h):int(crown + 0.80 * head_h)]
+    head_w = max(int(band.max()) if len(band) else 0, 8)
+    cxs = [(np.where(m[y])[0][0] + np.where(m[y])[0][-1]) / 2
+           for y in range(crown, neck) if m[y].any()]
+    return dict(crown=crown, neck=neck, head_h=head_h, head_w=head_w,
+                cx=float(np.median(cxs)))
+
+
+def avatar_mask(path: Path) -> np.ndarray:
+    """对话里的头像：近黑的一块就是人影。"""
+    lum = np.asarray(Image.open(path).convert("L")).astype(np.float32)
+    m = lum < 40
+    return row_runs(m, head_metrics(m)["cx"])
+
+
+def face_mask(path: Path) -> np.ndarray:
+    """林伟森：证件照里把人和背景分开。
+
+    背景是平光的浅蓝灰（B 比 R 高 30 上下），人身上没有这种冷偏 ——
+    灰衬衫是中性的，所以按「冷偏」抠比按亮度差抠稳，衬衫肩线才留得住。
+    """
+    a = np.asarray(Image.open(path).convert("RGB")).astype(np.float32)
+    cold = a[..., 2] - a[..., 0]
+    m = cold < 14
+    im = Image.fromarray((m * 255).astype(np.uint8)).filter(ImageFilter.MedianFilter(9))
+    # 先开后闭：开运算吃掉眼镜腿那两根细横刺和头发丝的碎口，
+    # 闭运算再把耳前那道细缝补上，剩下一整块人形
+    im = im.filter(ImageFilter.MinFilter(11)).filter(ImageFilter.MaxFilter(11))
+    im = im.filter(ImageFilter.MaxFilter(9)).filter(ImageFilter.MinFilter(9))
+    m = binary(np.asarray(im))
+    met = head_metrics(m)
+    return row_runs(m, met["cx"]), met
+
+
+def outline_photo(card: dict, box) -> Image.Image:
+    """证件照位置换成空相：米灰背景 + 一圈黑轮廓。
+
+    人影照真实剪影拓（罗、陈取对话头像，林取证件照），只换相片，版式不动。
+    「只有轮廓」的意思是：线以内的像素跟背景一样，五官、衣服、明暗全都不留。
+    """
+    bw = int(round((box[2] - box[0]) * SS))
+    bh = int(round((box[3] - box[1]) * SS))
+    src = bw / bh
+
+    if card["sil"]:
+        m = avatar_mask(AVA / card["sil"])
+        met = head_metrics(m)
+    else:
+        m, met = face_mask(IDPHOTO / card["photo"])
+
+    crown, head_h = met["crown"], met["head_h"]
+    win_h = head_h / SIL_HEAD                     # 裁窗（源像素）
+    win_w = win_h * src
+    win_x = met["cx"] - win_w / 2
+    win_y = crown - SIL_TOP * win_h
+    s = bw / win_w                                # 输出像素 / 源像素
+
+    # 源图边缘用「复制边」补，不要补黑：林伟森的肩宽过相框，
+    # 补黑会在相片里描出一道横线；复制边才是「人影还在外面」。
+    ep = int(head_h * 0.35)
+    m_ext = np.pad(m, ((ep, ep), (ep, ep)), mode="edge")
+
+    # 先多裁一圈（pad）再取边界：肩线穿过相框那一段不能沿着框边描出一道直线
+    pad = int(round(8 * SS))
+    src_im = Image.fromarray((m_ext * 255).astype(np.uint8))
+    px = pad / s
+    solid = src_im.crop((int(round(win_x + ep - px)), int(round(win_y + ep - px)),
+                         int(round(win_x + ep + win_w + px)), int(round(win_y + ep + win_h + px))))
+    solid = solid.resize((bw + 2 * pad, bh + 2 * pad), Image.Resampling.LANCZOS)
+
+    # 模糊再取阈：抹掉眼镜腿这类一两像素的突起和凹口，留下整块轮廓
+    soft = max(0.6, (0.007 if card["sil"] else 0.012) * met["head_w"] * s)
+    solid = solid.filter(ImageFilter.GaussianBlur(soft)).point(lambda v: 255 if v > 127 else 0)
+
+    # 边界取等宽带：膨胀减腐蚀，线宽两端各吃一半
+    r = max(1, int(round(SIL_LINE * SS / 2)))
+    k = 2 * r + 1
+    dil = np.asarray(solid.filter(ImageFilter.MaxFilter(k)), np.float32)
+    ero = np.asarray(solid.filter(ImageFilter.MinFilter(k)), np.float32)
+    line = np.clip((dil - ero) / 255.0, 0, 1)
+    line = np.asarray(Image.fromarray((line * 255).astype(np.uint8))
+                      .filter(ImageFilter.GaussianBlur(0.9 * SS)), np.float32) / 255.0
+    line = line[pad:pad + bh, pad:pad + bw]
+
+    # 背景：影棚米灰，左上一点光，四角压暗
+    yy, xx = np.mgrid[0:bh, 0:bw].astype(np.float32)
+    t = np.clip(0.62 * (yy / bh) + 0.38 * ((xx / bw) - 0.5) ** 2 * 4, 0, 1)
+    bg = (np.array(SIL_BG_HI, np.float32) * (1 - t[..., None])
+          + np.array(SIL_BG_LO, np.float32) * t[..., None])
+    r2 = np.sqrt(((xx / bw) - 0.42) ** 2 + ((yy / bh) - 0.30) ** 2)
+    bg *= np.clip(1.10 - 0.18 * r2, 0.86, 1.09)[..., None]
+    rng = np.random.RandomState(card["seed"] + 11)
+    bg += noise_layer((bw, bh), 7.0)[..., None]
+    bg += rng.normal(0, 2.6, (bh, bw, 1)).astype(np.float32)
+
+    # 墨：线心实、边缘毛，颗粒顺带压一点
+    ink_a = line * (0.94 + 0.10 * noise_layer((bw, bh), 1.0, Image.Resampling.NEAREST))
+    ink_a = np.clip(ink_a, 0, 0.97)[..., None]
+    out = bg * (1 - ink_a) + np.array(SIL_INK, np.float32) * ink_a
+    out = np.clip(out, 0, 255).astype(np.uint8)
+
+    im = Image.fromarray(out, "RGB").filter(ImageFilter.GaussianBlur(0.35 * SS))
+    buf = io.BytesIO()
+    im.save(buf, "JPEG", quality=84, subsampling=0)
+    buf.seek(0)
+    return Image.open(buf).convert("RGB")
+
+
 # ---------------------------------------------------------------- 卡片
 
 def rounded_mask(w, h, box, r):
@@ -317,7 +493,7 @@ def text_plan(draw, card) -> list[dict]:
     return plan
 
 
-def build(card: dict) -> Image.Image:
+def build(card: dict, outline: bool = False) -> Image.Image:
     w, h = W * SS, H * SS
     S = lambda v: int(round(v * SS))
 
@@ -372,14 +548,17 @@ def build(card: dict) -> Image.Image:
 
     # ---- 证件照：薄白边、右下软影，不做成贴纸
     ph = [S(PHOTO[0]), S(PHOTO[1]), S(PHOTO[2]), S(PHOTO[3])]
-    ph_im = age_photo(crop_photo(IDPHOTO / card["photo"], PHOTO), card["seed"], card["light"])
     pw, phh = ph[2] - ph[0], ph[3] - ph[1]
-    ph_im = ph_im.resize((pw, phh), Image.Resampling.LANCZOS)
+    if outline:
+        ph_im = outline_photo(card, PHOTO)
+    else:
+        ph_im = age_photo(crop_photo(IDPHOTO / card["photo"], PHOTO), card["seed"], card["light"])
+        ph_im = ph_im.resize((pw, phh), Image.Resampling.LANCZOS)
 
-    # 三张是同一批冲出来的：把人脸平均亮度拉到一条线上，免得一张偏黑
-    arr = np.asarray(ph_im).astype(np.float32)
-    arr *= (112.0 / max(1e-3, float(arr.mean()))) ** 0.8
-    ph_im = Image.fromarray(np.clip(arr, 0, 255).astype(np.uint8))
+        # 三张是同一批冲出来的：把人脸平均亮度拉到一条线上，免得一张偏黑
+        arr = np.asarray(ph_im).astype(np.float32)
+        arr *= (112.0 / max(1e-3, float(arr.mean()))) ** 0.8
+        ph_im = Image.fromarray(np.clip(arr, 0, 255).astype(np.uint8))
 
     canvas.paste(ph_im, (ph[0], ph[1]))          # 不留框、不描边，照片直接坐在卡面上
     draw = ImageDraw.Draw(canvas)
@@ -457,6 +636,7 @@ def main() -> None:
     ap.add_argument("--sid-lam", default=None)
     ap.add_argument("--only", default=None)
     ap.add_argument("--check", action="store_true")
+    ap.add_argument("--outline", action="store_true", help="证件照只留黑轮廓，另存 -輪廓")
     args = ap.parse_args()
 
     OUT.mkdir(parents=True, exist_ok=True)
@@ -465,13 +645,14 @@ def main() -> None:
             continue
         if card["n"] == "04" and args.sid_lam:
             card["sid"] = args.sid_lam
+        name = card["file"].replace("-重製", "-輪廓") if args.outline else card["file"]
         if args.check:
-            p = OUT / card["file"]
+            p = OUT / name
             if p.exists():
                 check(p, card)
             continue
-        im = build(card)
-        dest = OUT / card["file"]
+        im = build(card, outline=args.outline)
+        dest = OUT / name
         im.save(dest, "JPEG", quality=92, subsampling=0, optimize=True)
         print("ok", dest.relative_to(ROOT), f'{im.size[0]}x{im.size[1]}', flush=True)
 
