@@ -342,14 +342,19 @@ const LEVELS = [
       { text: "有人敲门，听他要什么", after: "周来要天台钥匙", show: () => noted("countbreath"), done: () => flag("roofKeyAsked"), hint: "" },
       { text: "还没看完廿八屋的旧闻", after: "翻了站内那两篇旧闻", show: () => flag("calledMing2") && !noted("twofiles"), done: () => noted("twofiles") },
       { text: "想想天台白天的样子", after: "想起天台白天的样子", show: () => flag("calledMing2"), done: () => !!S.searchRoof },
-      { text: "搜维港大学，登入校园网", after: "进了维港大学的校园网，登入第一个帐户", show: () => flag("calledMing2"), done: () => noted("vhu-law-in") || noted("vhu-chen-in"), hint: () => (noted("vhu-id")
+      { text: "搜维港大学，登入校园网", after: "进了维港大学的校园网，登入第一个帐户", need: true, show: () => flag("calledMing2"), done: () => noted("vhu-law-in") || noted("vhu-chen-in"), hint: () => (noted("vhu-id")
         ? "笔电在桌底。校名在剪报上，学号在钱夹那张学生证上。"
         : "笔电在桌底。校名在剪报上；学号在墙簿那张毕业相的右下角。") },
-      { text: "两个人的学号，各登进去看一次", after: "两个帐户都进去了，看过他们的信箱", show: () => noted("vhu-law-in") || noted("vhu-chen-in"), done: () => noted("vhu-law-in") && noted("vhu-chen-in"), hint: "他们之间那封「唔该晒」——信头那行地址就是另一个人的学号。" },
+      { text: "两个人的学号，各登进去看一次", after: "两个帐户都进去了", need: true, show: () => noted("vhu-law-in") || noted("vhu-chen-in"), done: () => vhuBothIn(), hint: "他们之间那封「唔该晒」——信头那行地址就是另一个人的学号。" },
+      // 这一行是「B 档」加的：要她真的在目录里翻到那一册，不是登进去就算。
+      // 任务条上把地方写清楚，不让人在站里瞎点；看懂多少仍留给愿意的人。
+      { text: "当年到底发生了什么？图书馆目录，搜「精神」", after: "那一册：二〇〇四年十一月借出，应还日期过了十年", need: true, show: () => noted("vhu-law-in") || noted("vhu-chen-in"), done: () => noted("vhu-lib-trace"), hint: "两个帐户里都有图书馆。目录里那一条点得开。" },
       { text: "上楼前问他白天", after: "他认：站在楼梯口，没有按门铃", show: () => noted("countbreath"), done: () => noted("day-admit") },
       { text: "他上去之后，打给家豪", after: "零点二十分打给家豪，他说马上到", show: () => noted("roofpause"), done: () => flag("calledChen") },
     ],
-    advance: { when: "9月7日　夜", where: "他来了", fn: () => mingReturn(), modes: ["search"], ready: () => flag("calledMing2") },
+    // 别改成 levelReady()：这一关有一条必做是「他到门口」，那件事本身要按这颗按钮才发生，
+    // 用 levelReady() 会死锁。这里只挡三样：打过电话、两个帐户都进去过、目录里那一册看过。
+    advance: { when: "9月7日　夜", where: "他来了", fn: () => mingReturn(), modes: ["search"], ready: () => flag("calledMing2") && vhuBothIn() && noted("vhu-lib-trace") },
     next: "零点四十一分　后楼梯",
     start: () => nightName(),
     gives: () => {
@@ -844,7 +849,7 @@ function drawCaption(c, L) {
       prev && DONE_LINE[c.from] ? el("p", { class: "caption-done" }, [H(DONE_LINE[c.from])]) : "",
       prev && kept.length ? el("ul", { class: "caption-kept" }, kept.map((t) => el("li", {}, [t]))) : "",
       prev && prev.next ? el("p", { class: "caption-next" }, [prev.next]) : "",
-      el("p", { class: "caption-line" }, [levelGoalText(L) || (typeof toHkTrad === "function" ? toHkTrad("继续。") : "继续。")]),
+      el("p", { class: "caption-line" }, [levelGoalText(L) || H("继续。")]),
       el("div", { class: "caption-acts" }, [go("嗯……", startLevelNow)])
     );
   } else {
@@ -1174,6 +1179,8 @@ function applySnap(snap) {
   if (!S.flags || typeof S.flags !== "object") S.flags = {};
   if (!S.known || typeof S.known !== "object") S.known = {};
   if (!S.chatLogs || typeof S.chatLogs !== "object") S.chatLogs = {};
+  // 旧档里分页是写死的 blank／blank2，这里换成动态分页（见 web-ui.js normalizeTabs）。
+  if (typeof normalizeTabs === "function") normalizeTabs();
   migrateEvidenceImgs();
   renderNotes();
 }
@@ -1500,8 +1507,9 @@ function bootGame() {
   if (web) {
     S.mode = "web";
     S.paused = null;
-    S.tab = "blank";
+    S.tab = "newtab";
     S.screen = web === "vhu" ? "vhu-login" : "newtab";
+    if (S.screen !== "newtab") S.tab = newPageTab();
     draw();
     return;
   }

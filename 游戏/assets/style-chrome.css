@@ -395,7 +395,7 @@ a:hover {
   align-items: center;
   gap: .55em;
 }
-/* 标题长了（例如「VHU Portal - 維港大學」）窄屏下不许换行，直接省略号；
+/* 标题长了（例如「VHU Portal - 维港大学」）窄屏下不许换行，直接省略号；
    否则右侧的 — □ × 会被挤到第二行。 */
 .browser-title {
   flex: 1 1 auto;
@@ -504,7 +504,13 @@ a:hover {
   padding: 3px 8px 0;
   border-bottom: 1px solid #9da6af;
   background: #d7dbe0;
+  /* 分页是动态开的：廿八屋、墙簿两个固定格，中间是这趟开过的网页，最右永远一格空的。
+     开到装不下时不缩格、不换行，整排横向推（滚条收起来，2014 年的 IE 上没有现代灰条）。 */
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
 }
+.browser-tabs::-webkit-scrollbar { display: none; }
 
 .browser-tabs button {
   min-width: 170px;
@@ -519,6 +525,7 @@ a:hover {
   text-align: left;
   white-space: nowrap;
   text-overflow: ellipsis;
+  flex: 0 0 auto;
 }
 
 .browser-tabs button.on {
@@ -546,7 +553,7 @@ a:hover {
   font-size: 10px;
   white-space: nowrap;
 }
-/* 状态栏右侧那两格：Internet ／ 受保護模式，中间一根 IE 式的凹陷竖线 */
+/* 状态栏右侧那两格：Internet ／ 受保护模式，中间一根 IE 式的凹陷竖线 */
 .bs-right {
   display: flex;
   align-items: center;
@@ -6496,7 +6503,7 @@ img.map-photo {
   letter-spacing: 0.28em;
   text-indent: 0.28em;
 }
-/* 「二　夜裏　5／16」那一行删掉了：段号、段名、第几关，玩家看不出来是什么意思，
+/* 「二　夜里　5／16」那一行删掉了：段号、段名、第几关，玩家看不出来是什么意思，
    还占掉卡片最贵的一行。现在只剩日子、地方、这一关要做的事。 */
 .resume-where {
   position: relative;

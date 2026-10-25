@@ -106,7 +106,7 @@ const VHU_NOTICES = [
     title: "校友帐户政策更新",
     body: [
       "由二〇一四年七月一日起，毕业同学的入门网站帐户会转为校友帐户。",
-      "校友帐户保留：校园电邮、学业纪录查阅、图书馆目录查询。",
+      "校友帐户保留：校园电邮、学业纪录查阅、图书馆目录查询及个人历史借阅纪录。",
       "选科、eLearn、宿舍申请及学生会服务，会于毕业手续办妥后停止。",
       "校友帐户不会自动删除。如帐户连续两年没有登入，系统会暂停电邮转寄，学业纪录仍然保留。",
     ],
@@ -120,6 +120,24 @@ const VHU_NOTICES = [
       "六月九日至八月三十一日，总馆开放时间为星期一至五上午九时至晚上七时，星期六上午九时至下午五时，星期日及公众假期休馆。",
       "医学院分馆逢星期六下午及星期日休馆。",
       "还书箱于休馆期间照常开放。",
+    ],
+  },
+];
+
+/* 存档通告：只放在列表最底，不贴在首页，也不进登入页那两条「系统讯息」。
+   二〇〇四年十一月那一条是这一整条线的背景：学校当时怎么处理，一个字的名字都不写。
+   版面理由用《资料保留政策》——保留十年，所以二〇一四年九月它还在这里，下个月就没了。 */
+const VHU_NOTICES_OLD = [
+  {
+    id: "grief04",
+    date: "2004年11月11日",
+    tag: "辅导",
+    title: "辅导及发展中心延长开放时间",
+    body: [
+      "本校一名同学于本周离世。辅导及发展中心由今日起延长开放时间：星期一至五上午九时至晚上十时，星期六上午十时至下午六时。",
+      "同学如需要，可于办公时间到中心预约，亦可经所属学系或舍堂导师转介。所有谈话内容保密。",
+      "中心同时呼吁同学留意身边的人。如察觉同学持续失眠、缺课、不愿与人接触，或反复说同一件事，可通知学系或舍堂导师。",
+      "辅导及发展中心",
     ],
   },
 ];
@@ -154,6 +172,23 @@ const VHU_MAILS = [
       "二〇〇五年度毕业证书将于七月十一日起，于医学院院务处派发。领取时请出示学生证或身份证明文件。",
       "成绩单可于同一期间申请，费用全免，每人限取两份。",
       "医学院院务处",
+    ],
+  },
+  // 二〇〇四年十一月十日，教务处还在通知考试日期。没有一句提到有人死了。
+  // 这一封的作用不是线索，是那一周的空气：世界照常运转，只有她那边停了。
+  {
+    id: "exam04",
+    from: "教务处",
+    addr: "reg@vhu.edu.hk",
+    date: "2004年11月10日 08:30",
+    subject: "二〇〇四／〇五年度上学期考试安排",
+    gives: ["vhu-exam04", "二〇〇四年十一月十日，教务处仍在通知考试日期。学校照原定日子办。"],
+    body: [
+      "各位同学：",
+      "上学期考试将按原定日期于十二月六日开始，考试时间表于十一月二十二日上载教务处网页。",
+      "同学如因病或其他理由申请特别安排，须于考试前七个工作天提交证明文件。逾期申请不获受理。",
+      "试场安排以教务处网页公布为准，不再个别通知。",
+      "教务处",
     ],
   },
   {
@@ -212,13 +247,27 @@ const VHU_MAILS = [
   },
 ];
 
+/* 目录里每一条都能点开看馆藏状态。第三本那一册是第 15 关的钩子：
+   二〇〇四年十一月五日借出，应还十一月十九日，一直没回来。
+   目录从不显示借阅人——现实如此，这里也不破例：只给日期，不给名字。
+   五天前是那一天她被告知暂缓独立值班（11-05），三天后她死（11-08）。
+   看书的人自己把两个日子对上去，系统一个字都没说。 */
 const VHU_BOOKS = [
-  { title: "格雷氏解剖学（第三十九版）", author: "Williams, P. L.", year: "1999", call: "QM 23.2 W72", state: "可借" },
-  { title: "内科学原理（第十五版）", author: "Braunwald, E. 等", year: "2001", call: "RC 46 H32", state: "可借" },
-  { title: "精神医学临床手册", author: "维港大学医学院精神科", year: "2003", call: "RC 456 V52", state: "已借出" },
-  { title: "香港公共卫生概论", author: "医学院公共卫生学系", year: "2000", call: "RA 541.H6 V52", state: "可借" },
-  { title: "医学统计入门", author: "医学院医学教育组", year: "1999", call: "RA 409 V52", state: "可借" },
-  { title: "临床沟通技巧", author: "医学院医学教育组", year: "2002", call: "R 727.3 V52", state: "可借" },
+  { title: "格雷氏解剖学（第三十九版）", author: "Williams, P. L.", year: "1999", call: "QM 23.2 W72", state: "可借", shelf: "医学院分馆　楼座 QM" },
+  { title: "内科学原理（第十五版）", author: "Braunwald, E. 等", year: "2001", call: "RC 46 H32", state: "可借", shelf: "医学院分馆　楼座 RC" },
+  {
+    title: "精神医学临床手册", author: "维港大学医学院精神科", year: "2003", call: "RC 456 V52", state: "已借出",
+    shelf: "医学院分馆　楼座 RC",
+    loan: {
+      out: "2004年11月5日",
+      due: "2004年11月19日",
+      over: "3,579 日",
+      note: "自二〇〇五年三月起列为长期逾期，暂缓催还。",
+    },
+  },
+  { title: "香港公共卫生概论", author: "医学院公共卫生学系", year: "2000", call: "RA 541.H6 V52", state: "可借", shelf: "医学院分馆　楼座 RA" },
+  { title: "医学统计入门", author: "医学院医学教育组", year: "1999", call: "RA 409 V52", state: "可借", shelf: "总馆　三楼 RA" },
+  { title: "临床沟通技巧", author: "医学院医学教育组", year: "2002", call: "R 727.3 V52", state: "可借", shelf: "医学院分馆　楼座 R" },
 ];
 
 const VHU_YEARS = [
@@ -432,7 +481,7 @@ function vhuSt() {
   const st = S.vhu;
   if (st.authed == null) st.authed = false;
   if (!st.read || typeof st.read !== "object") st.read = {};
-  ["id", "pw", "err", "mail", "notice", "libq", "errUrl", "url", "who"].forEach((k) => {
+  ["id", "pw", "err", "mail", "notice", "libq", "errUrl", "url", "who", "book"].forEach((k) => {
     if (st[k] == null) st[k] = "";
   });
   return st;
@@ -471,23 +520,12 @@ function vhuReset() {
   st.out = false;
   st.mail = "";
   st.notice = "";
+  st.book = "";
 }
 
 function vhuUnread() {
   const st = vhuSt();
   return vhuMails().filter((m) => m.unread && !st.read[m.id]).length;
-}
-
-function blankTabTitle(id) {
-  // 人在别的分页时，分页标题也要显示这一页最后停在哪，而不是退回「新分页」。
-  const key = id === "blank2" ? "blank2" : "blank";
-  const mem = typeof tabMemory === "function" && S.tab !== key ? tabMemory(key) : null;
-  const s = String((mem && mem.screen) || S.screen || "");
-  if (s.indexOf("vhu-") === 0) return "VHU Portal - 维港大学";
-  if (s === "engine") return "通搜　搜尋";
-  if (s === "wiki") return "維港大學 - 維基百科";
-  if (s === "web-error") return "无法显示网页";
-  return "新分页";
 }
 
 /* ---------- 地址 ---------- */
@@ -641,6 +679,7 @@ const VHU_PAGE_LABEL = {
   profile: "我的资料",
   academic: "学业纪录",
   library: "图书馆",
+  book: "馆藏纪录",
   mail: "电邮",
   notice: "公告",
   login: "登入",
@@ -704,7 +743,7 @@ function vhuFoot() {
   ]);
 }
 
-function vhuShell(body, page) {
+function vhuShell(body, page, crumb) {
   const st = vhuSt();
   const kids = [vhuHead()];
   if (st.authed) {
@@ -712,7 +751,8 @@ function vhuShell(body, page) {
     kids.push(el("div", { class: "vhu-crumb" }, [
       webLink("首页", () => vhuPage("home")),
       el("span", { class: "vhu-crumb-mark", "aria-hidden": "true" }, ["›"]),
-      el("span", {}, [VHU_PAGE_LABEL[page] || ""]),
+      // 馆藏纪录挂在图书馆下面：左边导航还亮「图书馆」，面包屑写它自己那一层。
+      el("span", {}, [crumb || VHU_PAGE_LABEL[page] || ""]),
     ]));
   }
   kids.push(el("div", { class: "vhu-body" }, body));
@@ -725,21 +765,21 @@ function vhuShell(body, page) {
 /* 站名虚构，跟廿八屋、墙簿一套：2014 年的香港，本地入口站都长这个样子。
    搜索只有两条结果，第二条是维基——两个人名、一间学校，她要的是把校名换成一个能登入的网址。 */
 const SE_SITE = { host: "www.tungso.hk", name: "通搜" };
-const SE_HOME_Q = "維港大學";
+const SE_HOME_Q = "维港大学";
 
 const SE_RESULTS = [
   {
     id: "portal",
-    title: "維港大學 — VHU Portal 校園入門網站",
+    title: "维港大学 — VHU Portal 校园入门网站",
     url: "portal.vhu.edu.hk",
-    text: "選科、成績、圖書館、電郵，一個入口。學生編號為八位數字加一個英文字母；畢業同學的帳戶會轉為校友帳戶，不會自動刪除。",
+    text: "选科、成绩、图书馆、电邮，一个入口。学生编号为八位数字加一个英文字母；毕业同学的帐户会转为校友帐户，不会自动删除。",
     kind: "vhu",
   },
   {
     id: "wiki",
-    title: "維港大學 - 維基百科，自由的百科全書",
-    url: "zh.wikipedia.org › wiki › 維港大學",
-    text: "維港大學（英語：Victoria Harbour University，縮寫 VHU）是一所位於香港的公立大學，一九六二年成立，設有文、理、社會科學、醫、工程五個學院。",
+    title: "维港大学 - 维基百科，自由的百科全书",
+    url: "zh.wikipedia.org › wiki › 维港大学",
+    text: "维港大学（英语：Victoria Harbour University，缩写 VHU）是一所位于香港的公立大学，一九六二年成立，设有文、理、社会科学、医、工程五个学院。",
     kind: "wiki",
   },
 ];
@@ -751,23 +791,15 @@ function seQueryText() {
 // 她只可能搜这一间。别的词进不来结果，也给一句「找不到」，不装作懂。
 function seHit(q) {
   const s = String(q || "").toLowerCase();
-  return s.indexOf("維港") >= 0 || s.indexOf("维港") >= 0 || s.indexOf("vhu") >= 0;
+  // 两种字形都认：普通话模式用简体，粤语／粤＋普模式界面是港繁，有人会照屏幕上的字打「維港」。
+  return s.indexOf("维港") >= 0 || s.indexOf("維港") >= 0 || s.indexOf("vhu") >= 0;
 }
 
-// 第一次点开维基时，第四格才出现：维基是站外的页，左上角那个后退键不显眼，
-// 与其让她去角落里找，不如多开一格空白页——要再搜一次，点那一格就行。
+// 第一次点开维基：站外的页，左上角那个后退键不显眼。从前这里手动造第四格空白页；
+// 现在分页栏本来就始终留着一格「新分页」，开了维基之后它是空的，她要再搜一次点那一格就行。
 function openForthTab() {
   if (S.wikiOpened) return;
   S.wikiOpened = true;
-  S.tabMem = S.tabMem || { house: null, wall: null, blank: null, blank2: null };
-  if (!S.tabMem.blank2) {
-    S.tabMem.blank2 = Object.assign(snapWeb(), {
-      screen: "newtab",
-      tab: "blank2",
-      vhuMail: "",
-      vhuNotice: "",
-    });
-  }
 }
 
 function seResultGo(kind) {
@@ -797,13 +829,14 @@ function viewSearchEngine() {
     value: q,
     autocomplete: "off",
     spellcheck: "false",
-    "aria-label": "搜尋",
+    "aria-label": "搜寻",
   });
   const submit = (e) => {
     if (e) e.preventDefault();
     const live = document.getElementById("se-q");
     S.engineQ = (live ? live.value : q) || "";
     S.seSearched = true;
+    S.engineDraft = S.engineQ; // 回到空白分页时那个框里还留着上次搜的词
     webAddrDraft = null;
     draw();
   };
@@ -811,7 +844,7 @@ function viewSearchEngine() {
   const rows = searched
     ? (hit
       ? [
-        el("p", { class: "se-stat" }, ["約 1,240 個結果（0.18 秒）"]),
+        el("p", { class: "se-stat" }, ["约 1,240 个结果（0.18 秒）"]),
         el("ol", { class: "se-list" }, SE_RESULTS.map((r) => el("li", { class: "se-item" }, [
           el("div", { class: "se-title" }, [webLink(r.title, () => seResultGo(r.kind))]),
           el("div", { class: "se-url" }, [r.url]),
@@ -820,18 +853,18 @@ function viewSearchEngine() {
         el("p", { class: "se-fine" }, ["通搜　香港　—　二〇一四年"]),
       ]
       : [
-        el("p", { class: "se-stat" }, ["找不到符合的結果。"]),
-        el("p", { class: "se-snip" }, ["建議：檢查有沒有打錯字，或改用更短的關鍵詞。"]),
+        el("p", { class: "se-stat" }, ["找不到符合的结果。"]),
+        el("p", { class: "se-snip" }, ["建议：检查有没有打错字，或改用更短的关键词。"]),
         el("p", { class: "se-fine" }, ["通搜　香港　—　二〇一四年"]),
       ])
     : [
       el("ul", { class: "se-picks" }, [
-        el("li", {}, ["熱門：", webLink("維港大學", () => {
+        el("li", {}, ["热门：", webLink("维港大学", () => {
           S.engineQ = SE_HOME_Q;
           S.seSearched = true;
           draw();
         })]),
-        el("li", {}, ["熱門：", webLink("深水埗　重建", () => {
+        el("li", {}, ["热门：", webLink("深水埗　重建", () => {
           S.engineQ = "深水埗 重建";
           S.seSearched = true;
           draw();
@@ -845,12 +878,12 @@ function viewSearchEngine() {
         el("span", { class: "se-logo" }, ["通搜"]),
         el("small", {}, ["香港"]),
       ]),
-      el("nav", { class: "se-nav" }, ["網頁", "圖片", "新聞", "地圖", "更多"].map((t, i) =>
+      el("nav", { class: "se-nav" }, ["网页", "图片", "新闻", "地图", "更多"].map((t, i) =>
         el("span", { class: i === 0 ? "on" : "" }, [t]))),
     ]),
     el("form", { class: "se-form", onsubmit: submit }, [
       box,
-      el("button", { type: "submit", class: "se-btn" }, ["搜尋"]),
+      el("button", { type: "submit", class: "se-btn" }, ["搜寻"]),
     ]),
     el("div", { class: "se-body" }, rows),
   ]);
@@ -860,57 +893,57 @@ function viewSearchEngine() {
 
 /* 与现实不同：本港没有这一间。年份、学院、舍堂都要跟站内已经出现过的一致
    （海宁堂、医学院、社会科学院、二〇〇四年十一月）。
-   事故写在「歷史」最后一句，不单独立节、不加粗、不提细节：她要是已经把黑料抄进簿里，
+   事故写在「历史」最后一句，不单独立节、不加粗、不提细节：她要是已经把黑料抄进簿里，
    读到这一句会停一下；没抄过的人，只当是校史里一件旧事划过去。 */
 const WIKI_VHU = {
-  title: "維港大學",
-  lead: "維港大學（英語：Victoria Harbour University，縮寫 VHU）是一所位於香港香港島西部的公立大學，一九六二年由香港政府創辦，一九七〇年獲准頒授學位並正名為大學。校訓為「求真」，全校設五個學院、十三間舍堂，學生約一萬四千人。",
+  title: "维港大学",
+  lead: "维港大学（英语：Victoria Harbour University，缩写 VHU）是一所位于香港香港岛西部的公立大学，一九六二年由香港政府创办，一九七〇年获准颁授学位并正名为大学。校训为「求真」，全校设五个学院、十三间舍堂，学生约一万四千人。",
   info: [
-    ["校訓", "求真"],
-    ["創辦", "一九六二年"],
-    ["學校類型", "公立"],
-    ["校長", "馬仲衡"],
-    ["學生人數", "約 14,000"],
-    ["校址", "香港島西區"],
-    ["校園", "約 11 公頃"],
+    ["校训", "求真"],
+    ["创办", "一九六二年"],
+    ["学校类型", "公立"],
+    ["校长", "马仲衡"],
+    ["学生人数", "约 14,000"],
+    ["校址", "香港岛西区"],
+    ["校园", "约 11 公顷"],
     ["代表色", "深青、米白"],
   ],
   sections: [
-    ["歷史", [
-      "一九六二年，政府在西區撥出一幅官地，開辦維港夜間學院，首年借用一所官立中學的課室上課，取錄學生一百八十人。",
-      "一九七〇年，學院獲准頒授學位，改名維港大學，並於原址以北的山坡興建主校舍。一九八五年增設醫學院，一九九三年增設工程學院。二〇〇四年十一月，一名醫學院女生被發現倒臥於主校舍東翼平台，送院後不治，校方其後加高東翼天台圍欄。",
+    ["历史", [
+      "一九六二年，政府在西区拨出一幅官地，开办维港夜间学院，首年借用一所官立中学的课室上课，取录学生一百八十人。",
+      "一九七〇年，学院获准颁授学位，改名维港大学，并于原址以北的山坡兴建主校舍。一九八五年增设医学院，一九九三年增设工程学院。二〇〇四年十一月，一名医学院女生被发现倒卧于主校舍东翼平台，送院后不治，校方其后加高东翼天台围栏。",
     ]],
-    ["學院與學系", [
-      "大學設文學院、理學院、社會科學院、醫學院及工程學院，另設通識教育部，負責全校共同必修課。",
-      "醫學院下設臨床醫學、公共衞生及護理三個學系，另設教學醫院，五年制課程的最後兩年全部在醫院上課。社會科學院以社會學系及社會工作學系歷史最久，早年為本地社會服務機構培訓前線人員。",
+    ["学院与学系", [
+      "大学设文学院、理学院、社会科学院、医学院及工程学院，另设通识教育部，负责全校共同必修课。",
+      "医学院下设临床医学、公共卫生及护理三个学系，另设教学医院，五年制课程的最后两年全部在医院上课。社会科学院以社会学系及社会工作学系历史最久，早年为本地社会服务机构培训前线人员。",
     ]],
-    ["校園與舍堂", [
-      "主校舍依山而建，由山下入口至山頂圖書館共七層，校內以樓梯、斜坡及兩部升降機連接，中間幾層是課室與實驗室，最上兩層是圖書館和行政樓。",
-      "十三間舍堂分佈於校園南北兩翼，其中海寧堂、觀海堂及思源堂歷史最久。舍堂設導師制度，一年級學生一般須住宿一年；舍堂不按學院分配，醫科生與社會科學院學生常常住在同一層。",
+    ["校园与舍堂", [
+      "主校舍依山而建，由山下入口至山顶图书馆共七层，校内以楼梯、斜坡及两部升降机连接，中间几层是课室与实验室，最上两层是图书馆和行政楼。",
+      "十三间舍堂分布于校园南北两翼，其中海宁堂、观海堂及思源堂历史最久。舍堂设导师制度，一年级学生一般须住宿一年；舍堂不按学院分配，医科生与社会科学院学生常常住在同一层。",
     ]],
-    ["校園生活", [
-      "舍堂是大學生活的主幹。每間舍堂有自己的堂色、堂歌和堂訓，一年級入宿第一晚要在飯堂唱一次堂歌，唱錯歌詞會被同層的舊生留下來再唱。",
-      "每年九月開學第一週，各舍堂舉行迎新晚宴，新生穿堂袍出席，席間由舍監介紹舍堂歷史。十月最後一個星期五是「回堂日」，畢業生穿回當年的堂袍回舍堂吃飯。",
-      "圖書館總館位於山頂，藏書約一百二十萬冊，另有醫學院及工程學院兩間分館。考試期間總館通宵開放，座位先到先得，醫科生習慣在上課前先去佔位。",
+    ["校园生活", [
+      "舍堂是大学生活的主干。每间舍堂有自己的堂色、堂歌和堂训，一年级入宿第一晚要在饭堂唱一次堂歌，唱错歌词会被同层的旧生留下来再唱。",
+      "每年九月开学第一周，各舍堂举行迎新晚宴，新生穿堂袍出席，席间由舍监介绍舍堂历史。十月最后一个星期五是「回堂日」，毕业生穿回当年的堂袍回舍堂吃饭。",
+      "图书馆总馆位于山顶，藏书约一百二十万册，另有医学院及工程学院两间分馆。考试期间总馆通宵开放，座位先到先得，医科生习惯在上课前先去占位。",
     ]],
-    ["傳統與術語", [
-      "校園依山，學生口中的「上山」是指去圖書館，「下山」是指去碼頭坐車；遲到的人說「等埋升降機」，意思是要多等五分鐘。",
-      "總館地下有一道一九七〇年代留下的銅牌，刻着創校時一百八十名學生的名字。考試前摸一下銅牌，是校內流傳最久的一個小迷信。",
-      "校歌以粵語演唱，一九七〇年由校內一名中文科講師填詞，共四段，畢業禮只唱第一段。",
+    ["传统与术语", [
+      "校园依山，学生口中的「上山」是指去图书馆，「下山」是指去码头坐车；迟到的人说「等埋升降机」，意思是要多等五分钟。",
+      "总馆地下有一道一九七〇年代留下的铜牌，刻着创校时一百八十名学生的名字。考试前摸一下铜牌，是校内流传最久的一个小迷信。",
+      "校歌以粤语演唱，一九七〇年由校内一名中文科讲师填词，共四段，毕业礼只唱第一段。",
     ]],
     ["校友", [
-      "校友約六萬人，分佈於醫療、教育、社會服務及工商界。校友事務處每年十月舉辦返校日，畢業禮多在十二月舉行。",
+      "校友约六万人，分布于医疗、教育、社会服务及工商界。校友事务处每年十月举办返校日，毕业礼多在十二月举行。",
     ]],
   ],
 };
 
 function viewWiki() {
   const body = [];
-  body.push(el("div", { class: "wk-crumb" }, ["維基百科，自由的百科全書"]));
+  body.push(el("div", { class: "wk-crumb" }, ["维基百科，自由的百科全书"]));
   body.push(el("h1", { class: "wk-title" }, [WIKI_VHU.title]));
-  body.push(el("div", { class: "wk-warn" }, ["本條目沒有列出任何參考或來源。（2014年8月）"]));
+  body.push(el("div", { class: "wk-warn" }, ["本条目没有列出任何参考或来源。（2014年8月）"]));
   body.push(el("table", { class: "wk-info" }, [
-    el("caption", {}, ["維港大學"]),
+    el("caption", {}, ["维港大学"]),
     el("tbody", {}, WIKI_VHU.info.map(([k, v]) => el("tr", {}, [
       el("th", {}, [k]),
       el("td", {}, [v]),
@@ -922,97 +955,91 @@ function viewWiki() {
     paras.forEach((p) => body.push(el("p", {}, [p])));
   });
   body.push(el("p", { class: "wk-fine" }, [
-    "本頁最後修訂於 2014年8月30日 (星期六) 14:07。",
+    "本页最后修订于 2014年8月30日 (星期六) 14:07。",
   ]));
 
   return el("div", { class: "hk-site wk-site" }, [
     el("div", { class: "wk-head" }, [
       el("span", { class: "wk-mark" }, ["W"]),
-      el("span", { class: "wk-word" }, ["維基百科"]),
-      el("small", {}, ["自由的百科全書"]),
+      el("span", { class: "wk-word" }, ["维基百科"]),
+      el("small", {}, ["自由的百科全书"]),
     ]),
     el("div", { class: "wk-cols" }, [
       el("aside", { class: "wk-side" }, [
-        el("h3", {}, ["導覽"]),
-        el("ul", {}, ["首頁", "分類", "特色條目", "最近更改", "隨機條目"].map((t) =>
+        el("h3", {}, ["导览"]),
+        el("ul", {}, ["首页", "分类", "特色条目", "最近更改", "随机条目"].map((t) =>
           el("li", {}, [el("span", { class: "wk-dead" }, [t])]))),
         el("h3", {}, ["工具"]),
-        el("ul", {}, ["連結至此的頁面", "相關變更", "可列印版"].map((t) =>
+        el("ul", {}, ["连结至此的页面", "相关变更", "可列印版"].map((t) =>
           el("li", {}, [el("span", { class: "wk-dead" }, [t])]))),
       ]),
       el("article", { class: "wk-article" }, body),
     ]),
-    el("div", { class: "wk-foot" }, ["文字內容可依 CC BY-SA 3.0 條款使用。"]),
+    el("div", { class: "wk-foot" }, ["文字内容可依 CC BY-SA 3.0 条款使用。"]),
   ]);
 }
 
 /* ---------- 空白分页 ---------- */
 
 function viewNewTab() {
-  const st = vhuSt();
-  const input = el("input", {
-    id: "vhu-url",
+  const blankQuery = () => {
+    const live = document.getElementById("vhu-blank-q");
+    return String((live ? live.value : S.engineDraft) || "").trim();
+  };
+  const searchWith = (q) => {
+    S.engineQ = q;
+    S.seSearched = true;
+    S.engineDraft = q;
+    goWeb("engine");
+  };
+  // 这一页照当年那台装了搜索栏的 IE 摆：一片白，一个牌子，一格框，底下「我的最爱」。
+  // 只有一格——带点的当网址，不带点的拿去搜。从前并排两格（上面「通搜」、下面「输入网址」），
+  // 人常把词打进下面那格，点「转到」既不搜也不动，还把刚打的字清掉。
+  // 草稿存在 S.engineDraft：重绘（回车、切分页、点「我的最爱」）不会把打到一半的字吞掉。
+  const opened = !!S.wikiOpened;
+  const submit = (e) => {
+    e.preventDefault();
+    const q = blankQuery();
+    if (!q) {
+      // 空着一按：当年首页就是通搜，回车即回首页。没见过的站不抢这一步。
+      if (opened) searchWith(SE_HOME_Q);
+      return;
+    }
+    S.engineDraft = q;
+    vhuOpenUrl(q);
+  };
+  const blankInput = el("input", {
+    id: "vhu-blank-q",
     type: "text",
-    class: "vhu-url-input",
-    value: st.url || "",
-    placeholder: "www.example.com",
+    class: "se-input",
+    value: S.engineDraft || "",
+    placeholder: opened ? "搜寻或输入网址" : "http://",
     autocomplete: "off",
     spellcheck: "false",
+    "aria-label": opened ? "搜寻" : "网址",
+    oninput: (e) => { S.engineDraft = e.target.value; },
   });
-  input.addEventListener("input", () => {
-    st.url = input.value;
-  });
-  const form = el("form", {
-    class: "vhu-url-form",
-    onsubmit: (e) => {
-      e.preventDefault();
-      vhuOpenUrl(input.value);
-    },
-  }, [
-    el("label", { for: "vhu-url" }, ["输入网址"]),
-    el("div", { class: "vhu-url-row" }, [
-      input,
-      el("button", { type: "submit", class: "vhu-btn" }, ["转到"]),
-    ]),
-  ]);
-  // 第四个分页开出来是空白的。空白页上得有一个能打字的地方，「开新一页再搜」才不是空话。
-  const seForm = !S.wikiOpened ? "" : el("form", {
-    class: "se-form se-form-blank",
-    onsubmit: (e) => {
-      e.preventDefault();
-      const live = document.getElementById("vhu-blank-q");
-      const q = ((live ? live.value : "") || "").trim() || SE_HOME_Q;
-      S.engineQ = q;
-      S.seSearched = true;
-      goWeb("engine");
-    },
-  }, [
-    el("span", { class: "se-form-label" }, ["通搜"]),
-    el("input", {
-      id: "vhu-blank-q",
-      type: "text",
-      class: "se-input",
-      value: "",
-      placeholder: "搜尋",
-      autocomplete: "off",
-      spellcheck: "false",
-      "aria-label": "搜尋",
-    }),
-    el("button", { type: "submit", class: "se-btn" }, ["搜尋"]),
-  ]);
   setTimeout(() => {
-    const box = document.getElementById("vhu-blank-q") || document.getElementById("vhu-url");
-    if (box && document.activeElement !== box) {
-      box.focus();
-      if (box.setSelectionRange) box.setSelectionRange(box.value.length, box.value.length);
+    if (document.activeElement !== blankInput) {
+      blankInput.focus();
+      if (blankInput.setSelectionRange) {
+        const at = blankInput.value.length;
+        blankInput.setSelectionRange(at, at);
+      }
     }
   }, 0);
+  // 通搜的牌子只在她见过这个站之后才挂；之前这一页就是一片白加一格地址。
+  const brand = !opened ? "" : el("div", { class: "se-brand vhu-blank-brand" }, [
+    el("span", { class: "se-logo" }, ["通搜"]),
+    el("small", {}, ["香港"]),
+  ]);
   return el("div", { class: "hk-site vhu-site vhu-blank" }, [
     el("div", { class: "vhu-blank-inner" }, [
-      el("p", { class: "vhu-blank-mark" }, ["about:blank"]),
-      seForm,
-      form,
-      el("p", { class: "vhu-fine" }, ["输入网址后按 Enter。也可从下面「我的最爱」开启。"]),
+      brand,
+      el("form", { class: "se-form se-form-blank", onsubmit: submit }, [
+        blankInput,
+        el("button", { type: "submit", class: "se-btn" }, [opened ? "搜寻" : "转到"]),
+      ]),
       el("div", { class: "vhu-fav" }, [
         el("h3", {}, ["我的最爱"]),
         el("ul", {}, [
@@ -1116,7 +1143,7 @@ function viewVhuLogin() {
         el("ul", {}, [
           el("li", {}, ["学生编号为八位数字加一个英文字母。"]),
           el("li", {}, ["帐户密码沿用入学时的设定，可于登入后自行更改。"]),
-          el("li", {}, ["服务时间：每日 07:00–23:00。"]),
+          el("li", {}, ["服务时间：每日 07:00–翌日 01:00。"]),
           el("li", {}, ["毕业同学的帐户会转为校友帐户。"]),
         ]),
       ]),
@@ -1195,7 +1222,7 @@ function viewVhuHome() {
       el("span", {}, [u.progShort]),
     ]),
     el("div", { class: "vhu-alert" }, [
-      "你的帐户为校友帐户。选科、eLearn 及宿舍服务已停用，学业纪录及电邮仍可查阅。",
+      "你的帐户为校友帐户。选科、eLearn 及宿舍服务已停用，学业纪录、图书馆及电邮仍可查阅。",
     ]),
     st.who === "chen"
       ? el("div", { class: "vhu-alert" }, [
@@ -1303,8 +1330,11 @@ function viewVhuLibrary() {
   const st = vhuSt();
   const u = vhuWho();
   const q = String(st.libq || "");
+  // 书名字面量是简体；粤语模式下屏幕上是港繁，有人会照屏幕打「精神醫學」。
+  // 两边都过一遍 toHkTrad 再比，简繁输入都认，跟界面语言无关。
+  const norm = (s) => (typeof toHkTrad === "function" ? toHkTrad(String(s)) : String(s)).toLowerCase();
   const hit = q
-    ? VHU_BOOKS.filter((b) => (b.title + b.author + b.call).toLowerCase().includes(q.toLowerCase()))
+    ? VHU_BOOKS.filter((b) => norm(b.title + b.author + b.call).includes(norm(q)))
     : [];
   const input = el("input", {
     type: "search",
@@ -1329,7 +1359,7 @@ function viewVhuLibrary() {
     ? el("p", { class: "vhu-fine" }, ["输入书名、作者或索书号，再按「搜寻」。"])
     : !hit.length
       ? el("p", { class: "vhu-empty" }, ["没有符合的纪录。请尝试其他关键字。"])
-      : el("table", { class: "vhu-table" }, [
+      : el("table", { class: "vhu-table vhu-book-list" }, [
         el("thead", {}, [el("tr", {}, [
           el("th", {}, ["书名"]),
           el("th", {}, ["作者"]),
@@ -1337,7 +1367,10 @@ function viewVhuLibrary() {
           el("th", {}, ["索书号"]),
           el("th", {}, ["状态"]),
         ])]),
-        el("tbody", {}, hit.map((b) => el("tr", {}, [
+        // 一条一条都能点开：状态那一栏写着「已借出」，接下来去哪儿看，得让它自己开。
+        el("tbody", {}, hit.map((b) => el("tr", {
+          onclick: () => { goWeb("vhu-book", { bookCall: b.call }); },
+        }, [
           el("td", {}, [b.title]),
           el("td", {}, [b.author]),
           el("td", { class: "vhu-num" }, [b.year]),
@@ -1345,6 +1378,12 @@ function viewVhuLibrary() {
           el("td", {}, [b.state]),
         ]))),
       ]);
+
+  // 「他也借过同一本」不是系统给的答案：目录从来不显示借阅人。
+  // 这句要她自己在阿明的帐户里翻到借阅纪录，才记下来。
+  if (st.who === "law" && typeof noted === "function" && noted("vhu-lib-trace")) {
+    note("vhu-same-book", "那一册，他也借过。二〇〇四年一月二十二日借，二月六日还。");
+  }
 
   return vhuShell([
     el("h2", { class: "vhu-h2" }, ["图书馆"]),
@@ -1363,6 +1402,7 @@ function viewVhuLibrary() {
       el("button", { type: "button", class: "vhu-btn", onclick: run }, ["搜寻"]),
     ]),
     results,
+    st.libdone && hit.length ? el("p", { class: "vhu-fine" }, ["按任何一条，可看该册的馆藏状态。"]) : "",
     el("h3", { class: "vhu-h3" }, ["借阅纪录"]),
     el("table", { class: "vhu-table" }, [
       el("thead", {}, [el("tr", {}, [
@@ -1377,6 +1417,51 @@ function viewVhuLibrary() {
       ]))),
     ]),
   ], "library");
+}
+
+/* ---------- 馆藏纪录 ---------- */
+
+/* 一册一条。借出／应还／逾期只在「已借出」那一册上出现。
+   逾期日数按二〇一四年九月七日算（2004-11-19 → 2014-09-07）。
+   页面底下两行小字是这一页最要紧的地方：一行说系统每天更新，一行说借阅人不显示——
+   两行都成立，所以这本书十年没回来，也没有一个名字。 */
+function viewVhuBook() {
+  const st = vhuSt();
+  const b = VHU_BOOKS.find((x) => x.call === st.book);
+  if (!b) {
+    return vhuShell([
+      el("p", { class: "vhu-back" }, [
+        webLink("« 返回目录", () => vhuPage("library")),
+      ]),
+      el("p", { class: "vhu-empty" }, ["找不到这一册的纪录。"]),
+    ], "library");
+  }
+  const loan = b.loan;
+  const rows = [
+    ["书名", b.title],
+    ["著者", b.author],
+    ["出版", b.year],
+    ["索书号", b.call, "mono"],
+    ["馆藏地", b.shelf || "医学院分馆"],
+    ["状态", b.state],
+  ];
+  if (loan) {
+    rows.push(["借出日期", loan.out], ["应还日期", loan.due], ["逾期", loan.over]);
+    rows.push(["备注", loan.note]);
+  }
+  if (typeof noted === "function" && loan && !noted("vhu-lib-trace")) {
+    note("vhu-lib-trace", "医学院分馆那本《精神医学临床手册》：二〇〇四年十一月五日借出，应还十一月十九日。逾期三千五百七十九日，二〇〇五年三月起暂缓催还。");
+  }
+  return vhuShell([
+    el("p", { class: "vhu-back" }, [
+      webLink("« 返回目录", () => vhuPage("library")),
+    ]),
+    el("h2", { class: "vhu-h2" }, ["馆藏纪录"]),
+    el("table", { class: "vhu-kv vhu-kv-wide" }, rows.map(([k, v, cls]) =>
+      el("tr", {}, [el("th", {}, [k]), el("td", { class: cls || "" }, [v])]))),
+    el("p", { class: "vhu-fine" }, ["本纪录每二十四小时更新一次。"]),
+    el("p", { class: "vhu-fine" }, ["借阅纪录依私隐政策不显示借阅人。"]),
+  ], "library", "馆藏纪录");
 }
 
 /* ---------- 电邮 ---------- */
@@ -1476,7 +1561,7 @@ function viewVhuMail() {
       : "",
     sent.length
       ? el("div", {}, [
-        el("h3", { class: "vhu-h3" }, ["寄件備份"]),
+        el("h3", { class: "vhu-h3" }, ["寄件备份"]),
         el("table", { class: "vhu-table vhu-mail-list" }, [
           el("thead", {}, [el("tr", {}, [
             el("th", {}, ["收件人"]),
@@ -1495,7 +1580,8 @@ function viewVhuMail() {
 
 function viewVhuNotice() {
   const st = vhuSt();
-  const one = st.notice ? VHU_NOTICES.find((n) => n.id === st.notice) : null;
+  const all = VHU_NOTICES.concat(VHU_NOTICES_OLD);
+  const one = st.notice ? all.find((n) => n.id === st.notice) : null;
   if (one) {
     return vhuShell([
       el("p", { class: "vhu-back" }, [
@@ -1510,23 +1596,27 @@ function viewVhuNotice() {
       el("div", { class: "vhu-article" }, one.body.map((p) => el("p", {}, [p]))),
     ], "notice");
   }
+  const list = (rows) => el("table", { class: "vhu-table vhu-notice-list" }, [
+    el("thead", {}, [el("tr", {}, [
+      el("th", {}, ["日期"]),
+      el("th", {}, ["类别"]),
+      el("th", {}, ["标题"]),
+    ])]),
+    el("tbody", {}, rows.map((n) => el("tr", {
+      onclick: () => { goWeb("vhu-notice", { noticeId: n.id }); },
+    }, [
+      el("td", { class: "vhu-num" }, [n.date]),
+      el("td", {}, [n.tag]),
+      el("td", {}, [n.title]),
+    ]))),
+  ]);
   return vhuShell([
     el("h2", { class: "vhu-h2" }, ["校园公告"]),
-    el("table", { class: "vhu-table vhu-notice-list" }, [
-      el("thead", {}, [el("tr", {}, [
-        el("th", {}, ["日期"]),
-        el("th", {}, ["类别"]),
-        el("th", {}, ["标题"]),
-      ])]),
-      el("tbody", {}, VHU_NOTICES.map((n) => el("tr", {
-        class: "vhu-mail-row",
-        onclick: () => { goWeb("vhu-notice", { noticeId: n.id }); },
-      }, [
-        el("td", { class: "vhu-num" }, [n.date]),
-        el("td", {}, [n.tag]),
-        el("td", {}, [n.title]),
-      ]))),
-    ]),
+    list(VHU_NOTICES),
+    // 存档压在最底。不写「二〇〇四年」以外的任何提示：要翻到最底的人才看得见。
+    el("h3", { class: "vhu-h3" }, ["存档通告"]),
+    el("p", { class: "vhu-fine" }, ["按《资料保留政策》保留十年，只作存档，不再更新。"]),
+    list(VHU_NOTICES_OLD),
   ], "notice");
 }
 

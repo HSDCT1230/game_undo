@@ -320,9 +320,11 @@
 /* ---------- 电邮与公告 ---------- */
 
 .vhu-mail-list tbody tr,
-.vhu-notice-list tbody tr { cursor: pointer; }
+.vhu-notice-list tbody tr,
+.vhu-book-list tbody tr { cursor: pointer; }
 .vhu-mail-list tbody tr:hover,
-.vhu-notice-list tbody tr:hover { background: #f2f7f4; }
+.vhu-notice-list tbody tr:hover,
+.vhu-book-list tbody tr:hover { background: #f2f7f4; }
 .vhu-unread td { color: #173f43; font-weight: 700; }
 .vhu-mail-head { margin-bottom: 12px; }
 .vhu-mail-body,
@@ -435,18 +437,10 @@
 /* ---------- 空白分页 ---------- */
 
 .vhu-blank { background: #fff; }
-.vhu-blank-inner { width: min(520px, 100%); margin: 64px auto 0; padding: 0 16px 40px; }
-.vhu-blank-mark { margin: 0 0 18px; color: #c3cbc7; font: 11px Consolas, "Courier New", monospace; }
-.vhu-url-form label { display: block; margin-bottom: 5px; color: #6b7874; font-size: 11px; }
-.vhu-url-row { display: flex; gap: 6px; }
-.vhu-url-input {
-  flex: 1 1 auto;
-  min-width: 0;
-  padding: 8px 9px;
-  border: 1px solid #7f9db9;
-  font: 13px Tahoma, Arial, sans-serif;
-}
-.vhu-url-input:focus { outline: 1px solid #7f9db9; }
+.vhu-blank-inner { width: min(600px, 100%); margin: 72px auto 0; padding: 0 16px 40px; }
+.vhu-blank-brand { margin: 0 0 16px; }
+.vhu-blank-brand .se-logo { font-size: 30px; letter-spacing: .22em; }
+.vhu-blank-brand small { font-size: 11px; }
 .vhu-fav { margin-top: 26px; padding-top: 10px; border-top: 1px solid #e7ebe8; }
 .vhu-fav h3 { margin: 0 0 6px; color: #6b7874; font-size: 11px; font-weight: 400; }
 .vhu-fav ul { margin: 0; padding: 0; list-style: none; font-size: 12px; }
@@ -513,8 +507,8 @@
 
 @media (max-width: 640px), (pointer: coarse) {
   .vhu-nav-item { min-height: 32px; }
-  .vhu-input,
-  .vhu-url-input { min-height: 32px; font-size: 13px; }
+  .vhu-input { min-height: 32px; font-size: 13px; }
+  .se-form-blank .se-input { min-height: 34px; font-size: 14px; }
   .vhu-btn { min-height: 32px; }
   .vhu-tile { min-height: 46px; }
   .vhu-mail-list tbody tr,
@@ -612,24 +606,19 @@
 .se-picks li { padding: 3px 0; }
 .se-fine { margin: 18px 0 0; color: #999; font-size: 10.5px; }
 
-/* 第四格空白分页上的通搜小格：不占满，贴在 about:blank 行下面，
-   她把学校名字打进这一格就行。样式与通搜首页那一行同源。 */
+/* 空白分页上那一格：当年装了搜索栏的 IE 就是这样，一格吃得下网址和关键词。
+   样式与通搜首页那一行同源，只是抬高一点，让它有整条搜索栏的分量。 */
 .se-form-blank {
-  margin: 0 0 16px;
+  margin: 0 0 14px;
   padding: 0;
-  gap: 6px;
+  gap: 8px;
   align-items: stretch;
   border: 0;
 }
-.se-form-label {
-  flex: 0 0 auto;
-  align-self: center;
-  color: #1f5fbf;
-  font: 700 14px "Microsoft JhengHei", "Microsoft YaHei", sans-serif;
-}
-.se-form-blank .se-input { padding: 8px 9px; border-color: #7f9db9; }
+.se-form-blank .se-input { padding: 11px 12px; font-size: 15px; border-color: #7f9db9; }
+.se-form-blank .se-input::placeholder { color: #9aa6b5; }
 .se-form-blank .se-input:focus { outline: 1px solid #7f9db9; }
-.se-form-blank .se-btn { padding: 0 14px; }
+.se-form-blank .se-btn { padding: 0 22px; font-size: 13.5px; }
 
 /* ---------- 维基 ---------- */
 

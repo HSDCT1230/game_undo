@@ -101,7 +101,7 @@ function phoneButton(label, onclick, opt) {
 }
 
 function yueFace(s) {
-  return typeof toHkTrad === "function" ? toHkTrad(s == null ? "" : String(s)) : (s == null ? "" : String(s));
+  return typeof H === "function" ? H(s == null ? "" : String(s)) : (s == null ? "" : String(s));
 }
 
 /** 对白／旁白共用：与 T() 同逻辑——zh 用普通话原文；粤语／粤＋普用粤语侧并转香港繁体。并排由 talkBody() 负责。 */

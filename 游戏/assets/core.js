@@ -8,7 +8,12 @@ const notesLeaf = $("#notes-leaf");
 const notesActions = $("#notes-actions");
 
 /* 壳上的中文只写在 JS，不写进 index.html，避免编辑工具把 UTF-8 弄成 ?? */
+/* 顶栏也跟语言模式走：粤语／粤＋普转港繁，普通话原样。以前这里无条件转繁，
+   切到普通话模式，顶栏还是「瀏覽器　日記簿　地圖」，跟网页里已经简体的字对不上。
+   注意：这个函数在 langMode 初始化之前不能调用（H() 会读 langMode，触发 TDZ），
+   所以 fillShellChrome() 的调用点挪到了语言初始化之后。 */
 function shellText(s) {
+  if (typeof H === "function") return H(s);
   return typeof toHkTrad === "function" ? toHkTrad(s) : s;
 }
 function fillShellChrome() {
@@ -44,7 +49,6 @@ function fillShellChrome() {
     document.body.appendChild(hint);
   }
 }
-fillShellChrome();
 
 /* 对白语言、字号：跟环境音开关一样存在本地，不进存档 */
 const LANG_KEY = "undo-lang-v3";
@@ -71,6 +75,9 @@ try {
   else langMode = "yue";
   sizeStep = Math.min(SIZE_STEPS.length - 1, Math.max(0, Number(localStorage.getItem(SIZE_KEY)) || 0));
 } catch (e) { /* 无 */ }
+
+// 读完存档里的语言模式才画壳上的字：顶栏也分粤／普两套字形（见 shellText）。
+fillShellChrome();
 
 /** 粤／普：对白与网站共用。粤语侧转香港繁体。both＝粤语为主，对白另加一行普通话小字对照。 */
 function T(yue, zh) {
@@ -160,10 +167,12 @@ function setPairLabel(node, label) {
 function cycleLang() {
   langMode = LANG_MODES[(LANG_MODES.indexOf(langMode) + 1) % LANG_MODES.length];
   try { localStorage.setItem(LANG_KEY, langMode); } catch (err) { /* 无 */ }
+  // 顶栏、玩吧那几颗字的字形也跟着换，不然切到普通话还挂着「瀏覽器」。
+  fillShellChrome();
   optButtons();
   redrawForLang();
   if (langMode === "both" && typeof showPrompt === "function") {
-    const hk = (s) => (typeof toHkTrad === "function" ? toHkTrad(s) : s);
+    const hk = (s) => H(s);
     showPrompt(
       hk("粤＋普"),
       hk("网页与长文只出粤语。人物对白下面，会加一行普通话小字。想整页转普通话，再点一次语言按钮。")
@@ -340,7 +349,10 @@ const initial = () => ({
   webHist: [],
   webFwd: [],
   // 每个分页最后停在哪一页。切走再切回来要回到原页，不是一张新的 about:blank。
-  tabMem: { house: null, wall: null, blank: null },
+  tabMem: { house: null, wall: null },
+  // 网页分页（廿八屋、墙簿之外的）按打开顺序排在这里；最后永远另有一个空的「新分页」。
+  webTabs: [],
+  tabSeq: 0,
   wallWho: "",
   forumId: "",
   pendingPost: "",

@@ -182,7 +182,13 @@ body {
   gap: 2px;
   padding: 0 10px;
   background: #cfc6b6;
+  /* 分页是动态开的，越开越多，整排不许换行。真正定宽度和溢出的是
+     style-chrome.css 里那套（170–230px，超了整排横向推），这里只是兜底。 */
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
 }
+.browser-tabs::-webkit-scrollbar { display: none; }
 .browser-tabs button {
   border: 0;
   background: #ddd4c4;
@@ -191,6 +197,12 @@ body {
   font: inherit;
   font-size: 13px;
   color: #4a4339;
+  flex: 0 0 auto;
+  min-width: 84px;
+  max-width: 186px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .browser-tabs button.on {
   background: #f4efe4;

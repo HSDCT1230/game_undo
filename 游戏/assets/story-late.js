@@ -278,7 +278,7 @@ function missDesk() {
   S.miss.desk = true;
   showModal(
     "他的工作台",
-    "电脑螢幕沒关。日历里九月六日晚「荣汇街上门」那一条被删掉了，回收站是空的。不是墙挂日历。",
+    "电脑荧幕没关。日历里九月六日晚「荣汇街上门」那一条被删掉了，回收站是空的。不是墙挂日历。",
     "杯子搁在鼠标垫旁边，水汽还没散。桌上那只金属夹子还在，本子不见了。你连键盘都没碰——他随时会端着水回来。",
     "scene",
     () => {
@@ -449,7 +449,7 @@ function missAttach(n, back) {
     withClue(pic(14, "示意-附件一新闻扫描"), () => showModal(
       "附件一　新闻扫描",
       "二〇〇四年十一月，维港大学，一名女学生坠楼。新闻写她的男友姓罗，自称有责任。",
-      "报头那行是印出来的，不是手写：維港大學　二〇〇四年十一月。你把「维港大学」四个字抄进簿里。名字被黑笔涂掉，涂不干净，露出一个「鱼」字。页脚一行小字：旺印文仪店。",
+      "报头那行是印出来的，不是手写：维港大学　二〇〇四年十一月。你把「维港大学」四个字抄进簿里。名字被黑笔涂掉，涂不干净，露出一个「鱼」字。页脚一行小字：旺印文仪店。",
       "scene",
       () => {
         note("vhu-school", "剪报上印着「维港大学　二〇〇四年十一月」。阿明读的是这一间。");
@@ -634,7 +634,7 @@ HUBS.miss = {
         },
         {
           title: "网上：旧闻和履历", sub: () => (noted("fish-cv") ? "对不上。应该另有隐情。" : "校报，和他的公开履历。"), img: pic(14, "示意-罗履历"),
-          // 履历上印着「維港大學醫學院」。她得先从附件一那张剪报上把校名抄下来，
+          // 履历上印着「维港大学医学院」。她得先从附件一那张剪报上把校名抄下来，
           // 才轮到这里对着看——不然她就在他的屏幕上先知道了那间学校。
           // 不会卡死：黑料是这一关升级的必经（day-trace 挂在 missDirtReady 上）。
           show: () => flag("askedFishLuo") && missHasFish() && vhuKnowsSchool(),
@@ -735,7 +735,7 @@ function callMing() {
 function goSearch() {
   S.talk = null;
   S.mode = "search";
-  S.tab = "blank";
+  S.tab = "newtab";
   S.screen = "newtab";
   setTime("2014年9月7日 周日 夜");
   drawSearch();
@@ -762,10 +762,14 @@ function vhuBothIn() {
   return noted("vhu-law-in") && noted("vhu-chen-in");
 }
 
-/* 码头那句提示分四层：没搜过／搜了没登入／登了一个／两个都登了。
+/* 码头那句提示分五层：没搜过／搜了没登入／登了一个／两个都登了／目录也翻过了。
    两条路（学生证上的学号、毕业照右下角的学号）在哪一层都对得上，不用分成两套话。 */
 function vhuDockHint() {
-  if (vhuBothIn()) return "站内新闻可以再翻。语音还在手机里。两个帐户都还开着。";
+  if (vhuBothIn()) {
+    return noted("vhu-lib-trace")
+      ? "站内新闻可以再翻。语音还在手机里。两个帐户都还开着。"
+      : "两个帐户都开着。图书馆的目录，哪一边都进得去。";
+  }
   if (noted("vhu-law-in") || noted("vhu-chen-in")) return "站内新闻可以再翻。语音还在手机里。另一个人的信箱还没看。";
   if (!vhuForkReady()) return "站内新闻可以再翻。语音还在手机里。";
   if (noted("vhu-id")) return "站内新闻可以再翻。语音还在手机里。剪报上那个校名，学生证上那个学号——都在簿里。";
@@ -784,10 +788,10 @@ function goCampus() {
 
 /* 码头那颗「搜」：她先搜「维港大学」，第一条才是校园网。 */
 function goEngine() {
-  S.engineQ = S.engineQ || "維港大學";
+  S.engineQ = S.engineQ || "维港大学";
   S.seSearched = true;
   if (S.mode === "search") {
-    S.tab = "blank";
+    S.tab = "newtab";
     goWeb("engine");
     return;
   }
@@ -798,16 +802,10 @@ function drawSearch() {
   baseView("search");
   if (typeof rememberWebScroll === "function") rememberWebScroll();
   clearStage();
-  const sc = String(S.screen || "");
-  const blankish =
-    sc === "newtab" ||
-    sc === "web-error" ||
-    sc === "engine" ||
-    sc === "wiki" ||
-    sc.indexOf("vhu-") === 0;
-  const wallish = !blankish && (S.tab === "wall" || sc === "ad" || sc.indexOf("wall-") === 0);
+  // 高亮哪一格由 tabKey() 说了算：分页现在是动态的，这里再手写一份白名单
+  // 就会把外来页算成廿八屋——分页上亮错格。
   const desk = laptop(webInner(), {
-    tab: blankish ? (S.tab === "blank2" ? "blank2" : "blank") : wallish ? "wall" : "house",
+    tab: tabKey(),
     addr: webAddr(),
   });
   desk.classList.add("search-desk");
@@ -847,6 +845,9 @@ function drawSearch() {
   if (S.modal) stage.append(S.modal);
   renderPlaybar();
   if (typeof applyWebScroll === "function") applyWebScroll();
+  // 搜台这一屏不走 draw()，得在这里自己记一次：不然从这一格切去别格再切回来，
+  // 这格没有记忆，会退成一张空白页。
+  if (typeof rememberTab === "function") rememberTab();
 }
 
 function mingReturn() {
@@ -932,7 +933,7 @@ function roofApproach() {
     { note: ["notforget", "诊室里想不起。回到走廊，她又站在那儿。"] },
     ...dirt,
     line("章慧琪", "你日头系咪嚟过？", { zh: "你白天……是不是来过？" }),
-    line("罗启明", "我企喺楼梯口。冇撳门钟。冇问过你就嚟。唔应该。", { zh: "我站在楼梯口。没按门铃。没问过你就来了。不该。" }),
+    line("罗启明", "我企喺楼梯口。冇揿门钟。冇问过你就嚟。唔应该。", { zh: "我站在楼梯口。没按门铃。没问过你就来了。不该。" }),
     { note: ["day-admit", "他说白天站在楼梯口，没按门铃。"] },
     flag("showedDirt")
       ? line("罗启明", "你而家咁望住我，同嗰张旧相一样。我惊……又将你收成病人。", { zh: "你现在这样望着我，跟那张旧相一样。我怕……又把你收成病人。" })

@@ -102,11 +102,11 @@ function boardLabel(b) {
   return T(b, ({ 求助: "求助", 租务: "租房", 地区: "地区", 杂谈: "闲聊" })[b] || b);
 }
 
-/** 列表热度：按回复数假造「第 N 頁」，像本地论坛一眼看出帖有多热闹。 */
+/** 列表热度：按回复数假造「第 N 页」，像本地论坛一眼看出帖有多热闹。 */
 function forumPageMarks(replyCount) {
   const pages = Math.max(1, Math.min(6, 1 + Math.ceil((replyCount || 0) / 2)));
   let s = "";
-  for (let i = 1; i <= pages; i++) s += T("第", "第") + i + T("頁", "页");
+  for (let i = 1; i <= pages; i++) s += T("第", "第") + i + T("页", "页");
   return s;
 }
 
@@ -317,7 +317,7 @@ function blockedLogout() {
   showPrompt(T("登出失败。", "退出失败。"), T("网页无回应，请稍后再试。", "网页无响应，请稍后再试。"));
 }
 
-// 网页里的任务提示，和其他场景一样别在螢幕右边的便条上
+// 网页里的任务提示，和其他场景一样别在荧幕右边的便条上
 function currentSlate() {
   if (S.mode !== "web") return "";
   if (S.pendingPost && S.screen === "post") return "看完草稿，按下面的「发布」。不按就不算发出去。";
@@ -364,9 +364,9 @@ function laptop(inner, opts) {
   const title = opts.title
     || (tab === "wall"
       ? wallCountLabel("墙簿", wallUnread().n)
-      : tab === "blank" || tab === "blank2"
-        ? blankTabTitle(tab)
-        : wallCountLabel("廿八屋", houseForumUnread().length));
+      : tab === "house"
+        ? wallCountLabel("廿八屋", houseForumUnread().length)
+        : webTabTitle(tab));
   const titlebar = el("div", { class: "browser-titlebar" }, [
     el("span", { class: "ie-icon", "aria-hidden": "true" }, ["e"]),
     el("span", { class: "browser-title" }, [title + " - Windows Internet Explorer"]),
@@ -429,18 +429,21 @@ function laptop(inner, opts) {
       title: "转到",
     }, ["转到"]),
   ]);
+  // 分页：廿八屋、墙簿两个固定格，后面是这趟开过的网页，最右边永远留一格空的「新分页」。
+  // 那一格被用来开了一个网页之后，分页会自动再多出一格空白的（见 goWeb → tabForScreen）。
   const tabs = el("div", { class: "browser-tabs" }, [
     btnTab(wallCountLabel("廿八屋", houseForumUnread().length) + " - 香港租盘", "house", tab, scene),
     btnTab(wallCountLabel("墙簿", wallUnread().n) + " - 我的首页", "wall", tab, scene),
-    btnTab(blankTabTitle("blank"), "blank", tab, scene),
-    tab4Open() ? btnTab(blankTabTitle("blank2"), "blank2", tab, scene) : "",
+    ...webTabs().map((id) => btnTab(webTabTitle(id), id, tab, scene)),
+    btnTab("新分页", "newtab", tab, scene),
   ]);
+  revealTab(tabs);
   const status = el("div", { class: "browser-status" }, [
     el("span", { class: "bs-left" }, [loading ? webLoadLabel() : "完成"]),
     el("span", { class: "bs-right" }, [
       el("span", {}, ["Internet"]),
       el("span", { class: "bs-sep", "aria-hidden": "true" }),
-      el("span", {}, [opts.secure ? "受保護模式：開啟" : "100%"]),
+      el("span", {}, [opts.secure ? "受保护模式：开启" : "100%"]),
     ]),
   ]);
   screen.append(titlebar, chrome, tabs, inner, status);
@@ -449,13 +452,28 @@ function laptop(inner, opts) {
   return desk;
 }
 
-function btnTab(label, id, on, scene) {
-  return el("button", {
+// 分页开到装不下时，当前这一格得自己滚进来。整排每次重绘都从最左边开始，
+// 不补这一下，人在第 8 格按个刷新就被弹回「廿八屋」了。
+function revealTab(bar) {
+  setTimeout(() => {
+    const on = bar.querySelector("button.on");
+    if (!on || !bar.isConnected) return;
+    if (bar.scrollWidth <= bar.clientWidth + 1) return;
+    const br = bar.getBoundingClientRect();
+    const or = on.getBoundingClientRect();
+    const left = or.left - br.left + bar.scrollLeft;
+    if (left < bar.scrollLeft) bar.scrollLeft = left - 6;
+    else if (left + or.width > bar.scrollLeft + bar.clientWidth)
+      bar.scrollLeft = left + or.width - bar.clientWidth + 6;
+  }, 0);
+}
+
+function btnTab(label, id, on, scene) {  return el("button", {
     type: "button",
     class: id === on ? "on" : "",
     onclick: () => {
       if (scene) {
-        browseFromScene(id === "wall" ? "wall" : id === "blank" || id === "blank2" ? "newtab" : "home");
+        browseFromScene(id === "wall" ? "wall" : id === "house" ? "home" : "newtab");
         return;
       }
       // 点自己所在的分页不重载——真实浏览器只是把这一页提到前面。
@@ -475,17 +493,25 @@ function btnTab(label, id, on, scene) {
       if (id === "wall") {
         swapTabHist(S.tab, id);
         goWeb("wall", { noHist: true });
-      } else if (id === "blank" || id === "blank2") {
-        // 第四格第一次点开是一张空白页，前面不接任何历史。
+        return;
+      }
+      if (id === "newtab") {
+        // 最右那一格永远是空的：点它就是把一张 about:blank 提到前面，不动别的分页。
         swapTabHist(S.tab, id);
         goWeb("newtab", { tab: id, noHist: true });
-      } else {
-        // 换去廿八屋／墙簿也各算一格：不换历史的话，在那边按后退会退进
-        // 第四格刚才那间校园网——四个分页却共用一个后退栈。
-        swapTabHist(S.tab, id);
-        if (S.pendingPost || !postedHelp()) goWeb("post", { noHist: true });
-        else goWeb(flag("searched") ? "list" : "home", { noHist: true });
+        return;
       }
+      if (id !== "house") {
+        // 网页分页没有记忆（理论上只在刚开出来那一下）——给它一张空白页。
+        swapTabHist(S.tab, id);
+        goWeb("newtab", { tab: id, noHist: true });
+        return;
+      }
+      // 换去廿八屋／墙簿也各算一格：不换历史的话，在那边按后退会退进
+      // 别个分页刚才那间校园网——几个分页却共用一个后退栈。
+      swapTabHist(S.tab, id);
+      if (S.pendingPost || !postedHelp()) goWeb("post", { noHist: true });
+      else goWeb(flag("searched") ? "list" : "home", { noHist: true });
     },
   }, [label]);
 }
@@ -516,18 +542,41 @@ function snapWeb() {
     // 校园网站内页（收件箱／公告栏）是同一个 screen，靠这两项分开列表与单条。
     vhuMail: (S.vhu && S.vhu.mail) || "",
     vhuNotice: (S.vhu && S.vhu.notice) || "",
+    vhuBook: (S.vhu && S.vhu.book) || "",
   };
 }
 
-/* 分页记忆：浏览器窗口里每个分页各自记得自己停在那一页。
-   第四格（blank2）只在看过维基那一条之后才出现，见 tab4Open()。 */
+/* 分页：廿八屋、墙簿是固定两格；后面是这趟真正开过的网页（webTabs，按打开顺序）；
+   最右永远留一格空的「新分页」。那一格被拿去开了网页之后，goWeb 会补一格新的——
+   所以整排里始终只有一格「新分页」，不会再像从前那样并排摆着两格空白页。
+   每格各自记得停在哪一页（tabMem），也各自有自己的后退栈（tabHist）。 */
+function webTabs() {
+  if (!Array.isArray(S.webTabs)) S.webTabs = [];
+  return S.webTabs;
+}
+
+function isWebTab(id) {
+  return webTabs().indexOf(id) >= 0;
+}
+
+// 开一格新的网页分页，排在「新分页」左边。id 只增不减，要写进 tabMem／tabHist／后退栈。
+function newPageTab() {
+  S.tabSeq = Number(S.tabSeq) || 0;
+  const id = "w" + (++S.tabSeq);
+  webTabs().push(id);
+  return id;
+}
+
 function tabKey() {
   const t = String(S.tab || "");
-  return t === "wall" || t === "blank" || t === "blank2" ? t : "house";
+  if (t === "wall" || t === "house" || t === "newtab") return t;
+  return isWebTab(t) ? t : "newtab";
 }
 
 function rememberTab() {
-  S.tabMem = S.tabMem || { house: null, wall: null, blank: null, blank2: null };
+  // 「新分页」永远是空的，不必记；记下来反而会把这一格变成一张有内容的页。
+  if (tabKey() === "newtab") return;
+  S.tabMem = S.tabMem || {};
   S.tabMem[tabKey()] = snapWeb();
 }
 
@@ -536,19 +585,57 @@ function tabMemory(id) {
   return mem && mem.screen ? mem : null;
 }
 
-// 四个分页各有自己的「上一页」：在第四个分页里按后退，不该退到第三个分页的维基去。
+// 这一格最后停在哪一页：自己就在这一格时看实时状态，否则看记忆。
+function tabScreen(id) {
+  if (id === S.tab) return String(S.screen || "newtab");
+  const mem = tabMemory(id);
+  return String((mem && mem.screen) || "newtab");
+}
+
+// 分页上的字：网页分页显示它停在的那一页，跟标题栏对得上。
+function webTabTitle(id) {
+  if (id === "newtab") return "新分页";
+  const s = tabScreen(id);
+  if (s.indexOf("vhu-") === 0) return "VHU Portal - 维港大学";
+  if (s === "engine") return "通搜　搜寻";
+  if (s === "wiki") return "维港大学 - 维基百科";
+  if (s === "web-error") return "无法显示网页";
+  return "about:blank";
+}
+
+// 一张页面该落在哪一格：廿八屋／墙簿回自己那格；外来页留在当前网页分页里，
+// 若当前停在固定格或「新分页」上，就为它开一张新分页（「新分页」随即被补一张新的）。
+function tabForScreen(screen, cur) {
+  if (screen === "ad" || screen === "wall" || String(screen).indexOf("wall-") === 0) return "wall";
+  if (isBlankSite(screen)) return isWebTab(cur) ? cur : newPageTab();
+  return "house";
+}
+
+// 旧档迁移：从前 blank／blank2 是写死的两格，现在换成动态分页。
+function normalizeTabs() {
+  if (!Array.isArray(S.webTabs)) S.webTabs = [];
+  S.webTabs = S.webTabs.filter((x) => typeof x === "string" && x);
+  S.tabSeq = Math.max(Number(S.tabSeq) || 0, S.webTabs.length);
+  S.tabMem = S.tabMem && typeof S.tabMem === "object" ? S.tabMem : {};
+  delete S.tabMem.blank;
+  delete S.tabMem.blank2;
+  const t = String(S.tab || "");
+  if (t === "house" || t === "wall" || t === "newtab" || isWebTab(t)) return;
+  // 旧档正停在一张外来页上：给它补一张正式分页，别让这一页丢掉。
+  if ((t === "blank" || t === "blank2") && !isBlankSite(String(S.screen || "newtab"))) {
+    S.tab = newPageTab();
+    return;
+  }
+  S.tab = "newtab";
+}
+
+// 几个分页各有自己的「上一页」：在这一格按后退，不该退到别格刚才那一页去。
 function swapTabHist(from, to) {
   S.tabHist = S.tabHist || {};
   if (from && from !== to) S.tabHist[from] = { hist: S.webHist || [], fwd: S.webFwd || [] };
   const got = S.tabHist[to];
   S.webHist = got ? (got.hist || []).slice() : [];
   S.webFwd = got ? (got.fwd || []).slice() : [];
-}
-
-// 看过维基之后，浏览器里多一格空白分页：她不必去找左上角那个后退键，
-// 开新一页再搜一次就行。第四个分页只在第 15 关的搜索台上出现。
-function tab4Open() {
-  return S.wikiOpened === true;
 }
 
 function browseFromScene(screen) {
@@ -684,10 +771,13 @@ function goWeb(screen, extra) {
     extra.filter = "share";
   }
   if (holdForPost(screen)) return;
+  // 先定这一页落在哪一格，再记历史：新开分页时上一页（about:blank）要记成同一格的，
+  // 否则新分页里按后退会跳回最右那格「新分页」，页跑了、格还留着。
+  const targetTab = extra.tab || tabForScreen(screen, S.tab);
   // noHist：换分页那一下不算「在新分页里走了一步」，不必把旧分页那一页塞进来。
   if (!extra.replace && !extra.noHist) {
     S.webHist = S.webHist || [];
-    const cur = snapWeb();
+    const cur = Object.assign(snapWeb(), { tab: targetTab });
     const last = S.webHist[S.webHist.length - 1];
     if (!last || last.screen !== cur.screen || last.tab !== cur.tab) {
       S.webHist.push(cur);
@@ -699,10 +789,9 @@ function goWeb(screen, extra) {
   S.wallFresh = null;
   S.wallNav = (S.wallNav || 0) + 1;
   if (extra.tab) S.tab = extra.tab;
-  // 站内页之间走动时留在自己这一格：她要是从第四个分页搜进去，就一直在第四个分页里。
-  else if (isBlankSite(screen)) S.tab = S.tab === "blank2" ? "blank2" : "blank";
-  else if (screen === "ad" || screen === "wall" || String(screen).indexOf("wall-") === 0) S.tab = "wall";
-  else S.tab = "house";
+  // 站内页之间走动时留在自己这一格：从哪张分页搜进去，就一直在那张分页里。
+  // 若当前停在固定格或「新分页」上，外来页会开一张新分页——「新分页」随即补一张新的。
+  else S.tab = targetTab;
   if ("listing" in extra) S.listing = extra.listing;
   if ("wallWho" in extra) S.wallWho = extra.wallWho;
   if ("forumId" in extra) S.forumId = extra.forumId;
@@ -713,6 +802,7 @@ function goWeb(screen, extra) {
   // 收件箱／公告栏的列表与单条是同一个 screen，用这两个走历史栈。
   if ("mailId" in extra && S.vhu) S.vhu.mail = extra.mailId || "";
   if ("noticeId" in extra && S.vhu) S.vhu.notice = extra.noticeId || "";
+  if ("bookCall" in extra && S.vhu) S.vhu.book = extra.bookCall || "";
   if (extra.search) flag("searched", true);
   webAddrDraft = null;
   webStartLoad();
@@ -749,7 +839,8 @@ function webForward() {
 
 function restoreWebSnap(p) {
   S.screen = p.screen;
-  S.tab = p.tab;
+  // 旧档/旧后退栈里可能还留着 blank／blank2 这种写死的分页名，认不出就留在当前这格。
+  if (p.tab === "house" || p.tab === "wall" || p.tab === "newtab" || isWebTab(p.tab)) S.tab = p.tab;
   S.listing = p.listing;
   S.wallWho = p.wallWho;
   S.forumId = p.forumId;
@@ -760,6 +851,7 @@ function restoreWebSnap(p) {
   if (S.vhu) {
     if (p.screen === "vhu-mail") S.vhu.mail = p.vhuMail || "";
     if (p.screen === "vhu-notice") S.vhu.notice = p.vhuNotice || "";
+    if (p.screen === "vhu-book") S.vhu.book = p.vhuBook || "";
   }
 }
 
@@ -767,7 +859,7 @@ function restoreWebSnap(p) {
 
 // 输入中的草稿。重绘会重建输入框，靠它把没提交的文字留住。
 let webAddrDraft = null;
-// 状态栏「正在開啟…」的截止时间戳；大于此刻即载入中，「停止」才可按。
+// 状态栏「正在开启…」的截止时间戳；大于此刻即载入中，「停止」才可按。
 let webLoadEnd = 0;
 let webLoadTimer = null;
 let webReloadTop = false;
@@ -775,9 +867,9 @@ const WEB_LOAD_MS = 600;
 
 function webLoadLabel() {
   const a = webAddr();
-  if (a === "about:blank") return "正在開啟 about:blank…";
+  if (a === "about:blank") return "正在开启 about:blank…";
   const host = String(a).replace(/^[a-z][a-z0-9+.-]*:\/\//i, "").split("/")[0];
-  return "正在開啟 " + (host || a) + "…";
+  return "正在开启 " + (host || a) + "…";
 }
 
 function webStartLoad() {
@@ -936,12 +1028,13 @@ function webAddr() {
     newtab: "about:blank",
     "web-error": (S.vhu && S.vhu.errUrl) || "http://",
     engine: "http://" + SE_SITE.host + "/search?q=" + encodeURIComponent(seQueryText()),
-    wiki: "http://zh.wikipedia.org/wiki/" + encodeURIComponent("維港大學"),
+    wiki: "http://zh.wikipedia.org/wiki/" + encodeURIComponent("维港大学"),
     "vhu-login": "https://" + VHU_HOST + "/login",
     "vhu-home": "https://" + VHU_HOST + "/home",
     "vhu-profile": "https://" + VHU_HOST + "/profile",
     "vhu-academic": "https://" + VHU_HOST + "/academic",
     "vhu-library": "https://" + VHU_HOST + "/library",
+    "vhu-book": "https://" + VHU_HOST + "/library/cat/" + encodeURIComponent((S.vhu && S.vhu.book) || ""),
     "vhu-mail": "https://" + VHU_HOST + "/webmail" + (S.vhu && S.vhu.mail ? "/read/" + S.vhu.mail : ""),
     "vhu-notice": "https://" + VHU_HOST + "/notice" + (S.vhu && S.vhu.notice ? "/" + S.vhu.notice : ""),
   };
@@ -989,6 +1082,7 @@ function webInner() {
     "vhu-profile": viewVhuProfile,
     "vhu-academic": viewVhuAcademic,
     "vhu-library": viewVhuLibrary,
+    "vhu-book": viewVhuBook,
     "vhu-mail": viewVhuMail,
     "vhu-notice": viewVhuNotice,
   };
@@ -2362,14 +2456,14 @@ function wallDoKeep(e) {
 
 function wallNoteParts(text, e) {
   let key = wallNoteKey(e);
-  if (!key) return [typeof toHkTrad === "function" ? toHkTrad(String(text || "")) : text];
+  if (!key) return [H(text || "")];
   let at = String(text).indexOf(key);
   if (at < 0 && typeof toHkTrad === "function") {
     const tk = toHkTrad(key);
     at = String(text).indexOf(tk);
     if (at >= 0) key = tk;
   }
-  if (at < 0) return [typeof toHkTrad === "function" ? toHkTrad(String(text || "")) : text];
+  if (at < 0) return [H(text || "")];
   const kept = noted(e.note[0]);
   const mark = kept
     ? el("span", { class: "wall-key-kept", title: hkAd("已记进日记簿") }, [key])
@@ -2503,7 +2597,7 @@ function openWallAd(id) {
 function wallAdButton(id, cls) {
   const a = WALL_ADS[id];
   if (!a) return "";
-  const trad = (s) => (typeof toHkTrad === "function" ? toHkTrad(s) : s);
+  const trad = (s) => H(s);
   const kids = [el("b", {}, [trad(a.sideTitle)]), trad(a.sideLine)];
   if (a.sideBy) kids.push(el("div", {}, [trad(a.sideBy)]));
   return el("button", {
@@ -2684,7 +2778,7 @@ function viewAdLin() {
 
 function hkAd(s) {
   if (s == null || s === "") return "";
-  return typeof toHkTrad === "function" ? toHkTrad(String(s)) : String(s);
+  return H(String(s));
 }
 
 function viewAdShop(a) {
@@ -2899,9 +2993,17 @@ function viewWallUser() {
     ]);
   }
   if (S.wallWho === "howard") {
+    // 相册「青春」要等银包不见那晚、他翻了一整晚旧相簿之后才出现：那一趟上载的毕业照，
+    // 和学生证并排挂在同一个相簿里。学号在动态里已经给了，这里不多也不少——
+    // 只是把这句「他也是维港大学的」落成一张看得见的卡。
+    const youth = wallShown(WALL_FEED).some((x) => x.e.id === "howard-grad");
     return wallProfile("陈家豪", [
       "姐夫。督察。已婚。",
       "妻子：陈美娟",
+      youth ? wallAlbum("相册「青春」（2 张）", [
+        { id: pic(15, "示意-家豪毕业照"), cap: "维港大学社会科学院　二〇〇四届" },
+        { id: pic(14, "证据-陈家豪学生证"), cap: "维港大学学生证" },
+      ]) : "",
       wallAlbum("相册「旅行」（2 张）", [
         { id: pic(1, "墙簿/陈家豪-渡轮"), cap: "渡轮" },
         { id: pic(1, "墙簿/陈家豪-沙滩"), cap: "沙滩" },
