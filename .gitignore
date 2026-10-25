@@ -40,3 +40,6 @@ _t/
 tools/_t/
 tools/_mob/
 tools/_smoke/
+
+# 生图底图（会重生成；成品在 图/ 里，底图本身不入库）
+gen/
