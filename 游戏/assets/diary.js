@@ -323,14 +323,18 @@ function openPairs(onClose) {
       };
       const step = full ? 0 : empty ? 1 : pick ? 3 : 2;
       const guide = el("div", { class: "tool-guide" });
-      const lead = ["", "先去屋里找，今晚哪里不一样。", "点一张今晚看见的。", "再点它对应的那一格。"][step];
+      // 第一格原来留空：摆齐之后这一框里一个字都没有，只剩右边那个绝对定位的胶囊，
+      // 框就塌成一条横线、「✓ 齐了」跑到框外面。（两栏之后才看清，10-29）
+      const lead = ["三处对上了。", "先去屋里找，今晚哪里不一样。", "点一张今晚看见的。", "再点它对应的那一格。"][step];
       if (lead) guide.append(el("p", { class: "tool-lead" }, [lead]));
       guide.append(el("span", { class: "tool-progress" + (full ? " done" : "") }, [
         full ? "✓ 齐了" : "已摆好 " + pairCount() + "／3",
       ]));
       host.append(guide);
-      const cards = el("div", { class: "tool-cards" });
-      if (full) cards.append(el("p", { class: "tool-note" }, ["摆齐了。"]));
+      const cards = el("div", { class: "tool-cards pair-cards" });
+      // 齐了且没有别的纸条时才写这一句；齐了还有没配的，就让它留在左栏里——
+      // 那张也是今晚看见的，写着「摆齐了」再摆一张在下面会打架。
+      if (full && !loose.length) cards.append(el("p", { class: "tool-note" }, ["今晚的都摆上了。"]));
       else if (empty) {
         cards.append(el("div", { class: "tool-empty" }, [
           el("p", { class: "tool-empty-lead" }, [found ? "找到的都摆上了，还差 " + need + " 处。" : "今晚看见的，这里还一张都没有。"]),
@@ -348,14 +352,13 @@ function openPairs(onClose) {
           },
         }, ["今晚：" + tonightText(r.id)]));
       });
-      host.append(cards);
       if (!full && loose.length && loose.length < need) {
         host.append(el("p", { class: "tool-more" }, [
           "这些摆好也还差 " + (need - loose.length) + " 处，要再去屋里找。",
           el("button", { type: "button", class: "tool-more-go", onclick: leave }, ["去屋里"]),
         ]));
       }
-      const list = el("div", { class: "tool-rows" + (empty ? " idle" : "") });
+      const list = el("div", { class: "tool-rows pair-rows" + (empty ? " idle" : "") });
       rows.forEach((r) => {
         if (r.id === "family") return;
         const known = r.id === "print" || (S.base && S.base[r.id]);
@@ -393,7 +396,20 @@ function openPairs(onClose) {
           paired ? el("small", { class: "tonight" }, ["今晚：" + tonightText(r.id)]) : "",
         ]));
       });
-      host.append(list);
+      // 两栏并排：左边「今晚看见的」纸条，右边「搬进来那晚」的格子。
+      // 原来是上下两段——点一张今晚的纸条要去下面找它那一格，中间还夹着「还差 N 处」那一行，
+      // 1280 下也要滚。并排之后「这一张配哪一格」在一屏里对着看（10-29）。
+      // 手机上还是回到上下（见 style-chrome.css 的 640 断点）：一栏放不下两句对照。
+      host.append(el("div", { class: "pair-split" }, [
+        el("div", { class: "pair-col" }, [
+          el("p", { class: "pair-col-title" }, ["今晚看见的"]),
+          cards,
+        ]),
+        el("div", { class: "pair-col" }, [
+          el("p", { class: "pair-col-title" }, ["搬进来那晚"]),
+          list,
+        ]),
+      ]));
     },
   });
 }

@@ -6048,6 +6048,87 @@ body .wall-photo-sheet .img-slot.wall-photo-lg::after { content: none; }
 }
 .pair-row.over { border-color: #c47a28; }
 .sort-btns { display: inline-flex; gap: 8px; margin-left: auto; }
+
+/* ---------- 摆在一起：左右两栏（10-29） ----------
+
+   原来是上下两段：上面点一张今晚的纸条，再去下面找它对应的那一格，
+   中间还夹着「还差 N 处 / 去屋里」那一行——1280 下也得上下滚。
+   并排之后「这一张配哪一格」在一屏里对着看。
+
+   只挂在 .pair-* 下：.tool-cards／.tool-rows 别的工具（把东西给他看、对照纸、
+   排序）也在用，全局改一栏变两栏会把那几屏一起拆了。 */
+.pair-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+/* 栏名做成细线压着的眉标：两栏各一条，替掉每行里重复的「搬进来那晚：」
+   ——那半句在窄栏里占地最多，读起来还像每格各说一遍。 */
+.pair-col-title {
+  margin: 0 0 8px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid #d8c9ad;
+  color: #8a3c10;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+/* 一栏只有半宽，纸条与格子都竖着排。横排会把长短不齐的句子挤成一条，
+   两栏反而比原来那段更难认。 */
+.pair-cards { flex-direction: column; gap: 10px; margin: 0; }
+.pair-cards .tool-card { width: 100%; }
+.pair-rows { gap: 10px; margin: 0; }
+.pair-rows .tool-row { flex-direction: column; align-items: stretch; gap: 2px; }
+.pair-rows .tool-row:not(.done) small { color: #6d6355; }
+/* 配上的那一格：左边一道绿边（inset 阴影，圆角跟着走），跟左栏选中的橙竖条对位。
+   比整格刷绿轻——她只是把两样摆到一处，不是打了一个勾。 */
+.pair-rows .tool-row.done {
+  border-color: #6d9a63;
+  background: linear-gradient(rgba(143, 174, 134, 0.26), rgba(143, 174, 134, 0.13));
+  box-shadow: inset 4px 0 0 #4f7a48;
+}
+/* 选中：纸片被拎起来一层。
+   原来用 outline 画第二道框——2px 硬线、隔 1px 再一道，那是**浏览器的焦点框**
+   （tab 键选到控件时的样子），放在纸面上像系统提示，不像她做的记号；
+   而且 outline 是直角的，border-radius 管不到它。这里换成 box-shadow：
+   贴着边框再压一道橙（合计 3.5px，比原来 outline 更厚但不飘）、外面一圈很淡的暖光、
+   底下一道硬投影——纸被拿起来，影子落回页面上。
+   左边那条竖边是「捏住了这一张」，比再粗一号的字安静。 */
+.pair-cards .tool-card { position: relative; }
+.pair-cards .tool-card.sel {
+  outline: none;
+  border-color: #a8551a;
+  background: #ffefc2;
+  box-shadow:
+    0 0 0 2px #c47a28,
+    0 0 0 5px rgba(196, 122, 40, 0.14),
+    2px 4px 0 rgba(60, 40, 20, 0.16);
+  transform: translateY(-1px);
+}
+.pair-cards .tool-card.sel::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 4px;
+  background: linear-gradient(#a8551a, #6e2c08);
+}
+/* 两栏要的地方比一栏多：620 分两半各 280，「搬进来那晚」那一句就折行。
+   只对这一种工具放宽，别的日记工具仍是 620。 */
+.diary-sheet:has(.pair-split) {
+  width: min(94vw, 800px);
+  max-width: min(94vw, 800px);
+}
+/* 手机上回到上下：一栏 340 放不下「纸条 + 对照格」两列并排 */
+@media (max-width: 640px) {
+  .pair-split { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  /* 引导语与进度胶囊在窄屏抢同一行：「點一張今晚看見的。」被挤成两行，
+     "的。"单起一行。640 以下把胶囊从绝对定位放回文档流，靠右单独占一行。 */
+  .tool-progress { position: static; display: block; width: fit-content; margin: 8px 0 0 auto; }
+  .tool-lead { margin-right: 0; }
+}
 .sort-btns button {
   padding: 3px 10px;
   border: 1.5px solid #a08a62;
