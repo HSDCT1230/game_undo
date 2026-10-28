@@ -26,6 +26,26 @@ const ITEMS = {
   "fish-tag": { kind: "物件", title: "鱼牌", time: "2014年9月7日", body: "空抽屉底滑出一小块磨白塑料。鱼形。没有字。节拍器已经不在。", img: pic(14, "证据-鱼牌"), key: "没有字" },
   "chen-wallet": { kind: "物件", title: "钱夹", time: "2014年9月7日", body: "走廊椅脚边黑色钱夹。透明套里表姐和陈家豪合照。夹层里的学生证发黄：年轻的罗医生。", img: pic(14, "证据-钱夹罗证件照"), key: "夹层里的学生证" },
   "rec-name": { kind: "录音", title: "章慧琪。你知", time: "2014年9月7日 夜", body: "先是阿轩，返嚟食饭。再低一句：章慧琪。你知。声从门底来。", key: "章慧琪。你知" },
+  // 「两个人」那两页写下来的纸。日子不写死：她在第 14 关就推得出周生那一页，
+  // 也可能等到第 15 关拿到图书馆纪录才推得出罗启明——纸上的日子该是她写的那天。
+  "paper-zhou": {
+    kind: "纸", title: "这两个人", time: "",
+    body: "二〇一二年九月，十二乡。一场山泥带走两个人：同村一户的妻子与儿子。\n业主姓周。相框背面的铅笔字：丽芬　阿轩　十二乡村屋门口　二〇一二年春。\n门底那个声音在叫「阿轩，返嚟食饭」。\n阿轩不是鬼。他是一个男孩，那年春天还在门口照相。",
+    key: "阿轩不是鬼",
+  },
+  "paper-luo": {
+    kind: "纸", title: "不在考场", time: "",
+    body: "二〇〇四年十一月十五日，他缺考。那一科是精神科临床实习。\n十一月五日他借了一本书，应还日期是十九日。他没有还。\n十一月八日，东翼平台。十一月十一日，学校把辅导中心开到晚上十点。\n他不是没有考。他是没有去。",
+    key: "他不是没有考",
+  },
+  // 第二张：鱼牌＋校报＋履历三样摆齐才写得出来。
+  // 不写「那个女生是他的女朋友」——第 14 关他自己当面讲过了（missShow：「我心入面叫佢鱼」）。
+  // 这张写的是他没讲的那一半：那一整年被他从履历上剪走了，却剪不干净。
+  "paper-yu": {
+    kind: "纸", title: "没抹干净", time: "",
+    body: "校报写：二〇〇四年十一月，维港大学一个女生从教学楼坠下。男友姓罗，自称有责任。名字涂掉，露出一个「鱼」。\n他的公开履历：二〇〇五年毕业，二〇〇五年开始驻院。二〇〇四年那一整年，上头没有。\n十一月十五日，他没有去考试。\n鱼牌在空抽屉最底下。\n剪掉的是年份。剪不掉的是那块牌。",
+    key: "没抹干净",
+  },
 };
 
 function item(id) {
@@ -33,6 +53,7 @@ function item(id) {
   const out = Object.assign({ id }, base);
   if (id === "paper-30") out.body = compareBody();
   if (id === "paper-06") out.body = weekCalBody();
+  if (id === "paper-zhou" || id === "paper-luo" || id === "paper-yu") out.time = noteDayText();
   // 楼梯口那一晚她怎么答的，这页纸就怎么写。三档共用一条必做，不改关卡结构。
   if (id === "note-zhoutue") {
     const told = flag("zhouTold");
@@ -60,7 +81,10 @@ function peekItem(id, next) {
 }
 
 function itemLabel(id) {
-  const it = hasEvidence(id) ? (S.evidence.find((e) => e.id === id) || item(id)) : item(id);
+  // 存档里的证物正常都带 kind／title；旧档或手动塞进去的只有 id，
+  // 那就回 ITEMS 里取一次——不然簿子上会出现一行「·：」（10-29 探针踩到）。
+  const found = hasEvidence(id) ? S.evidence.find((e) => e.id === id) : null;
+  const it = found && found.kind ? found : item(id);
   return H(it.kind) + "：" + H(it.title);
 }
 
@@ -72,7 +96,7 @@ const ITEM_ABOUT = {
   "letter-red": ["周生"],
   "photo-sill": ["窗台"],
   "photo-print": ["储物室门"],
-  "rec-axuan": ["储物室门"],
+  "rec-axuan": ["储物室门", "周生"],
   "note-dry": ["周生"],
   "photo-car-out": ["车"],
   "photo-tap-out": ["水喉"],
@@ -92,6 +116,13 @@ const ITEM_ABOUT = {
   "fish-tag": ["罗启明"],
   "chen-wallet": ["表姐一家", "罗启明"],
   "rec-name": ["储物室门"],
+  // 两条从网页上抄下来的新闻也归人：山泥那条是周生的十二乡，
+  // 市建局那条讲的是这栋楼。新闻原本就进得了簿子，只是从来没归过主人（10-28）。
+  "news-mud": ["周生"],
+  // 罗线最重的两样一直没贴上主人：校报旧闻写着「男友姓罗」「涂掉的名字露出一个鱼」，
+  // 公开履历写着二〇〇五年毕业、中间那一年不见了。不归过来，他那栏就只剩几个日子（10-29）。
+  "news-yu04": ["罗启明"],
+  "news-kimon": ["罗启明"],
 };
 
 const itemAbout = (id) => ITEM_ABOUT[id] || [];
@@ -790,6 +821,184 @@ function openCompare(onDone) {
         afterModalClose();
       },
     }],
+  });
+}
+
+/* ---------- 两个人：把这间屋的事按人分开，再问一句「合起来是什么」 ---------- */
+
+/* 网页上的字进了簿子，是一行一行散着的。这一页把它们按人分开：
+   周生那边是这间屋，罗启明那边是二〇〇四年十一月。
+   归类不要她动手——条目自己认得主人（证物看 ITEM_ABOUT，抄下来的笔记看 who）；
+   她要做的只有最后那一下：从三句里挑一句，把它写下来。
+   三条候选只有一条对，选错不罚，只换一句她自己的反驳，可以再选。
+
+   为什么不给「全部集齐」才可推：任何一条藏在不好找的页面上（公告存档最底那条），
+   整条线就停在门口。必要几条够了就写得出来，缺的那几处只留在栏里当计数（10-29）。
+
+   罗启明有两问。第一问只到「他出了事」，材料全在第 15 关的校园网上；
+   第二问要鱼牌、校报、公开履历——三样都在第 14 关，且都藏在可做可不做的分支里，
+   所以它不挂关卡、凑不齐就不出现。第一页是这一章能给的，第二页是给第二章留的钩。 */
+const PEOPLE = [
+  {
+    key: "zhou",
+    name: "周生",
+    sub: "这间屋",
+    min: 3,
+    need: ["photo-back", "news-mud", "rec-axuan"],
+    q: "这几样合起来是……",
+    options: [
+      { t: "他把这间屋租给我，是想有人陪他。", no: "不对。他要的是有人住。有人住，他才有租收。" },
+      { t: "二〇一二年十二乡那场山泥里死的两个人，是他的妻子和儿子。", ok: true },
+      { t: "储物室里住着一个人，他不让我进去。", no: "门是从里面锁着的。里面没有人住。" },
+    ],
+    paper: "paper-zhou",
+    flag: "deduce-zhou",
+  },
+  {
+    key: "luo",
+    name: "罗启明",
+    sub: "二〇〇四年十一月",
+    min: 3,
+    need: ["vhu-miss04", "vhu-grief04", "vhu-news04", "vhu-lib-trace"],
+    q: "这几样合起来是……",
+    options: [
+      { t: "他那一科没考，是因为他不想当精神科医生。", no: "他借了那一科的书，借了两次。不想当的人不会借两次。" },
+      { t: "二〇〇四年十一月，他不在考场。那个月他出了事。", ok: true },
+      { t: "教务处改了考试日期，他没有收到通知。", no: "通告写着「按原定日期」。改期这件事没有发生过。" },
+    ],
+    paper: "paper-luo",
+    flag: "deduce-luo",
+    // 第二问：第一页只到「他出了事」，这一页到「出事的是谁」。
+    // 要鱼牌、校报、履历三样——三样都在第 14 关，且都藏在可做可不做的分支里。
+    // 所以这一问不挂关卡（软），凑不齐就不出现，不提示「你还有东西没找」。
+    next: {
+      key: "yu",
+      min: 3,
+      need: ["fish-tag", "news-yu04", "news-kimon"],
+      leader: "还有一样，我一直没写。",
+      q: "校报、履历、鱼牌，三样摆在一起……",
+      options: [
+        { t: "他不想当精神科医生，所以空了一年。", no: "不想当不用把年份抹掉。他是整年剪走了——连驻院那一年都换了年份。" },
+        { t: "他把二〇〇四年整年从履历上剪掉了。可是鱼牌还在抽屉里。", ok: true },
+        { t: "履历是学校写错的。", no: "名字、年份、专科资格都对得上。只有那一年是空的。" },
+      ],
+      paper: "paper-yu",
+      flag: "deduce-yu",
+    },
+  },
+];
+
+/* 这个人名下现在有什么。证物在前（她拿到的顺序），抄下来的笔记在后（她抄的顺序）。
+   证物靠 ITEM_ABOUT 里写的中文名认人；笔记靠 note() 第三参的短名（"luo"／"zhou"）——
+   两套 key 不同，所以 p 同时带 name 与 key，别拿 name 去比 n.who（10-28 踩过）。 */
+function whoRows(p) {
+  const out = [];
+  (S.evidence || []).forEach((e) => {
+    if (!itemAbout(e.id).includes(p.name)) return;
+    out.push({ id: e.id, ev: true, text: itemLabel(e.id) });
+  });
+  (S.notes || []).forEach((n) => {
+    if (!n.who || (n.who !== p.key && n.who !== p.name)) return;
+    out.push({ id: n.id, ev: false, text: n.text });
+  });
+  return out;
+}
+
+const whoGot = (st, rows) => rows.filter((r) => st.need.includes(r.id)).length;
+const whoReady = (st, rows) => whoGot(st, rows) >= st.min;
+
+/* 写下来：纸进簿子，flag 立起来。门槛只判「够不够」，不够就不给按。 */
+function whoWrite(st, redraw) {
+  flag(st.flag, true);
+  if (!hasEvidence(st.paper)) fileEvidence(item(st.paper));
+  if (typeof sfx === "function") sfx("paper");
+  if (typeof tip === "function") tip("写下来了。在簿子里。", { nearBar: true });
+  redraw();
+}
+
+/* 一问的整块：写过了就只留一行「看那页」，不够就说还不够，够了才出三句。
+   两问共用这一段，第二问只是换一组 need 与候选。 */
+function whoAsk(st, rows, redraw) {
+  if (flag(st.flag)) {
+    return [el("p", { class: "who-done" }, [
+      "写下来了。",
+      el("button", {
+        type: "button",
+        class: "who-see",
+        onclick: () => showClueModal(item(st.paper)),
+      }, ["看那页"]),
+    ])];
+  }
+  if (!whoReady(st, rows)) {
+    return [el("p", { class: "who-miss" }, [st.leader ? "这几样我还没凑齐。" : "对得上的还不够。再有两处，我才写得出来。"])];
+  }
+  const out = [el("p", { class: "who-q" }, [st.q])];
+  const tried = S.whoTry[st.key];
+  if (tried != null && st.options[tried] && st.options[tried].no) {
+    out.push(el("p", { class: "who-no" }, [st.options[tried].no]));
+  }
+  out.push(el("div", { class: "who-opts" }, st.options.map((o, i) => el("button", {
+    type: "button",
+    class: "who-opt",
+    onclick: () => {
+      if (o.ok) { whoWrite(st, redraw); return; }
+      S.whoTry[st.key] = i;
+      redraw();
+    },
+  }, [o.t]))));
+  return out;
+}
+
+function openWho() {
+  S.whoTry = S.whoTry || {};
+  showDiaryTool({
+    kind: "两个人",
+    build: (host, redraw) => {
+      host.append(el("p", { class: "tool-lead" }, [
+        "这件事牵着两个人。他们各自的东西，我分开放在这里。",
+      ]));
+      PEOPLE.forEach((p) => {
+        const rows = whoRows(p);
+        const got = whoGot(p, rows);
+        const miss = Math.max(0, p.need.length - got);
+        const card = el("div", { class: "who-card" });
+        card.append(el("div", { class: "who-head" }, [
+          el("b", { class: "who-name" }, [p.name]),
+          el("span", { class: "who-sub" }, [p.sub]),
+          // 分母是「一共有几处」，不是「还差几处」：3／4 又有选项，会被读成「还差一处」。
+          // 所以只有全部归齐才把这一格点亮，其余时候它就只是个计数。
+          el("span", { class: "who-count" + (got >= p.need.length ? " done" : "") }, [got + "／" + p.need.length]),
+        ]));
+        const list = el("ul", { class: "who-list" });
+        if (!rows.length) list.append(el("li", { class: "who-row ghost" }, ["——　还没有。"]));
+        rows.forEach((r) => {
+          list.append(el("li", { class: "who-row" + (p.need.includes(r.id) ? " need" : "") }, [
+            el("span", { class: "who-mark" }, [p.need.includes(r.id) ? "◆" : "·"]),
+            r.ev
+              ? el("button", {
+                type: "button",
+                class: "who-item",
+                onclick: () => showClueModal(item(r.id)),
+              }, [r.text])
+              : el("span", { class: "who-item plain" }, [r.text]),
+          ]));
+        });
+        // 「还差 N 处」只在真的还写不出来的时候挂。够写的时候它跟下面那三句选项打架：
+        // 一边说差一处，一边请她挑一句（10-28）。
+        if (!whoReady(p, rows) && rows.length) list.append(el("li", { class: "who-row ghost" }, ["——　还差 " + miss + " 处。"]));
+        card.append(list);
+        card.append(...whoAsk(p, rows, redraw));
+        // 第二问只在第一页写完、且三样真的凑齐时才露。凑不齐就当它不存在——
+        // 这一问是深度内容，不该在栏里挂一行「你还差三样」把人赶去找（10-29）。
+        if (p.next && flag(p.flag) && (flag(p.next.flag) || whoReady(p.next, rows))) {
+          card.append(el("div", { class: "who-stage" }, [
+            el("p", { class: "who-stage-lead" }, [p.next.leader]),
+            ...whoAsk(p.next, rows, redraw),
+          ]));
+        }
+        host.append(card);
+      });
+    },
   });
 }
 

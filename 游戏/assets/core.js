@@ -478,10 +478,20 @@ function noteDayText() {
   return out;
 }
 
-function note(id, text) {
+/* who：这一行指向谁（"luo"／"zhou"／"chen"）。
+   有 who 的进「三个人」那一栏，没 who 的照旧只在时间线上——现有几十条一条都不用改。
+   网页上的字要她自己抄下来才进得来（点那一行小字），所以这里的 who 只决定归属，不决定收不收。 */
+function note(id, text, who) {
   if (S.notes.some((n) => n.id === id)) return;
-  S.notes.push({ id, text, time: noteDayText() });
+  S.notes.push({ id, text, time: noteDayText(), who: who || "" });
   renderNotes();
+}
+
+/* 同一条只在第一次抄下来时算数：网页上那一处点第二次不该再响一声。 */
+function notedRow(id, text, who) {
+  if (S.notes.some((n) => n.id === id)) return false;
+  note(id, text, who);
+  return true;
 }
 
 function hasEvidence(id) {

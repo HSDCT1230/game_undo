@@ -7925,3 +7925,102 @@ html.screen-on body::after {
   .wall-album { width: 100%; }
   .wall-album .wall-shot { width: calc(50% - 5px); }
 }
+
+/* ---------- 「两个人」：簿子里按人分开的两栏 ---------- */
+
+/* 一栏一个人：名字、他是谁、对上几处；下面是各自的东西。
+   ◆ 是要紧的那几条（对上它们才写得出来），· 是旁证。
+   条目本身不是新做的证物页——点得开的还是原来那一页，这里只重排归属（10-28）。 */
+.who-card {
+  margin: 0 0 16px;
+  padding: 0 0 14px;
+  border-bottom: 1px solid #ded4c1;
+}
+.who-card:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: 0; }
+.who-head { display: flex; align-items: baseline; gap: 10px; }
+.who-name { font-size: 17px; letter-spacing: 0.08em; }
+.who-sub { color: #8a7c6a; font-size: 13px; letter-spacing: 0.04em; }
+.who-count {
+  margin-left: auto;
+  color: #8a7c6a;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  font-variant-numeric: tabular-nums;
+}
+.who-count.done { color: #4f6b46; }
+.who-list { margin: 8px 0 0; padding: 0; list-style: none; }
+.who-row { display: flex; gap: 8px; font-size: 15px; line-height: 1.65; color: #2c2620; }
+.who-mark { flex: 0 0 10px; color: #b9ab95; font-size: 11px; line-height: 2.1; }
+.who-row.need .who-mark { color: #8a3c10; }
+.who-row.ghost { color: #a89a86; }
+.who-item {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  text-decoration-color: #cbbca4;
+}
+.who-item:hover,
+.who-item:focus-visible { color: #8a3c10; text-decoration-color: #8a3c10; outline: none; }
+.who-item.plain { cursor: default; text-decoration: none; }
+/* 触屏上这一行是「点开那张证物」，行高 25px 点不准：给一点上下余量，
+   撑到 32 以上。桌面不加，列表会空掉（10-28 手机端量出）。 */
+@media (pointer: coarse) {
+  .who-item:not(.plain) { min-height: 32px; padding: 4px 0; }
+  .who-see { min-height: 32px; padding: 4px 0; }
+}
+.who-miss { margin: 10px 0 0; color: #a89a86; font-size: 14px; line-height: 1.6; }
+.who-q { margin: 12px 0 8px; color: #8a3c10; font-size: 15px; font-weight: 700; letter-spacing: 0.06em; }
+.who-no {
+  margin: 0 0 8px;
+  padding: 7px 12px;
+  border-left: 4px solid #b5452f;
+  background: rgba(181, 69, 47, 0.1);
+  color: #8a2a18;
+  font-size: 15px;
+  line-height: 1.55;
+}
+.who-opts { display: flex; flex-direction: column; gap: 7px; }
+.who-opt {
+  padding: 8px 12px;
+  border: 1.5px solid #a08a62;
+  border-radius: 3px;
+  background: #fff6d2;
+  box-shadow: 1px 2px 0 rgba(60, 40, 20, 0.16);
+  color: inherit;
+  font: inherit;
+  font-size: 15px;
+  line-height: 1.55;
+  text-align: left;
+  cursor: pointer;
+}
+.who-opt:hover,
+.who-opt:focus-visible { border-color: #8a3c10; transform: translateY(-1px); outline: none; }
+.who-done { margin: 10px 0 0; color: #4f6b46; font-size: 15px; }
+.who-see {
+  margin-left: 8px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #8a3c10;
+  font: inherit;
+  font-size: 15px;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+/* 第二问：第一页写完之后才在下面接一段。用一条虚线隔开，读起来像同一个人的补记，
+   不像一张新卡片——她是在同一页纸上接着往下写的（10-29）。 */
+.who-stage {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed #d8c9ad;
+}
+.who-stage-lead { margin: 0 0 8px; color: #a89a86; font-size: 14px; line-height: 1.6; }

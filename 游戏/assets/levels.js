@@ -19,8 +19,10 @@ function seedItems(ids) {
   ids.forEach((id) => fileEvidence(item(id)));
 }
 
+/* 第三格是「这一行指向谁」：有就进簿子「两个人」那一栏，没有就只在时间线上。
+   who 用短名（"luo"／"zhou"），跟 PEOPLE 的 key 对得上；写中文名也认（whoRows 两边都比）。 */
 function seedNotes(rows) {
-  rows.forEach(([id, text]) => note(id, text));
+  rows.forEach(([id, text, who]) => note(id, text, who));
 }
 
 const LEVELS = [
@@ -327,6 +329,8 @@ const LEVELS = [
       { text: "去走廊", after: "走廊碰到陈家豪", need: true, show: () => noted("stolen"), done: () => !!(S.miss && S.miss.chen), hint: "走廊那边，我还没去" },
       { text: "手机响了，看完", show: () => !!(S.miss && S.miss.chen), after: "打开邮件，两个附件都看", need: true, count: () => (S.miss && (S.miss.att1 || S.miss.att2) ? [cnt(["att1", "att2"], S.miss), 2] : null), done: () => typeof missDirtReady === "function" ? missDirtReady() : ev("mail-dirt"), hint: "" },
       { text: "把那封信给他看", after: "给他看", show: () => typeof missDirtReady === "function" ? missDirtReady() : ev("mail-dirt"), done: () => flag("showedDirt") },
+      // 可选：簿子里写出了「这两个人」那页，才有这一行。软钥匙——写了有回报，不写照样过关。
+      { text: "把这两个人那一页给他看", after: "他看完了。他问我：三个都在，我去了哪", show: () => flag("deduce-zhou"), done: () => flag("showedZhou") },
       { text: "空抽屉再拉一次", after: "空抽屉掉出鱼牌", show: () => !!(S.miss && S.miss.chen) && !ev("chen-wallet"), done: () => ev("fish-tag") },
       // 后半截「上网对履历」要等校名从剪报上抄下来之后才露面（履历上就印着校名）。
       { text: "问他那块鱼，再上网对履历", after: "问过。履历和校报对不上", show: () => ev("fish-tag") && (typeof vhuKnowsSchool === "function" ? vhuKnowsSchool() : true), done: () => flag("askedFishLuo") && noted("fish-cv") },
@@ -345,10 +349,10 @@ const LEVELS = [
       S.miss = { chen: true, att1: true, att2: true };
       seedItems(["mail-dirt"]);
       seedNotes([
-        ["forget", "他说本子不在，却讲得出一串细节。"],
-        ["stolen", "上门行程被删了。现场笔记不见。"],
-        ["dirt", "二〇〇四年十一月，维港大学，女学生坠楼。剪报报头上印着校名。名字涂掉，露出一个鱼。"],
-        ["vhu-school", "剪报上印着「维港大学　二〇〇四年十一月」。阿明读的是这一间。"],
+        ["forget", "他说本子不在，却讲得出一串细节。", "luo"],
+        ["stolen", "上门行程被删了。现场笔记不见。", "luo"],
+        ["dirt", "二〇〇四年十一月，维港大学，女学生坠楼。剪报报头上印着校名。名字涂掉，露出一个鱼。", "luo"],
+        ["vhu-school", "剪报上印着「维港大学　二〇〇四年十一月」。阿明读的是这一间。", "luo"],
         ["zhou-day", "周说他白天来过。他下午明明在诊所。"],
         ["day-trace", "铁闸差一格。门垫挪过。储物室门底多一截干水印。"],
       ]);
@@ -674,6 +678,11 @@ function paperPages() {
   if (S.level === 4 && nightOn()) pages.push(["摆在一起", () => openPairs(() => afterModalClose())]);
   if (S.level === 9 && ev("paper-norec") && ev("note-meiwater")) {
     pages.push(["对照纸", () => openCompare(finishCompare)]);
+  }
+  // 「两个人」：簿子里的条目一旦归得了主人，这一格才出现。
+  // 不是第三个页签——上一轮刚把三页压成两页，不能再加回来（10-28）。
+  if (typeof whoRows === "function" && PEOPLE.some((p) => whoRows(p).length)) {
+    pages.push(["两个人", openWho]);
   }
   return pages;
 }

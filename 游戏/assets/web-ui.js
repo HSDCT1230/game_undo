@@ -2177,13 +2177,13 @@ function viewNews() {
 
 function applyNewsNotes(id) {
   const kept = {
-    mud: ["web-zhou", "2012年9月。妻儿遇难。周说是天意。土木署：雨后斜坡失稳。"],
+    mud: ["web-zhou", "2012年9月。妻儿遇难。周说是天意。土木署：雨后斜坡失稳。", "zhou"],
     urb: ["web-ura", "荣汇街在研究名单。业主将获补偿。"],
-    kimon: ["kimon-bio", "网上履历：罗启明，维港大学医科，二〇〇五年毕业。没有二〇〇四年。没有十一月。"],
-    yu04: ["yu-old", "校报旧闻：二〇〇四年十一月，女学生坠楼。名字涂掉，露出一个鱼。男友姓罗。"],
+    kimon: ["kimon-bio", "网上履历：罗启明，维港大学医科，二〇〇五年毕业。没有二〇〇四年。没有十一月。", "luo"],
+    yu04: ["yu-old", "校报旧闻：二〇〇四年十一月，女学生坠楼。名字涂掉，露出一个鱼。男友姓罗。", "luo"],
   }[id];
   if (!kept) return;
-  note(kept[0], kept[1]);
+  note(kept[0], kept[1], kept[2]);
   if (hasEvidence("news-mud") && hasEvidence("news-urb")) {
     note("twofiles", "两篇都看完。更乱。");
   }

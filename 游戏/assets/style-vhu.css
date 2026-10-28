@@ -1597,3 +1597,37 @@
 .wk-catlist { margin: 0 0 12px; padding-left: 22px; font-size: 12.5px; }
 .wk-catlist li { margin: 3px 0; }
 .wk-catn { margin-left: 3px; color: var(--wk-mute); font-size: 11px; }
+
+/* ---------- 抄下来：网页上唯一一个会进簿子的动作 ---------- */
+
+/* 那一行字本身带一条虚线，点一下就抄进簿子。
+   不做成按钮：按钮会说「这是功能」，而她只是在抄一行字。
+   抄过之后虚线收掉、颜色退成旁注——已经在她簿子里了，页面上就不必再招手（10-28）。 */
+.vhu-take {
+  display: inline;
+  padding: 2px 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-decoration-thickness: 1px;
+  text-decoration-color: #c0b6a2;
+  text-underline-offset: 3px;
+}
+.vhu-take:hover,
+.vhu-take:focus-visible {
+  color: #6b4a32;
+  text-decoration-color: #8b6b52;
+  outline: none;
+}
+.vhu-take.on {
+  color: #9aa39e;
+  text-decoration: none;
+  cursor: default;
+}
+/* 名录里那两个字的姓名：点它才算抄下这一行 */
+.vhu-o-roll .vhu-take { letter-spacing: inherit; }

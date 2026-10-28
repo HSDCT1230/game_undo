@@ -718,11 +718,46 @@ HUBS.miss = {
       show: () => missDirtReady() && !flag("showedDirt") && !flag("hidDirt"),
       go: missShow,
     },
+    // 簿子里真的写出了「这两个人」那一页，这一格才出现。
+    // 不做成必做：这里是软钥匙，写了有回报，不写也过得去（10-29）。
+    {
+      mark: "给", label: "给他看那一页",
+      show: () => flag("deduce-zhou") && !flag("showedZhou"),
+      go: missShowZhou,
+    },
   ],
 };
 
 function missDirtReady() {
   return ev("mail-dirt") || !!(S.miss && S.miss.att1 && S.miss.att2);
+}
+
+/* 递「这两个人」那页给他。他看的是纸上没写的那一格：
+   丽芬、阿轩、周生，三个都在，只有她不在。这句是第 15 关录音之前她最后一次被问「你自己呢」（10-29）。 */
+function missShowZhou() {
+  hubTalk([
+    {
+      prompt: "那张纸在袋里。给他看？",
+      choices: [
+        {
+          label: "给他看。",
+          flag: "showedZhou",
+          then: [
+            line("", "他看得很慢。看到「阿轩不是鬼」那一句，指腹在纸上按了一下。"),
+            line("罗启明", "你写「佢系一个男仔」。上一次你同我讲，系一只鬼。", { zh: "你写「他是一个男孩」。上一次你跟我说，是一只鬼。" }),
+            line("章慧琪", "因为相入面真系有个人。", { zh: "因为照片里真的有个人。" }),
+            line("罗启明", "丽芬。阿轩。周生。三个都喺度。", { zh: "丽芬。阿轩。周生。三个都在。" }),
+            line("罗启明", "你喺边？", { zh: "你在哪？", note: ["axuan-paper", "他看完那页纸。他没问阿轩，也没问周。他问：三个都在，我去了哪。"] }),
+            line("", "他把纸推回来，四个角对得很齐。"),
+          ],
+        },
+        {
+          label: "先不给。",
+          then: [line("", "你把纸压回袋底。")],
+        },
+      ],
+    },
+  ], "澄心诊室", "face");
 }
 
 function missHome() {

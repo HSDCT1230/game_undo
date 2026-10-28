@@ -29,6 +29,11 @@ const VHU_USERS = {
     libFine: "HK$ 0.00",
     libHold: "0 项",
     lastLogin: "2005年6月28日 16:12",
+    // 这一行可抄：他停下来的那个月，正好是毕业那个月。
+    loginTake: {
+      id: "vhu-last-login", who: "luo",
+      text: "罗启明的校友帐户，最后一次登入是二〇〇五年六月二十八日。毕业那个月之后，他没有再进来。",
+    },
     // 从上次登入到这一次（2014年9月5日 23:41）隔了多久。写成汉字，不写「3286 天」——
     // 她看一眼就知道这个号空了多久，不需要算。
     lastGap: "九年二个月",
@@ -157,6 +162,12 @@ const VHU_NOTICES_OLD = [
       "中心同时呼吁同学留意身边的人。如察觉同学持续失眠、缺课、不愿与人接触，或反复说同一件事，可通知学系或舍堂导师。",
       "辅导及发展中心",
     ],
+    // 名单里最不能漏的一条：它不写名字，只写「一名同学」。读过成绩表那一格的人
+    // 会自己去对日子。从前这条只是列表最底的一行灰字，现在可以抄下来（10-28）。
+    clue: {
+      id: "vhu-grief04", who: "luo",
+      text: "二〇〇四年十一月十一日，辅导中心延长开放时间。通告说「本校一名同学于本周离世」，没有名字。",
+    },
   },
 ];
 
@@ -362,6 +373,12 @@ const VHU_YEARS = [
       ["MED5105", "毕业专题", "4", "B+"],
     ],
     note: "MED5103 缺考记录：2004年11月15日。补考安排另行通知。",
+    // 这一格是全站最该被抄下来的一处：它跟 11-05 借书、11-08 东翼平台、
+    // 11-11 辅导中心延长，四个日子串成一条。从前它只是红字，看过就没了（10-28）。
+    clue: {
+      id: "vhu-miss04", who: "luo",
+      text: "二〇〇四年十一月十五日，精神科临床实习缺考。整个五年级只有这一格不是「合格」。",
+    },
   },
 ];
 
@@ -906,6 +923,35 @@ function vhuShell(body, page, crumb) {
   return el("div", { class: "hk-site vhu-site" }, kids);
 }
 
+/* ---------- 抄下来：网页上唯一一个会进簿子的动作 ---------- */
+
+/* 只给「这一行和别处对得上」的地方用——一个日子、一个名字、一个编号。
+   世界照常运转的那些（非典停见习、校友通讯、考试通告）一律不给：
+   簿子不是网页副本，抄满一页就没人翻（10-28）。
+   要抄的对象就是那一行字本身：它带一条虚下划线，点一下就进簿子。
+   点了就地变灰，不重绘页面——成绩表很长，重绘会把她甩回顶部。
+   字不加后缀：抄过的行跟没抄过的行只差「虚线收掉、颜色退成旁注」，
+   加一句「（抄下了）」等于在正文里塞功能提示，而正文不点头（10-28）。 */
+function vhuTake(spec, label) {
+  const on = typeof noted === "function" && noted(spec.id);
+  const b = el("button", {
+    type: "button",
+    class: "vhu-take" + (on ? " on" : ""),
+    disabled: on,
+  }, [label]);
+  if (on) return b;
+  b.onclick = (e) => {
+    if (e) e.stopPropagation();
+    if (!notedRow(spec.id, spec.text, spec.who)) return;
+    b.disabled = true;
+    b.className = "vhu-take on";
+    if (typeof sfx === "function") sfx("paper");
+    if (typeof tip === "function") tip("抄进簿子了。", { nearBar: true });
+    if (typeof renderNotes === "function") renderNotes();
+  };
+  return b;
+}
+
 /* ---------- 通搜：2014 年她用来找那间学校的搜索 ---------- */
 
 /* 站名虚构，跟廿八屋、墙簿一套：2014 年的香港，本地入口站都长这个样子。
@@ -1125,7 +1171,7 @@ const WIKI_NEWS = {
     date: "2005年1月17日",
     title: "东翼天台围栏加高工程完成",
     // 三条里只有这一条会写进簿：读到它才算知道东翼天台出过什么事。
-    clue: ["vhu-news04", "二〇〇四年十一月，一名医学院女生倒卧于主校舍东翼平台，送院后不治。学校其后加高东翼天台围栏：由一点一米加到一点六米。"],
+    clue: ["vhu-news04", "二〇〇四年十一月，一名医学院女生倒卧于主校舍东翼平台，送院后不治。学校其后加高东翼天台围栏：由一点一米加到一点六米。", "罗启明"],
     paras: [
       "主校舍东翼天台围栏加高工程已于本年一月十四日完成，围栏高度由一点一米加高至一点六米，并在内侧加设一道横向扶手。工程由校园发展处统筹，施工期间东翼天台暂停开放。",
       "二〇〇四年十一月，一名医学院女生被发现倒卧于主校舍东翼平台，送院后不治。校方其后加高东翼天台围栏，并重新检视各座天台及平台的围栏高度。",
@@ -1446,7 +1492,7 @@ function viewWikiNews() {
   }
   // 读到这一条：平台、不治、围栏加高。她要的就是这一句——
   // 学校自己写在稿子里的，不是剪报上别人转述的。
-  if (n.clue && typeof noted === "function" && !noted(n.clue[0])) note(n.clue[0], n.clue[1]);
+  if (n.clue && typeof noted === "function" && !noted(n.clue[0])) note(n.clue[0], n.clue[1], n.clue[2]);
   return el("div", { class: "hk-site press-site" }, [
     pressHead(),
     el("div", { class: "press-body" }, [
@@ -1678,6 +1724,12 @@ const VHU_SITE_PAGES = {
       ["邓志明", "机械工程", "2004"],
       ["林美玲", "政治与公共行政", "2003"],
     ],
+    // 官方那一头的说法：他是一个二〇〇五年正常毕业的校友。
+    // 成绩表那一头有一格「缺考」——两处并看才咬得住，名录自己一个字都不提（10-28）。
+    clue: {
+      id: "vhu-alumni-luo", who: "luo", name: "罗启明",
+      text: "校友名录：罗启明，内外全科医学，二〇〇五年毕业。官方版本里，他是一个正常毕业的人。",
+    },
   },
 };
 
@@ -1867,8 +1919,9 @@ function vhuCols(cols) {
 }
 
 /* 校友名录。三列：姓名、学院／专业、毕业年份。
-   不做成卡片、不做头像——二〇一四年那种官方名录就是一串名字，越朴素越像真的。 */
-function vhuSiteRoll(rows) {
+   不做成卡片、不做头像——二〇一四年那种官方名录就是一串名字，越朴素越像真的。
+   带 clue 时，clue.name 那一个名字可点：她抄的是名录上的名字，不是整张表。 */
+function vhuSiteRoll(rows, clue) {
   return el("table", { class: "vhu-o-roll" }, [
     el("thead", {}, [el("tr", {}, [
       el("th", {}, ["姓名"]),
@@ -1876,7 +1929,7 @@ function vhuSiteRoll(rows) {
       el("th", { class: "vhu-o-roll-y" }, ["毕业年份"]),
     ])]),
     el("tbody", {}, rows.map(([n, p, y]) => el("tr", {}, [
-      el("td", {}, [n]),
+      el("td", {}, [clue && clue.name === n ? vhuTake(clue, n) : n]),
       el("td", {}, [p]),
       el("td", { class: "vhu-o-roll-y" }, [y]),
     ]))),
@@ -2070,7 +2123,7 @@ function viewVhuSitePage() {
         webLink("新闻稿", () => goWeb("vhusite-story", { siteArg: p.after.link[1] })),
       ]) : null,
     ]) : null,
-    p.roll ? vhuSiteRoll(p.roll) : null,
+    p.roll ? vhuSiteRoll(p.roll, p.clue) : null,
     p.lists ? el("div", { class: "vhu-o-index" }, [
       el("div", { class: "vhu-o-sec-h" }, [el("h2", {}, ["新闻稿"])]),
       vhuNewsList(),
@@ -2590,14 +2643,18 @@ function viewVhuProfile() {
     ["帐户建立", u.created],
     ["密码最后更改", u.pwChanged],
     ["帐户类别", "校友（只读）"],
+    // 「最后登入」原来只写在数据表里、不上屏：她是二〇一四年九月进来的，
+    // 而这个号的最后登入停在他毕业那个月。这一行比十行成绩都更能说明他什么时候停的（10-28）。
+    ["最后登入", u.lastLogin, u.loginTake],
+    ["上次登入距今", u.lastGap],
   ];
   return vhuShell([
     el("h2", { class: "vhu-h2" }, ["我的资料"]),
     el("p", { class: "vhu-note" }, [
       "校友帐户只供查阅。如需更新联络资料，请填写校友事务处的更新表格。",
     ]),
-    el("table", { class: "vhu-kv vhu-kv-wide" }, rows.map(([k, v]) =>
-      el("tr", {}, [el("th", {}, [k]), el("td", {}, [v])])
+    el("table", { class: "vhu-kv vhu-kv-wide" }, rows.map(([k, v, take]) =>
+      el("tr", {}, [el("th", {}, [k]), el("td", {}, [take ? vhuTake(take, v) : v])])
     )),
     el("p", { class: "vhu-fine" }, ["资料摘录自学生纪录系统，最后更新：" + u.grad + "。" ]),
   ], "profile");
@@ -2628,7 +2685,9 @@ function viewVhuAcademic() {
         el("td", { class: "vhu-num" + (r[3] === "缺考" ? " vhu-miss" : "") }, [r[3]]),
       ]))),
     ]),
-    y.note ? el("p", { class: "vhu-year-note" }, [y.note]) : null,
+    y.note ? el("p", { class: "vhu-year-note" }, [
+      y.clue ? vhuTake(y.clue, y.note) : y.note,
+    ]) : null,
   ]));
   return vhuShell([
     el("h2", { class: "vhu-h2" }, ["学业纪录"]),
@@ -2702,7 +2761,7 @@ function viewVhuLibrary() {
   // 「他也借过同一本」不是系统给的答案：目录从来不显示借阅人。
   // 这句要她自己在阿明的帐户里翻到借阅纪录，才记下来。
   if (st.who === "law" && typeof noted === "function" && noted("vhu-lib-trace")) {
-    note("vhu-same-book", "那一册，他也借过。二〇〇四年一月二十二日借，二月六日还。");
+    note("vhu-same-book", "那一册，他也借过。二〇〇四年一月二十二日借，二月六日还。", "luo");
   }
 
   return vhuShell([
@@ -2732,7 +2791,16 @@ function viewVhuLibrary() {
       ])]),
       el("tbody", {}, (u.borrow || []).map((r) => el("tr", {}, [
         el("td", { class: "vhu-num" }, [r[0]]),
-        el("td", {}, [r[1]]),
+        // 借阅纪录从不显示别人借过什么，只显示他自己借过。这一本他借了两次：
+        // 一月这一笔还了，十一月那一笔没有还（馆藏那边）。同一本书，两个日子（10-28）。
+        el("td", {}, [
+          r[1] === "精神医学临床手册"
+            ? vhuTake({
+              id: "vhu-borrow-luo", who: "luo",
+              text: "二〇〇四年一月二十二日，他借过《精神医学临床手册》，二月六日还了。",
+            }, r[1])
+            : r[1],
+        ]),
         el("td", { class: "vhu-num" }, [r[2]]),
       ]))),
     ]),
@@ -2770,7 +2838,7 @@ function viewVhuBook() {
     rows.push(["备注", loan.note]);
   }
   if (typeof noted === "function" && loan && !noted("vhu-lib-trace")) {
-    note("vhu-lib-trace", "医学院分馆那本《精神医学临床手册》：二〇〇四年十一月五日借出，应还十一月十九日，一直没还。二〇〇五年三月起暂缓催还。");
+    note("vhu-lib-trace", "医学院分馆那本《精神医学临床手册》：二〇〇四年十一月五日借出，应还十一月十九日，一直没还。二〇〇五年三月起暂缓催还。", "luo");
   }
   return vhuShell([
     el("p", { class: "vhu-back" }, [
@@ -2914,6 +2982,10 @@ function viewVhuNotice() {
         el("span", {}, [one.tag]),
       ]),
       el("div", { class: "vhu-article" }, one.body.map((p) => el("p", {}, [p]))),
+      // 存档里只有这一条写着人。正文不会提她是谁——那正是要抄下来的地方。
+      one.clue ? el("p", { class: "vhu-year-note" }, [
+        vhuTake(one.clue, "二〇〇四年十一月十一日，辅导中心延长开放时间。"),
+      ]) : null,
     ], "notice");
   }
   const list = (rows) => el("table", { class: "vhu-table vhu-notice-list" }, [
