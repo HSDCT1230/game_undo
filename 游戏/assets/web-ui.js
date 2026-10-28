@@ -2987,10 +2987,13 @@ function showWallPhoto(title, id) {
     closeModal();
     draw();
   };
-  const sheet = el("div", { class: "sheet prompt wall-photo-sheet" }, [
-    el("h3", {}, [title]),
+  /* 这一屏不用 prompt：prompt 是蓝色的「网页提示」窗，那是站外的浏览器外壳，
+     而这里是墙簿自己开的看图层——标题条要用站头那支绿（10-29）。
+     标题走 el()，所以跟别处一样由 H() 转港繁；CSS 里写死 content 做不到这一点。 */
+  const sheet = el("div", { class: "sheet wall-photo-sheet" }, [
+    el("p", { class: "wall-photo-title" }, [title]),
     imgSlot(id, "photo-lg wall-photo-lg", title),
-    el("button", { class: "wall-ad-cta ghost", type: "button", onclick: close }, ["合上"]),
+    el("button", { class: "wall-ad-cta", type: "button", onclick: close }, ["合上"]),
   ]);
   S.modal = el("div", {
     class: "modal web",

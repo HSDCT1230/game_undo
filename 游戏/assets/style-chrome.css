@@ -5203,30 +5203,14 @@ button.mail-row:hover { background: #121a23; }
   min-height: 480px;
 }
 .wall-profile h2 { color: #386b43; margin-top: 0; }
-/* 相册板：墙簿的绿。照片贴在浅绿板上、四周留白边，才像一册相簿；
-   原来是灰白底 + 照片直接铺上去，跟绿色页头不是一家。（10-28） */
+/* 相册保持墙簿原装：白底、灰细框、照片直接铺在板上，不加绿板绿带（10-29）。
+   上一轮我把「照片墙要绿」读成了相册列表，其实用户指的是点开照片后那一屏——
+   绿色只属于 .wall-photo-sheet，见下面。
+   盒子修复（border-box + 内层 width:100% + 去掉第二道线）留着：那是压边框的真 bug，
+   与颜色无关，退回去会重新长出双线。 */
+.wall-album { margin: 12px 0 4px; }
 .wall-album-name { margin: 0 0 8px; color: #386b43; font-size: 13px; }
-.wall-album {
-  /* 板跟着照片收紧：整宽的绿板配两张照片，右边会空出一大片绿，比没有底色还难看 */
-  width: fit-content;
-  max-width: 100%;
-  margin: 14px 0 0;
-  padding: 0 12px 12px;
-  border: 1px solid #a8c0a3;
-  background: #e3eedd;
-}
-/* 相册名做成一条绿带，跟站头同一支绿——不然一页里只有顶上那一条是绿的，
-   照片墙仍是灰白。负 margin 抵掉板的左右内边距，让绿带顶到边。
-   「動態」也用这个类但不在相册里，所以绿带只挂在 .wall-album 下。 */
-.wall-album .wall-album-name {
-  margin: 0 -12px 12px;
-  padding: 6px 12px;
-  background: linear-gradient(#6c956f, #4f7657);
-  color: #f2f7ef;
-  font-size: 13px;
-}
-/* 间距 10px：原来 8px，白边一进来就显挤 */
-.wall-shots { display: flex; flex-wrap: wrap; gap: 10px; }
+.wall-shots { display: flex; flex-wrap: wrap; gap: 8px; }
 /* 帖子配图用的也是 .wall-shot：同样要 border-box，否则内层 img-slot 按 148 撑出去，
    和这一层的边框压在一起，图右下角会多出一条错位的细线 */
 .wall-shot {
@@ -5242,27 +5226,36 @@ button.mail-row:hover { background: #121a23; }
   aspect-ratio: 4 / 3;
   min-height: 0;
 }
-/* 相纸：外框用绿，里面 4px 白边托住照片。
-   width 必须 box-sizing:border-box——原来 width 148 加 1px 边框，内容盒只剩 146，
-   而里面 .img-slot 写死 148，图片压出边框 1.7px，和 .img-slot 自己的灰线叠成两条。（10-28） */
-.wall-album .wall-shot {
-  box-sizing: border-box;
-  width: 156px;
-  padding: 4px;
-  border: 1px solid #a9bfa5;
-  background: #fff;
-  box-shadow: 0 1px 0 rgba(54, 93, 61, .14);
-}
-.wall-album .wall-shot:hover,
-.wall-album .wall-shot:focus-visible {
-  border-color: #4f7657;
-  outline: none;
-}
-/* 相册里跟着相纸走：铺满内框、去掉 .img-slot 自带的灰线（白边已经是框） */
+/* 相册里内层不再画第二道线：外框已经是框（10-28 修的双线，保留） */
 .wall-album .wall-shot .img-slot.wall-thumb {
   width: 100%;
   border: 0;
-  background: #dfe7db;
+}
+/* 点开一张相之后那一屏（标题条、大图、合上）走墙簿那支绿。
+   原来用的是 .sheet.prompt——蓝色的「网页提示」窗，那是站外的浏览器外壳；
+   这一屏相当于墙簿自己开的看图层，不该长成浏览器对话框。（10-29）
+   相册列表不跟着绿：绿只在这一屏，翻回去那面照片墙仍是原装的灰白。 */
+/* 选择器要写成 .modal .sheet.wall-photo-sheet：单一个 .wall-photo-sheet 只有 (0,1,0)，
+   压不过上文的 .modal .sheet（0,2,0）——边框、底色、max-width 三条会全被吃掉，
+   只剩标题条是绿的，看着像「绿了个头」。（10-29 实测踩到） */
+.modal .sheet.wall-photo-sheet {
+  max-width: 380px;
+  border: 1px solid #365d3d;
+  background: #f4f6f1;
+  /* 原来靠 .sheet.prompt 的 text-align 居中，去掉 prompt 之后要自己写 */
+  text-align: center;
+}
+/* 标题条抵掉 .sheet 的上下左右内边距（18/20），顶着上沿、左右到边，
+   跟墙簿站头同一条绿、同一道浅色高光。 */
+.wall-photo-sheet .wall-photo-title {
+  margin: -18px -20px 14px;
+  padding: 7px 14px;
+  background: linear-gradient(#6c956f, #4f7657);
+  color: #f2f7ef;
+  font-size: 13px;
+  letter-spacing: 0;
+  text-align: left;
+  text-shadow: 0 1px #2c4b32;
 }
 /* 墙簿相册原图都是 4:3，大图不要按 16:9 裁——裁掉底边会切掉右下角的时间码 */
 .wall-photo-sheet .img-slot.wall-photo-lg {
@@ -5270,6 +5263,13 @@ button.mail-row:hover { background: #121a23; }
 }
 /* 弹窗里已经是放大图，不用「点图放大」角标——它会盖住照片右下角的时间码 */
 body .wall-photo-sheet .img-slot.wall-photo-lg::after { content: none; }
+/* 合上：绿底白字，跟相册页里别的按钮同一套。原来挂 .ghost（白灰），
+   在这一屏里像浏览器原生按钮，不像墙簿的。（10-29） */
+.wall-photo-sheet .wall-ad-cta {
+  margin-top: 13px;
+  /* 触屏判据 32：.wall-ad-cta 原本 6+12+6≈30 */
+  min-height: 32px;
+}
 .wall-shot .img-slot.wall-thumb img {
   position: absolute;
   inset: 0;
@@ -7917,14 +7917,9 @@ html.screen-on body::after {
   #map-draw { min-height: 0; }
   #map-detail { overflow: visible; border-left: 0; border-top: 1px solid #d7ccb8; }
 }
-/* 窄屏相册：156 死宽放不下两张（156×2+10 > 内容宽），三张照片要滚三屏。
-   改成占一半，一行两张；相纸内边距与间距不变，只是格子跟着列宽走。
-   板这里必须回到 100%——照片写的是百分比，板若还 fit-content，
-   百分比没有确定的基准，浏览器会一路收到最小，两张缩成指甲盖大小。 */
-@media (max-width: 640px) {
-  .wall-album { width: 100%; }
-  .wall-album .wall-shot { width: calc(50% - 5px); }
-}
+/* 窄屏相册：相册回到原装（148 定宽）之后这条也退回原样——
+   390 宽下 148×2+8 放得下两张，不用再改成占一半。板没有 fit-content 了，
+   也就不需要 width:100% 去给百分比找基准。（10-29） */
 
 /* ---------- 「两个人」：簿子里按人分开的两栏 ---------- */
 
