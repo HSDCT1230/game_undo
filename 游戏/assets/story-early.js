@@ -889,8 +889,13 @@ function axuanItem() {
 }
 
 // 第 4 关：她只听见门底有个女人在叫「阿轩」。名字要等到 09-06 翻相框背面才知道。
+// 这一卷是**她自己录的**，不是捡来的纸：听过就等于在手机里，不该再问一次「记不记下来」。
+// 从前这里留着归档动作，于是「听过、按了好」的人任务栏还挂着「开录音」，等天亮又被叫回来点门底。
 function openAxuan(onClose) {
-  showVoicemail("女人的声音", "阿轩，返嚟食饭。", onClose || (() => drawNight()), axuanItem(), "录音　08-15");
+  if (!noted("voice")) note("voice", "女人声「阿轩，返嚟食饭。」从储物室门底来。");
+  const it = axuanItem();
+  if (!hasEvidence(it.id)) fileEvidence(it);
+  showVoicemail("女人的声音", "阿轩，返嚟食饭。", onClose || (() => drawNight()), it, "录音　08-15");
 }
 
 function printItem() {
@@ -937,7 +942,8 @@ function nightStart() {
 // 里面本来没声音，那一下也就白过了。告示要长在物件上，不长在界面上。
 function storageSub(n) {
   if (!(n.fired && n.fired.voice)) return "锁着。";
-  return n.recording ? "那卷录音还在" : "门底有声音。手机在茶几上，没开。";
+  // 开着录音时要把人往这边引：这一格是「去听」的动作，不是一句状态
+  return n.recording ? "手机录着。门缝里有人在说话。" : "门底有声音。手机在茶几上，没开。";
 }
 
 function drawNight() {
@@ -1334,11 +1340,32 @@ function waitDawn() {
     if (S.mode === "night") drawNight();
     return;
   }
-  stopNightClock();
   const n = S.night;
   n.fired = n.fired || {};
-  const missedVoice = !!(n.recording && !n.fired.voice);
-  const missedPrint = !n.fired.print;
+
+  // 录音这一条要**先拦、后结算**。原来顺序是反的：先把 n.min 拨到 101、把 fired.voice 按成 true，
+  // 回头才提示「录音还没开。开了，再等到天亮」——可钟已经停在 101，八十九分那一秒永远回不来，
+  // 录音打开也不会再有那一声。于是提示一直喊「录音还没开」，玩家照做也过不了关（10-28 复现）。
+  const recDone = !!(hasEvidence("rec-axuan") || noted("voice"));
+  if (!recDone) {
+    tip(
+      !n.recording
+        ? "录音还没开。茶几上那部手机。"
+        : (n.min || 63) >= 91
+          ? "录音开着。回屋里，点一下储物室门底。"
+          : "录音开着。先别走，等那一声。",
+      { nearBar: true }
+    );
+    stopNightClock();
+    S.talk = null;
+    S.mode = "night";
+    drawNight();
+    // 夜还没过完就把钟接回去：提示里说的是「等那一声」，钟停了就永远等不到
+    if ((n.min || 63) < 101) startNightClock();
+    return;
+  }
+
+  stopNightClock();
   const unseenVoice = !!(n.recording && !nightAct("heardAxuan"));
   const unseenPrint = !nightAct("sawPrint");
   if (!n.fired.car) {
@@ -1346,10 +1373,10 @@ function waitDawn() {
     note("car-move", "车头朝门。昨晚放的时候朝窗。");
   }
   // 时钟追到天亮：屋里状态到位，漏看的让自己点，不连环弹窗
-  if (missedVoice) {
+  if (!n.fired.voice && n.recording) {
     note("voice", "女人声「阿轩，返嚟食饭。」从储物室门底来。");
   }
-  if (missedPrint) {
+  if (!n.fired.print) {
     n.print = true;
     note("print", "门底湿脚印，到一半停住。");
   }
@@ -1357,18 +1384,8 @@ function waitDawn() {
   n.min = 101;
   n.phase = "leave";
   setTime(nightClockText());
-  // 录音是这一关的必做，所以这里也要拦一道。原来的判断是反的：missedVoice／unseenVoice
-  // 都以 n.recording 为前提，于是「压根没开录音」的人一个提示都收不到，直接被送去天亮。
-  const recDone = !!(hasEvidence("rec-axuan") || noted("voice"));
-  if (missedVoice || unseenVoice || missedPrint || unseenPrint || !recDone) {
-    tip(
-      !recDone
-        ? "录音还没开。开了，再等到天亮。"
-        : missedPrint || unseenPrint
-          ? "门底那边，天亮前再看一眼。"
-          : "储物室那边，天亮前再看一眼。",
-      { nearBar: true }
-    );
+  if (unseenVoice || unseenPrint) {
+    tip(unseenPrint ? "门底那边，天亮前再看一眼。" : "储物室那边，天亮前再看一眼。", { nearBar: true });
     S.talk = null;
     S.mode = "night";
     drawNight();

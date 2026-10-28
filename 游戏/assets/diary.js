@@ -64,9 +64,7 @@ function itemLabel(id) {
   return H(it.kind) + "：" + H(it.title);
 }
 
-/* ---------- 日记簿目录用：每样东西关于屋里哪样、哪句笔记和证物重复 ---------- */
-
-const THINGS = ["车", "水喉", "储物室门", "窗台", "周生", "罗启明", "表姐一家"];
+/* ---------- 日记簿目录用：同一样东西的其它条目（点开一页能横着跳） ---------- */
 
 const ITEM_ABOUT = {
   "obj-keytag": ["周生"],
@@ -97,35 +95,6 @@ const ITEM_ABOUT = {
 };
 
 const itemAbout = (id) => ITEM_ABOUT[id] || [];
-
-// 笔记也挂到某样东西上：「按东西」看的时候，一句「车头朝门」该出现在「车」下面，
-// 不该整批堆到最后一组去。挂不上的（比如藤先生在论坛回帖）落最后一组，不硬塞。
-const NOTE_ABOUT = {
-  "bbs-self": [],
-  "move-car": ["车"],
-  "car-still": ["车"],
-  "car-move": ["车"],
-  "move-tap": ["水喉"],
-  "tap-fixed": ["水喉"],
-  "wet": ["周生"],
-  "day-trace": ["储物室门", "周生"],
-  "phone-you": ["储物室门", "周生"],
-  "zhou-day": ["周生"],
-  "linWait": ["罗启明"],
-  "clinic2": ["罗启明"],
-  "clinic3": ["罗启明"],
-  "clinic4": ["罗启明"],
-  "notsame": ["罗启明"],
-  "delay": ["罗启明"],
-  "forget": ["罗启明"],
-  "stolen": ["罗启明"],
-  "offhours": ["罗启明"],
-  "vhu-school": ["罗启明"],
-  "vhu-news04": ["罗启明"],
-  "bento": ["表姐一家"],
-};
-
-const noteAbout = (id) => NOTE_ABOUT[id] || [];
 
 // 笔记和已记下的证物讲同一件事时，目录只列证物
 const NOTE_IN_ITEM = { print: "photo-print", voice: "rec-axuan", sill: "photo-sill", dirt: "mail-dirt", namecall: "rec-name", takeback: "letter-red" };

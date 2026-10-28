@@ -117,7 +117,11 @@ const LEVELS = [
       // 这一条从前不是必做，于是录音整夜可以不按——第 8 关他照样「戴上耳机听录音」，
       // 第 9 关又照样叫「有一晚唔好开录音」。剧本已经当她录过了，机制没跟上。
       // 两种达成都要求录音键开着：一个是拿着那卷，一个是整夜在带子上（见 waitDawn）。
-      { text: "开录音", need: true, show: nightOn, done: () => ev("rec-axuan") || noted("voice"), hint: "手机在茶几上。录一晚会怎样" },
+      { text: "开录音", need: true, show: nightOn, done: () => ev("rec-axuan") || noted("voice"), hint: () => (!(S.night && S.night.recording)
+        ? "手机在茶几上。先开录音，这一夜才录得到"
+        : nightAct("heardAxuan")
+          ? "录音开着，带子也听过了"
+          : "录音开着。回屋里，点一下储物室门底") },
       { text: "打 999", show: nightOn, done: () => flag("called999") },
       { text: "打给阿乐", show: nightOn, done: () => flag("calledLok") },
       { text: "敲周生的门", show: nightOn, done: () => flag("knockedZhou") },
@@ -632,7 +636,7 @@ function levelBlocks() {
   const ht = hintTask();
   const hint = ht ? hintSay(ht) : "";
   if (hint && !hintEchoes(hint, ht.text)) blocks.push(el("p", { class: "diary-note task-hint" }, [hint]));
-  blocks.push(...homeworkBlocks(), ...freshBlocks());
+  blocks.push(...homeworkBlocks());
   return blocks;
 }
 
@@ -659,17 +663,13 @@ function homeworkBlocks() {
   return out;
 }
 
-// 这一关收进日记簿的
-function freshBlocks() {
-  const mark = S.levelMark || { ev: [] };
-  const fresh = (S.evidence || []).filter((e) => !mark.ev.includes(e.id));
-  if (!fresh.length) return [];
-  return [diarySubHead("这一段收到的", fresh.length), ...fresh.map((e) => evidenceEntry(e))];
-}
-
+// 这一章还用得着的几张纸（簿子顶上那一行）。摆在一起、对照纸这类「要摆弄」的东西
+// 场景里也能开，这里只是把入口收到一处；簿子里不再单开「我列的」一页。
 function paperPages() {
   const pages = [];
-  if (S.level <= 2 || Object.keys(S.four || {}).length) pages.push(["租房必需四条", openFour]);
+  // 「租房必需四条」只在看楼那两章有用：楼已经租下来了，这张纸再挂在簿子上
+  // 就是一本翻两页全是旧清单的簿子（从前 `|| Object.keys(S.four).length` 让它一直留着）。
+  if (S.level <= 2) pages.push(["租房必需四条", openFour]);
   if (S.level >= 3) pages.push([S.level <= 3 ? "屋里的样子" : "搬进来那晚", openBase]);
   if (S.level === 4 && nightOn()) pages.push(["摆在一起", () => openPairs(() => afterModalClose())]);
   if (S.level === 9 && ev("paper-norec") && ev("note-meiwater")) {

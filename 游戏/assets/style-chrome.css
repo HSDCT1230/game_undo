@@ -4008,27 +4008,35 @@ button.mail-row:hover { background: #121a23; }
   letter-spacing: 0.04em;
 }
 
-/* 「收集的」顶上：按日子／按东西 */
-.diary-by { display: flex; gap: 14px; height: var(--diary-cell, 28px); margin-top: var(--diary-cell, 28px); }
-.diary-by-opt {
+/* 「簿子里」顶上那一行工具：摆在一起／对照纸／屋里的样子／四条。
+   一格里排开，窄屏折行——折了只多占一格，不压正文。
+   从前这里是「按日子／按东西」两个小字开关，两种排法看的是同一批东西。 */
+.diary-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 18px;
+  min-height: var(--diary-cell, 28px);
+  margin-top: var(--diary-cell, 28px);
+}
+/* 按钮类是 diary-tool-link，别叫 diary-tool：5777 行那个 .diary-tool 是
+   showDiaryTool() 的外壳（配 .diary-sheet:has(.diary-tool)），同名会互相吃掉样式。 */
+.diary-tool-link {
   padding: 0;
   border: 0;
   background: transparent;
-  color: rgba(42, 51, 68, 0.5);
+  color: #8a3c10;
   font: inherit;
-  font-size: 14px;
+  font-size: 16px;
   line-height: var(--diary-cell, 28px);
   letter-spacing: 0.06em;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
   cursor: pointer;
 }
-.diary-by-opt:hover { color: var(--diary-ink, #2a3344); }
-.diary-by-opt.on {
-  color: #8a3c10;
-  font-weight: 700;
-  text-decoration: underline;
-  text-underline-offset: 4px;
-  cursor: default;
-}
+.diary-tool-link:hover,
+.diary-tool-link:focus-visible { color: #b04a12; outline: none; }
 
 /* 「收集的」：本关之前收成「历史收集」一行；展开后同一页内滚动 */
 .diary-fold {

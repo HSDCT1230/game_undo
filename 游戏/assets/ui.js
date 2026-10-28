@@ -170,7 +170,7 @@ function dayOf(t) {
   return m ? { key: Number(m[1]) * 100 + Number(m[2]), label: m[1] + "月" + m[2] + "日" } : { key: 0, label: "更早记下的" };
 }
 
-// 「收集的」：证物和笔记按日子排；纸归「我写的」。
+// 「簿子里」：证物、笔记、纸、诊所记录按日子排成一条线。
 // 本关之前的收成「历史收集」挂在最新一条后面；展开后同一页内滚动，不翻页
 function timelineBlocks() {
   const days = new Map();
@@ -179,8 +179,16 @@ function timelineBlocks() {
     if (!days.has(d.key)) days.set(d.key, { label: d.label, rows: [] });
     return days.get(d.key).rows;
   };
-  (S.evidence || []).filter((e) => e.kind !== "纸").forEach((e) => at(e.time).push(evidenceEntry(e)));
+  (S.evidence || []).forEach((e) => at(e.time).push(evidenceEntry(e)));
   (S.notes || []).filter(noteShown).forEach((n) => at(noteTime(n)).push(el("p", { class: "diary-note diary-line" }, [n.text])));
+  if (typeof clinicLogs === "function") {
+    clinicLogs().forEach((r) => at(r.day).push(diaryEntry(
+      r.label,
+      () => diaryOpen(() => showClueModal(r.open(), { canFile: false, fromIndex: true })),
+      false,
+      "诊所"
+    )));
+  }
   const keys = [...days.keys()].sort((a, b) => a - b);
   const L = typeof levelNow === "function" ? levelNow() : null;
   const start = L && L.clock ? dayOf(L.clock).key : 0;
@@ -223,64 +231,22 @@ function timelineBlocks() {
   return out;
 }
 
-// 「按东西」：证物和笔记都按「关于哪样」归堆。
-// 先前这里只数证物，笔记一条都不出现——两个视图一翻，二十几条当场不见，
-// 看着就像收来的东西丢了。归不上的（论坛回帖之类）收在最后一组，不硬塞。
-function thingBlocks() {
-  const rows = [];
-  // 每条存「怎么造」，不存造好的节点：一条纸可以同时关于车和水喉，
-  // 两组各要自己的一个节点。共用同一个的话，后一组的 append 会把节点搬走，
-  // 前一组当场少几条（数着 9 件，只排出 5 件）。
-  (S.evidence || []).forEach((e) => rows.push({ t: e.time, about: itemAbout(e.id), make: () => evidenceEntry(e) }));
-  (S.notes || []).filter(noteShown).forEach((n) => rows.push({
-    t: noteTime(n),
-    about: noteAbout(n.id),
-    make: () => el("p", { class: "diary-note diary-line" }, [n.text]),
-  }));
+// 「簿子里」：一条时间线。证物、笔记、带给他看的纸、诊所说过的话，全按日子混排；
+// 顶上那一行是这一章还用得着的工具（摆在一起／对照纸／屋里的样子／四条）。
+// 从前分三页（要做的／收集的／我写的），「收集的」还带「按日子／按东西」两种排法：
+// 同一件事在场景里读过一次，到簿子里又能从两个角度再读一遍，翻两页全是刚看过的字。
+function bookBlocks() {
   const out = [];
-  [...THINGS, ""].forEach((t) => {
-    const group = rows.filter((r) => (t ? r.about.includes(t) : !r.about.length));
-    if (!group.length) return;
-    group.sort((a, b) => dayOf(a.t).key - dayOf(b.t).key);
-    out.push(diarySubHead(t || "只是记下的话", group.length), ...group.map((r) => r.make()));
-  });
-  return out;
-}
-
-function diaryByToggle() {
-  const by = S.diaryBy === "thing" ? "thing" : "date";
-  const opt = (k, label) => el("button", {
-    type: "button",
-    class: "diary-by-opt" + (by === k ? " on" : ""),
-    "aria-pressed": by === k ? "true" : "false",
-    onclick: () => {
-      if (by === k) return;
-      S.diaryBy = k;
-      S.diaryPage = 0;
-      sfx("paper");
-      renderDiaryIndex();
-    },
-  }, [label]);
-  return el("div", { class: "diary-by" }, [opt("date", "按日子"), opt("thing", "按东西")]);
-}
-
-function writtenBlocks() {
-  const out = [];
-  const papers = typeof paperPages === "function" ? paperPages() : [];
-  if (papers.length) {
-    out.push(diarySubHead("我列的", papers.length));
-    papers.forEach(([label, fn]) => out.push(diaryEntry(label, () => diaryOpen(fn), false)));
+  const tools = typeof paperPages === "function" ? paperPages() : [];
+  if (tools.length) {
+    out.push(el("div", { class: "diary-tools" }, tools.map(([label, fn]) => el("button", {
+      type: "button",
+      class: "diary-tool-link",
+      onclick: () => { sfx("paper"); diaryOpen(fn); },
+    }, [label]))));
   }
-  const sheets = (S.evidence || []).filter((e) => e.kind === "纸");
-  if (sheets.length) {
-    out.push(diarySubHead("带给他的纸", sheets.length));
-    sheets.forEach((e) => out.push(evidenceEntry(e, dayOf(e.time).key ? dayOf(e.time).label : "")));
-  }
-  const logs = typeof clinicLogs === "function" ? clinicLogs() : [];
-  if (logs.length) {
-    out.push(diarySubHead("在诊所", logs.length));
-    logs.forEach((r) => out.push(diaryEntry(r.label, () => diaryOpen(() => showClueModal(r.open(), { canFile: false, fromIndex: true })), false, dayOf(r.day).label)));
-  }
+  const line = timelineBlocks();
+  out.push(...(line.length ? line : [el("p", { class: "diary-note diary-empty" }, ["还没有。"])]));
   return out;
 }
 
@@ -288,13 +254,7 @@ function diarySections() {
   const secs = [];
   const todo = typeof levelBlocks === "function" ? levelBlocks() : [];
   if (todo.length) secs.push({ tab: "要做的", title: "要做的", blocks: todo });
-
-  const empty = (t) => [el("p", { class: "diary-note diary-empty" }, [t])];
-  const got = S.diaryBy === "thing" ? thingBlocks() : timelineBlocks();
-  secs.push({ tab: "收集的", title: "收集的东西", blocks: got.length ? [diaryByToggle(), ...got] : empty("还没有。") });
-
-  const mine = writtenBlocks();
-  secs.push({ tab: "我写的", title: "我写的", blocks: mine.length ? mine : empty("还没有写过。") });
+  secs.push({ tab: "簿子里", title: "簿子里", blocks: bookBlocks() });
   return secs;
 }
 
