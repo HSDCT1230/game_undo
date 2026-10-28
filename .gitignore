@@ -16,6 +16,7 @@ _*.txt
 _*.json
 _*.js
 _*.cjs
+_*.log
 _scan/
 _zh_*
 _tmp_*

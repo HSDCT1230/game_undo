@@ -3339,6 +3339,8 @@ button.mail-row:hover { background: #121a23; }
 .chat {
   width: min(680px, calc(100% - 24px));
   height: min(680px, calc(100vh - 88px));
+  /* 手机浏览器的 100vh 是「隐掉地址栏」那个高度，比看得见的区域高，窗口底会被切掉 */
+  height: min(680px, calc(100dvh - 88px));
   max-width: none;
   min-height: 0;
   margin: 8px auto;
@@ -4547,7 +4549,9 @@ button.mail-row:hover { background: #121a23; }
   }
 
   .browser-chrome {
-    flex-wrap: wrap;
+    /* 窄屏原先折行：地址栏撑满一行，「轉到」被挤到第二行左端孤零零一颗。
+       地址栏改成可缩（basis 0），整条始终一行。 */
+    flex-wrap: nowrap;
   }
 
   .browser-nav {
@@ -4569,6 +4573,7 @@ button.mail-row:hover { background: #121a23; }
   }
 
   .addr {
+    flex: 1 1 0;
     min-width: 0;
   }
 
@@ -4687,6 +4692,8 @@ button.mail-row:hover { background: #121a23; }
   .chat {
     width: 100%;
     height: calc(100vh - 56px);
+    /* 同上：手机上按看得见的高度算，别按隐掉地址栏那个高度 */
+    height: calc(100dvh - 56px);
     min-height: 0;
     margin: 0;
   }
@@ -7823,4 +7830,36 @@ html.screen-on body::after {
 @media (max-width: 430px) {
   .polaroid { width: min(260px, 90%); }
   .polaroid-cap { font-size: 12.5px; letter-spacing: .02em; }
+}
+
+/* ---------- 手机端触控与视口（2026-10-28 按 390×844／360×640、DPR3 触屏模拟逐屏量过） ----------
+   量出来的三处硬伤：底部导航按钮只有 25px 高（手机上的主入口）、过场「跳过」49×23 贴角、
+   地图弹层把详情压到 164px 还得在小框里再滚。桌面尺寸不受影响。 */
+@media (max-width: 720px) {
+  /* 瀏覽器／日記簿／地圖 是手机上换屏的唯一入口，给足指头高度 */
+  .playbar-mid button { padding: 12px 0; }
+}
+@media (max-width: 640px), (pointer: coarse) {
+  /* 过场「跳过」原先 49×23、贴着右下角，指头够不着 */
+  .cut-skip { right: 8px; bottom: 8px; padding: 12px 16px; font-size: 13px; }
+  /* 顶栏四个开关 30→34，横向留白收紧，把位置让给日期 */
+  #os-bar { padding: 0 4px; gap: 6px; }
+  .os-opt,
+  #sfx-toggle { min-height: 34px; }
+  .browser-nav button { min-width: 34px; }
+  #map-close { min-height: 36px; }
+}
+@media (max-width: 480px) {
+  /* 390 宽时日期被截成「2014年7月31日 周…」，时间看不见了——让出应用名那一格 */
+  #os-title { display: none; }
+  #os-bar { padding-left: 8px; }
+}
+/* 地图弹层竖屏：平面图与详情上下排，详情被挤到 164px 高、内部再滚一层。
+   改成整块单轴滚动（平面图跟着走），手机上只留一个滚动条。 */
+@media (max-width: 800px) {
+  #map-layer { padding: 8px; }
+  #map-sheet { max-height: 100%; }
+  #map-main { display: block; overflow-y: auto; overscroll-behavior: contain; }
+  #map-draw { min-height: 0; }
+  #map-detail { overflow: visible; border-left: 0; border-top: 1px solid #d7ccb8; }
 }
