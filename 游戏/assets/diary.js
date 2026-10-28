@@ -85,7 +85,15 @@ function itemLabel(id) {
   // 那就回 ITEMS 里取一次——不然簿子上会出现一行「·：」（10-29 探针踩到）。
   const found = hasEvidence(id) ? S.evidence.find((e) => e.id === id) : null;
   const it = found && found.kind ? found : item(id);
-  return H(it.kind) + "：" + H(it.title);
+  // 网页新闻不在 ITEMS 里（它们是带着标题一起归档的），只剩 id 时 item() 会把 id 当标题，
+  // 簿子上就出现「新闻：news-mud」。标题问 NEWS 表，那里才有读者看得懂的那一句（10-29）。
+  let kind = it.kind;
+  let title = it.title;
+  if ((!title || title === id) && /^news-/.test(id) && typeof NEWS === "object" && NEWS[id.slice(5)]) {
+    kind = "新闻";
+    title = NEWS[id.slice(5)].title;
+  }
+  return H(kind) + "：" + H(title || id);
 }
 
 /* ---------- 日记簿目录用：同一样东西的其它条目（点开一页能横着跳） ---------- */
@@ -127,8 +135,14 @@ const ITEM_ABOUT = {
 
 const itemAbout = (id) => ITEM_ABOUT[id] || [];
 
-// 笔记和已记下的证物讲同一件事时，目录只列证物
-const NOTE_IN_ITEM = { print: "photo-print", voice: "rec-axuan", sill: "photo-sill", dirt: "mail-dirt", namecall: "rec-name", takeback: "letter-red" };
+// 笔记和已记下的证物讲同一件事时，目录只列证物。
+// 末三条是网页新闻：新闻本身「记下来」归档成证物，同一句话又「抄一行」成了笔记，
+// 两行并排的时候「两个人」那一栏看着像重了影。有新闻这件证物，抄的那条就不必再列（10-29）。
+const NOTE_IN_ITEM = {
+  print: "photo-print", voice: "rec-axuan", sill: "photo-sill", dirt: "mail-dirt",
+  namecall: "rec-name", takeback: "letter-red",
+  "yu-old": "news-yu04", "kimon-bio": "news-kimon", "web-zhou": "news-mud",
+};
 
 // 第 3 关日历上点开的那几天，钟仍停在八月一日
 const NOTE_DAY = { "tap-fixed": "8月3日", "gate-tick": "8月11日", "car-still": "8月12日" };
@@ -899,6 +913,8 @@ function whoRows(p) {
   });
   (S.notes || []).forEach((n) => {
     if (!n.who || (n.who !== p.key && n.who !== p.name)) return;
+    // 这句话已经有对应的证物在栏里了，就不再列第二遍（NOTE_IN_ITEM：新闻与抄录同源）。
+    if (NOTE_IN_ITEM[n.id] && hasEvidence(NOTE_IN_ITEM[n.id])) return;
     out.push({ id: n.id, ev: false, text: n.text });
   });
   return out;
