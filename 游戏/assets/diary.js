@@ -96,7 +96,7 @@ function itemLabel(id) {
   return H(kind) + "：" + H(title || id);
 }
 
-/* ---------- 日记簿目录用：同一样东西的其它条目（点开一页能横着跳） ---------- */
+/* ---------- 归属：这一条挂在谁名下（证物页脚、人物栏共用） ---------- */
 
 const ITEM_ABOUT = {
   "obj-keytag": ["周生"],
@@ -155,23 +155,18 @@ function noteShown(n) {
   return !(it && hasEvidence(it));
 }
 
-// 同一样东西的其他证物（证物页底下列出来）：同的越多越前，再按日子近，最多三样
-function itemKin(id) {
+/* 这一件东西归谁（证物页脚下那一行）。
+
+   从前这里是「同一样东西」：按 ITEM_ABOUT 的内部标签算近邻，取同得最多、日子最近的三样。
+   标签是玩家看不见的东西，所以录音那一页把「钥匙牌」列了进来（都带「周生」与「储物室门」），
+   而同一晚最该看的「窗台童码」反倒不在——它的标签是「窗台」。那一栏既解释不了自己，
+   也只是把刚在时间线上看过的三条抄成一份目录。整块删掉（10-29）。
+
+   留下来的只有归属：想「这条归谁」，簿子第三页按人排好了，还带计数和推理。
+   ITEM_ABOUT 不能跟着一起删——whoRows() 靠它认人。 */
+function itemOwner(id) {
   const about = itemAbout(id);
-  if (!about.length) return [];
-  const day = (t) => {
-    const m = /(\d+)月(\d+)日/.exec(t || "");
-    return m ? Number(m[1]) * 31 + Number(m[2]) : 0;
-  };
-  const self = (S.evidence || []).find((e) => e.id === id) || ITEMS[id] || {};
-  const at = day(self.time);
-  return (S.evidence || [])
-    .filter((e) => e.id !== id)
-    .map((e) => ({ e, shared: itemAbout(e.id).filter((a) => about.includes(a)).length, gap: Math.abs(day(e.time) - at) }))
-    .filter((r) => r.shared)
-    .sort((a, b) => b.shared - a.shared || a.gap - b.gap)
-    .slice(0, 3)
-    .map((r) => r.e);
+  return PEOPLE.find((p) => about.includes(p.name)) || null;
 }
 
 /* ---------- 四条 ---------- */
@@ -854,7 +849,7 @@ function openCompare(onDone) {
   });
 }
 
-/* ---------- 两个人：把这间屋的事按人分开，再问一句「合起来是什么」 ---------- */
+/* ---------- 我认识的人：把簿子里的事按人分开，再问一句「合起来是什么」 ---------- */
 
 /* 网页上的字进了簿子，是一行一行散着的。这一页把它们按人分开：
    周生那边是这间屋，罗启明那边是二〇〇四年十一月。
@@ -981,57 +976,93 @@ function whoAsk(st, rows, redraw) {
   return out;
 }
 
-function openWho() {
+/* 计数说人话。「3／4」既像进度条又像「还差一处」，玩家得先猜这个分数是什么；
+   而且它是按 need 算的，跟栏里列了几行不是一回事——列了六行、句子写「手上三样」，
+   读的人只会觉得哪里不对（10-29）。所以只回答一句：够不够写。 */
+function whoStateText(p, rows) {
+  if (flag(p.flag)) return "写下来了";
+  if (!rows.length) return "还没有";
+  if (whoReady(p, rows)) return "够写了";
+  // 「还差」按 min 算，不按 need.length 算：够写只要 min 条，而 need 更长
+  // （罗启明必要四条，凑够三条就写得出来）。按 need 报会多报一处——
+  // 玩家凑到三条时下面三句选项已经出来了，这句话还挂着「还差一处」（10-29）。
+  return "还差 " + (p.min - whoGot(p, rows)) + " 处";
+}
+
+/* 一个人的整页：他名下的东西、够不够写、够写就出三句。
+   这一页只放一个人——两个并排是上一版的读法，两个人挤在同一屏，谁也读不完（10-29）。 */
+function whoCard(p, redraw) {
+  const rows = whoRows(p);
+  const card = el("div", { class: "who-card" });
+  card.append(el("div", { class: "who-head" }, [
+    el("b", { class: "who-name" }, [p.name]),
+    el("span", { class: "who-sub" }, [p.sub]),
+    el("span", { class: "who-state" + (whoReady(p, rows) || flag(p.flag) ? " ready" : "") }, [whoStateText(p, rows)]),
+  ]));
+  const list = el("ul", { class: "who-list" });
+  if (!rows.length) list.append(el("li", { class: "who-row ghost" }, ["——　还没有。"]));
+  // 行首不再标 ◆：玩家不知道那是什么，他只需要知道「够不够写」，那句话在头上。
+  rows.forEach((r) => {
+    list.append(el("li", { class: "who-row" }, [
+      r.ev
+        ? el("button", {
+          type: "button",
+          class: "who-item",
+          onclick: () => showClueModal(item(r.id)),
+        }, [r.text])
+        : el("span", { class: "who-item plain" }, [r.text]),
+    ]));
+  });
+  card.append(list);
+  card.append(...whoAsk(p, rows, redraw));
+  // 第二问只在第一页写完、且三样真的凑齐时才露。凑不齐就当它不存在——
+  // 这一问是深度内容，不该在栏里挂一行「你还差三样」把人赶去找（10-29）。
+  if (p.next && flag(p.flag) && (flag(p.next.flag) || whoReady(p.next, rows))) {
+    card.append(el("div", { class: "who-stage" }, [
+      el("p", { class: "who-stage-lead" }, [p.next.leader]),
+      ...whoAsk(p.next, rows, redraw),
+    ]));
+  }
+  return card;
+}
+
+function openWho(key) {
   S.whoTry = S.whoTry || {};
+  const p = PEOPLE.find((x) => x.key === key) || PEOPLE[0];
   showDiaryTool({
-    kind: "两个人",
+    kind: p.name,
     build: (host, redraw) => {
-      host.append(el("p", { class: "tool-lead" }, [
-        "这件事牵着两个人。他们各自的东西，我分开放在这里。",
-      ]));
-      PEOPLE.forEach((p) => {
-        const rows = whoRows(p);
-        const got = whoGot(p, rows);
-        const miss = Math.max(0, p.need.length - got);
-        const card = el("div", { class: "who-card" });
-        card.append(el("div", { class: "who-head" }, [
-          el("b", { class: "who-name" }, [p.name]),
-          el("span", { class: "who-sub" }, [p.sub]),
-          // 分母是「一共有几处」，不是「还差几处」：3／4 又有选项，会被读成「还差一处」。
-          // 所以只有全部归齐才把这一格点亮，其余时候它就只是个计数。
-          el("span", { class: "who-count" + (got >= p.need.length ? " done" : "") }, [got + "／" + p.need.length]),
-        ]));
-        const list = el("ul", { class: "who-list" });
-        if (!rows.length) list.append(el("li", { class: "who-row ghost" }, ["——　还没有。"]));
-        rows.forEach((r) => {
-          list.append(el("li", { class: "who-row" + (p.need.includes(r.id) ? " need" : "") }, [
-            el("span", { class: "who-mark" }, [p.need.includes(r.id) ? "◆" : "·"]),
-            r.ev
-              ? el("button", {
-                type: "button",
-                class: "who-item",
-                onclick: () => showClueModal(item(r.id)),
-              }, [r.text])
-              : el("span", { class: "who-item plain" }, [r.text]),
-          ]));
-        });
-        // 「还差 N 处」只在真的还写不出来的时候挂。够写的时候它跟下面那三句选项打架：
-        // 一边说差一处，一边请她挑一句（10-28）。
-        if (!whoReady(p, rows) && rows.length) list.append(el("li", { class: "who-row ghost" }, ["——　还差 " + miss + " 处。"]));
-        card.append(list);
-        card.append(...whoAsk(p, rows, redraw));
-        // 第二问只在第一页写完、且三样真的凑齐时才露。凑不齐就当它不存在——
-        // 这一问是深度内容，不该在栏里挂一行「你还差三样」把人赶去找（10-29）。
-        if (p.next && flag(p.flag) && (flag(p.next.flag) || whoReady(p.next, rows))) {
-          card.append(el("div", { class: "who-stage" }, [
-            el("p", { class: "who-stage-lead" }, [p.next.leader]),
-            ...whoAsk(p.next, rows, redraw),
-          ]));
-        }
-        host.append(card);
-      });
+      host.append(el("p", { class: "tool-lead" }, ["归在「" + p.sub + "」的东西，都在这一页。"]));
+      host.append(whoCard(p, redraw));
     },
   });
+}
+
+/* 「我认识的人」那一页的目录：一行一个人。
+   这一页只回答「有谁、够不够写」，点进去才是他那一页。
+   没有东西的人不出现——第 3 关刚拿到钥匙牌时，两张空卡挂在这里，点开两个「—— 还没有」（10-29）。 */
+function peopleBlocks() {
+  const out = [];
+  PEOPLE.forEach((p) => {
+    const rows = whoRows(p);
+    if (!rows.length && !flag(p.flag)) return;
+    const ready = whoReady(p, rows) || flag(p.flag);
+    out.push(el("button", {
+      type: "button",
+      class: "people-row" + (ready ? " ready" : ""),
+      onclick: () => {
+        if (typeof sfx === "function") sfx("paper");
+        diaryOpen(() => openWho(p.key));
+      },
+    }, [
+      el("span", { class: "people-name" }, [p.name]),
+      el("span", { class: "people-sub" }, [p.sub]),
+      el("span", { class: "people-state" }, [whoStateText(p, rows)]),
+      el("span", { class: "people-go", "aria-hidden": "true" }, ["›"]),
+    ]));
+  });
+  if (!out.length) return [];
+  return [el("p", { class: "diary-note people-lead" }, ["他们各自的东西，我分开记。"]), ...out];
 }
 
 /* ---------- 补充纸：九月头一个礼拜 ---------- */

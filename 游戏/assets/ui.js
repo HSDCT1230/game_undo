@@ -138,7 +138,10 @@ function diaryBack() {
   showDiaryIndex();
 }
 
-const diaryBackLabel = () => (diaryTrail.length ? "‹ 返回" : "‹ 回到目录");
+// 「回到目录」这个词取消了：目录就是页签，它已经不指向任何具体东西。
+// 只留两种——「‹ 返回」（回上一处）和「合上」（关簿子）。两套标签在同一高度互相冒充，
+// 玩家分不清自己在第几层（10-29）。
+const diaryBackLabel = () => "‹ 返回";
 
 function diarySubHead(label, n) {
   return el("h4", { class: "diary-sub" }, n ? [label, el("span", { class: "diary-count" }, [String(n)])] : [label]);
@@ -170,8 +173,8 @@ function dayOf(t) {
   return m ? { key: Number(m[1]) * 100 + Number(m[2]), label: m[1] + "月" + m[2] + "日" } : { key: 0, label: "更早记下的" };
 }
 
-// 「簿子里」：证物、笔记、纸、诊所记录按日子排成一条线。
-// 本关之前的收成「历史收集」挂在最新一条后面；展开后同一页内滚动，不翻页
+// 「日记」：证物、笔记、纸、诊所记录按日子排成一条线。
+// 本关之前的收成「历史收集」挂在最新一条后面；展开后同一页内滚动，不翻页。
 function timelineBlocks() {
   const days = new Map();
   const at = (t) => {
@@ -189,10 +192,23 @@ function timelineBlocks() {
       "诊所"
     )));
   }
+  // 「搬进来那晚」是八月一日夜里的记录，本来就属于这条线。
+  // 从前它挂在页顶当一行小字，于是时间线永远缺第一天——而那一天正是后面每一夜的对照物（10-29）。
+  if (typeof baseCount === "function" && baseCount()) {
+    at("2014年8月1日 夜").push(diaryEntry(
+      "搬进来那晚",
+      () => diaryOpen(openBase),
+      false,
+      "记下 " + baseCount() + " 样"
+    ));
+  }
   const keys = [...days.keys()].sort((a, b) => a - b);
   const L = typeof levelNow === "function" ? levelNow() : null;
   const start = L && L.clock ? dayOf(L.clock).key : 0;
-  const old = start ? keys.filter((k) => k < start) : [];
+  // 第 4 关整夜都在「跟搬进来那晚比」，整本簿子都是眼下的材料，一条都不折。
+  // 只把八月一日挑出来不折也不行：折起来那一段会写成「7月31日～8月13日」，
+  // 而八月初一明明在下面摊着——一句话里就自相矛盾（10-29）。
+  const old = start && S.level !== 4 ? keys.filter((k) => k < start) : [];
   const cur = keys.filter((k) => !old.includes(k));
   const out = [];
   const dayChunk = (k) => {
@@ -231,30 +247,29 @@ function timelineBlocks() {
   return out;
 }
 
-// 「簿子里」：一条时间线。证物、笔记、带给他看的纸、诊所说过的话，全按日子混排；
-// 顶上那一行是这一章还用得着的工具（摆在一起／对照纸／屋里的样子／四条）。
-// 从前分三页（要做的／收集的／我写的），「收集的」还带「按日子／按东西」两种排法：
-// 同一件事在场景里读过一次，到簿子里又能从两个角度再读一遍，翻两页全是刚看过的字。
-function bookBlocks() {
-  const out = [];
-  const tools = typeof paperPages === "function" ? paperPages() : [];
-  if (tools.length) {
-    out.push(el("div", { class: "diary-tools" }, tools.map(([label, fn]) => el("button", {
-      type: "button",
-      class: "diary-tool-link",
-      onclick: () => { sfx("paper"); diaryOpen(fn); },
-    }, [label]))));
-  }
-  const line = timelineBlocks();
-  out.push(...(line.length ? line : [el("p", { class: "diary-note diary-empty" }, ["还没有。"])]));
-  return out;
-}
+/* 三页，每页只回答一个问题：要做什么（To do）／发生过什么（日记）／都有谁（我认识的人）。
+
+   从前是「要做的」＋「簿子里」两页，而「簿子里」顶上那一行把四种东西并排：
+   一个时间点（搬进来那晚）、一个人（两个人）、两件要动手做的事（对照纸、摆在一起）。
+   它们并排，只是因为代码里都叫 paperPages()，玩家却回答不了「这一行是什么」——
+   四种东西本来就不属于同一个问题（10-29）。
+
+   To do 的字面是保留英文的：这本簿子是她的方格本，但这一页是清单，
+   清单头写 To do 她自己认得；其余两页仍是中文。
+
+   页签不跨会话记忆：每次开簿子都在 To do（openNotes 里清空 S.diaryTab）。
+   它记的只是「这一次翻到哪一页」——簿子是随手翻开看一眼的东西，
+   隔一天再翻还停在上次那一页反而怪。所以改名不需要给老存档做字面映射，
+   顺带也不会出现「老档落进一个已经不存在的页签」。 */
 
 function diarySections() {
   const secs = [];
   const todo = typeof levelBlocks === "function" ? levelBlocks() : [];
-  if (todo.length) secs.push({ tab: "要做的", title: "要做的", blocks: todo });
-  secs.push({ tab: "簿子里", title: "簿子里", blocks: bookBlocks() });
+  if (todo.length) secs.push({ tab: "To do", blocks: todo });
+  const line = typeof timelineBlocks === "function" ? timelineBlocks() : [];
+  secs.push({ tab: "日记", blocks: line.length ? line : [el("p", { class: "diary-note diary-empty" }, ["还没有。"])] });
+  const who = typeof peopleBlocks === "function" ? peopleBlocks() : [];
+  if (who.length) secs.push({ tab: "我认识的人", blocks: who });
   return secs;
 }
 
@@ -286,12 +301,15 @@ function renderDiaryIndex() {
   const secs = diarySections();
   diaryTabsNow = secs.map((s) => s.tab);
   let cur = diaryTabsNow.indexOf(S.diaryTab);
+  // 认不出来就落第一页（To do）：它是唯一一个「每次都要看」的页。
   if (cur < 0) cur = 0;
   S.diaryTab = diaryTabsNow[cur];
   const s = secs[cur];
   const pages = [];
+  // 页签已经标出你在哪一页，页内再写一次同名大标题只是把内容往下推一格、还让页签看着像标签。
+  // 只有续页留一行「（续）」，否则翻过去不知道还是同一页的下一张。
   const newPage = (cont) => {
-    const p = el("div", { class: "diary-folio-page" }, [el("h3", { class: "diary-sec" }, [cont ? s.title + "（续）" : s.title])]);
+    const p = el("div", { class: "diary-folio-page" }, cont ? [el("h3", { class: "diary-sec" }, [s.tab + "（续）"])] : []);
     flow.append(p);
     pages.push(p);
     return p;
@@ -519,15 +537,17 @@ function showClueModal(item, opts) {
 
   // 点正文下划线记下；点「好／合上」、弹窗外或 Esc = 不记（不恢复「记下来／先不记」）
   if (opts.fromIndex) {
-    const kin = item.id && typeof itemKin === "function" ? itemKin(item.id) : [];
-    if (kin.length) {
-      kids.push(el("div", { class: "clue-kin" }, [
-        el("p", { class: "clue-kin-h" }, ["同一样东西"]),
-        ...kin.map((e) => el("button", {
+    // 脚下只留一行归属。「同一样东西」那一栏按内部标签算近邻，玩家看不出为什么是这三样，
+    // 而同一晚最该看的第四样反倒不在里面——它既解释不了自己，也只是把刚看过的东西抄成目录（10-29）。
+    const owner = item.id && typeof itemOwner === "function" ? itemOwner(item.id) : null;
+    if (owner) {
+      kids.push(el("p", { class: "clue-owner" }, [
+        "归在 ",
+        el("button", {
           type: "button",
-          class: "clue-kin-link",
-          onclick: () => diaryPush(() => showClueModal(e, { canFile: false, fromIndex: true })),
-        }, [H(e.kind) + "：" + H(e.title) + " ›"])),
+          class: "clue-owner-go",
+          onclick: () => diaryPush(() => openWho(owner.key)),
+        }, [owner.name + " 那一栏 ›"]),
       ]));
     }
     kids.push(el("div", { class: "clue-acts" }, [

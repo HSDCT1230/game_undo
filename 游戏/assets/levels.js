@@ -640,6 +640,20 @@ function levelBlocks() {
   const ht = hintTask();
   const hint = ht ? hintSay(ht) : "";
   if (hint && !hintEchoes(hint, ht.text)) blocks.push(el("p", { class: "diary-note task-hint" }, [hint]));
+  // 要摆的纸：三张纸都不是「读一页」，是「做一件事」，所以每行右端带一句进度。
+  const papers = typeof todoPapers === "function" ? todoPapers() : [];
+  if (papers.length) {
+    blocks.push(diarySubHead("要摆的纸"));
+    blocks.push(el("div", { class: "todo-papers" }, papers.map((p) => el("button", {
+      type: "button",
+      class: "todo-paper",
+      onclick: () => { sfx("paper"); diaryOpen(p.fn); },
+    }, [
+      el("span", { class: "todo-paper-name" }, [p.label]),
+      el("span", { class: "todo-paper-meta" }, [p.meta]),
+      el("span", { class: "todo-paper-go", "aria-hidden": "true" }, ["›"]),
+    ]))));
+  }
   blocks.push(...homeworkBlocks());
   return blocks;
 }
@@ -667,24 +681,37 @@ function homeworkBlocks() {
   return out;
 }
 
-// 这一章还用得着的几张纸（簿子顶上那一行）。摆在一起、对照纸这类「要摆弄」的东西
-// 场景里也能开，这里只是把入口收到一处；簿子里不再单开「我列的」一页。
-function paperPages() {
-  const pages = [];
+// 「To do」页底下那一小块：这一章还要摆弄的几张纸。
+// 三样都是「做到一半」的状态，所以每行带一句进度——裸链接每打开一次都要重新确认到哪了。
+// 「搬进来那晚」不在这里：它是八月一日夜里的记录，归时间线。
+// 「两个人」也不在这里：那是一页人名，归「我认识的人」（10-29）。
+function todoPapers() {
+  const out = [];
   // 「租房必需四条」只在看楼那两章有用：楼已经租下来了，这张纸再挂在簿子上
   // 就是一本翻两页全是旧清单的簿子（从前 `|| Object.keys(S.four).length` 让它一直留着）。
-  if (S.level <= 2) pages.push(["租房必需四条", openFour]);
-  if (S.level >= 3) pages.push([S.level <= 3 ? "屋里的样子" : "搬进来那晚", openBase]);
-  if (S.level === 4 && nightOn()) pages.push(["摆在一起", () => openPairs(() => afterModalClose())]);
+  // 进度说「划掉」不说「卡住」：找着的证据越多，划掉的越多——那是在往前走。
+  // 写「卡住 3 条」会读反，读成「还有三条没解决」（10-29）。
+  if (S.level <= 2) {
+    const n = FOUR.filter((f) => ((S.four && S.four[f.id]) || []).length).length;
+    out.push({ label: "租房必需四条", meta: n ? "划掉 " + n + " 条" : "一条都还没划", fn: openFour });
+  }
+  if (S.level === 4 && nightOn()) {
+    const n = pairCount();
+    out.push({
+      label: "摆在一起",
+      meta: n >= 3 ? "三处都摆上了" : n ? "摆上 " + n + " 处" : "一处都还没摆",
+      fn: () => openPairs(() => afterModalClose()),
+    });
+  }
   if (S.level === 9 && ev("paper-norec") && ev("note-meiwater")) {
-    pages.push(["对照纸", () => openCompare(finishCompare)]);
+    const n = Object.keys(S.compare || {}).length;
+    out.push({
+      label: "对照纸",
+      meta: compareReady() ? "四格都填上了" : n ? "填了 " + n + " 格" : "一格都还没填",
+      fn: () => openCompare(finishCompare),
+    });
   }
-  // 「两个人」：簿子里的条目一旦归得了主人，这一格才出现。
-  // 不是第三个页签——上一轮刚把三页压成两页，不能再加回来（10-28）。
-  if (typeof whoRows === "function" && PEOPLE.some((p) => whoRows(p).length)) {
-    pages.push(["两个人", openWho]);
-  }
-  return pages;
+  return out;
 }
 
 /* ---------- 开场卡、结束卡 ---------- */

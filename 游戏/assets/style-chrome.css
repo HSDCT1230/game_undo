@@ -4008,35 +4008,43 @@ button.mail-row:hover { background: #121a23; }
   letter-spacing: 0.04em;
 }
 
-/* 「簿子里」顶上那一行工具：摆在一起／对照纸／屋里的样子／四条。
-   一格里排开，窄屏折行——折了只多占一格，不压正文。
-   从前这里是「按日子／按东西」两个小字开关，两种排法看的是同一批东西。 */
-.diary-tools {
+/* 「To do」页底下那一小块：这一章还要摆弄的几张纸（四条／摆在一起／对照纸）。
+   三样都是「做到一半」的状态，所以每行右端带一句进度——裸链接每打开一次都要重新确认到哪了。
+   从前这里是簿子顶上并排的一行文字链接，跟一个时间点、一个人挤在同一级（10-29）。 */
+.todo-papers { margin-top: 2px; }
+.todo-paper {
   display: flex;
-  flex-wrap: wrap;
   align-items: baseline;
-  gap: 0 18px;
-  min-height: var(--diary-cell, 28px);
-  margin-top: var(--diary-cell, 28px);
-}
-/* 按钮类是 diary-tool-link，别叫 diary-tool：5777 行那个 .diary-tool 是
-   showDiaryTool() 的外壳（配 .diary-sheet:has(.diary-tool)），同名会互相吃掉样式。 */
-.diary-tool-link {
-  padding: 0;
+  gap: 10px;
+  width: 100%;
+  padding: 0 4px 0 0;
   border: 0;
   background: transparent;
   color: #8a3c10;
   font: inherit;
-  font-size: 16px;
   line-height: var(--diary-cell, 28px);
+  text-align: left;
+  cursor: pointer;
+}
+.todo-paper-name {
+  font-size: 16px;
   letter-spacing: 0.06em;
   text-decoration: underline;
   text-decoration-thickness: 1px;
   text-underline-offset: 4px;
-  cursor: pointer;
+  text-decoration-color: rgba(138, 60, 16, 0.45);
 }
-.diary-tool-link:hover,
-.diary-tool-link:focus-visible { color: #b04a12; outline: none; }
+.todo-paper-meta {
+  margin-left: auto;
+  color: #8a7c6a;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+}
+.todo-paper-go { flex: 0 0 auto; margin-left: 8px; color: rgba(138, 60, 16, 0.5); font-size: 18px; line-height: 1; }
+.todo-paper:hover .todo-paper-name,
+.todo-paper:focus-visible .todo-paper-name { color: #b04a12; text-decoration-color: #b04a12; }
+.todo-paper:focus-visible { outline: none; }
 
 /* 「收集的」：本关之前收成「历史收集」一行；展开后同一页内滚动 */
 .diary-fold {
@@ -4102,22 +4110,31 @@ button.mail-row:hover { background: #121a23; }
 }
 .hw-ev:hover { text-decoration: underline; }
 
-/* 证物页底：同一样东西 */
-.clue-kin { margin-top: 12px; padding-top: 8px; border-top: 1px dashed rgba(60, 50, 40, 0.3); }
-.clue-kin-h { margin: 0 0 2px; color: #8a7d6a; font-size: 12px; letter-spacing: 0.1em; }
-.clue-kin-link {
-  display: block;
-  width: calc(100% - 96px);
-  padding: 4px 0;
+/* 证物页脚：这一件归谁。一行就够。
+   原来这里是一栏「同一样东西」，按内部标签列出三样近邻——玩家看不出为什么是这三样（10-29）。 */
+.clue-owner {
+  margin: 12px 0 0;
+  padding-top: 8px;
+  border-top: 1px dashed rgba(60, 50, 40, 0.3);
+  color: #8a7c6a;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+}
+.clue-owner-go {
+  padding: 0;
   border: 0;
   background: transparent;
-  color: #6a3b2a;
+  color: #8a3c10;
   font: inherit;
-  font-size: 14px;
-  text-align: left;
+  font-size: 13px;
   cursor: pointer;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  text-decoration-color: #cbbca4;
 }
-.clue-kin-link:hover { text-decoration: underline; }
+.clue-owner-go:hover,
+.clue-owner-go:focus-visible { color: #b04a12; text-decoration-color: #b04a12; outline: none; }
 
 .diary-sec {
   display: inline-block;
@@ -4154,6 +4171,23 @@ button.mail-row:hover { background: #121a23; }
   font-weight: 700;
   background: rgba(214, 196, 160, 0.5);
   cursor: default;
+}
+
+/* 触屏热区：窄屏格子压到 26px，页签和条目行跟着只剩 26，手指点不准。
+   不能改它们的 height —— 格子本的横线是按 --diary-cell 画的，行一高，
+   字就浮到两道线中间去了。所以另起一层透明热区，只在触屏上生效：
+   视觉不动，可点范围上下各多出 3px。桌面端不加，免得热区压到相邻行。 */
+@media (pointer: coarse) {
+  .diary-tab::after,
+  .evidence-open::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 32px;
+    transform: translateY(-50%);
+  }
 }
 
 .diary-note {
@@ -8002,10 +8036,43 @@ html.screen-on body::after {
    390 宽下 148×2+8 放得下两张，不用再改成占一半。板没有 fit-content 了，
    也就不需要 width:100% 去给百分比找基准。（10-29） */
 
-/* ---------- 「两个人」：簿子里按人分开的两栏 ---------- */
+/* ---------- 「我认识的人」：簿子第三页 ---------- */
 
-/* 一栏一个人：名字、他是谁、对上几处；下面是各自的东西。
-   ◆ 是要紧的那几条（对上它们才写得出来），· 是旁证。
+/* 目录页：一行一个人，只回答「有谁、够不够写」。上一版把两个人并排挤在同一屏，
+   谁也读不完；现在点进去才是他那一页（10-29）。 */
+.people-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  width: 100%;
+  padding: 0 4px 0 0;
+  border: 0;
+  border-bottom: 1px solid #e2d8c6;
+  background: transparent;
+  color: var(--diary-ink, #2a3344);
+  font: inherit;
+  line-height: var(--diary-cell, 28px);
+  text-align: left;
+  cursor: pointer;
+}
+.people-row:last-child { border-bottom: 0; }
+.people-lead { margin-bottom: var(--diary-cell, 28px); color: #8b8274; font-size: 15px; }
+.people-name { font-size: 17px; letter-spacing: 0.08em; }
+.people-sub { color: #8a7c6a; font-size: 13px; letter-spacing: 0.04em; }
+.people-state {
+  margin-left: auto;
+  color: #8a7c6a;
+  font-size: 13px;
+  letter-spacing: 0.05em;
+  font-variant-numeric: tabular-nums;
+}
+.people-row.ready .people-state { color: #4f6b46; }
+.people-go { flex: 0 0 auto; margin-left: 8px; color: rgba(42, 51, 68, 0.45); font-size: 18px; line-height: 1; }
+.people-row:hover .people-name,
+.people-row:focus-visible .people-name { color: #8a3c10; }
+.people-row:focus-visible { outline: none; }
+
+/* 一个人的页面：名字、他是谁、够不够写；下面是各自的东西。
    条目本身不是新做的证物页——点得开的还是原来那一页，这里只重排归属（10-28）。 */
 .who-card {
   margin: 0 0 16px;
@@ -8013,21 +8080,24 @@ html.screen-on body::after {
   border-bottom: 1px solid #ded4c1;
 }
 .who-card:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: 0; }
-.who-head { display: flex; align-items: baseline; gap: 10px; }
+.who-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+}
 .who-name { font-size: 17px; letter-spacing: 0.08em; }
 .who-sub { color: #8a7c6a; font-size: 13px; letter-spacing: 0.04em; }
-.who-count {
+/* 计数说人话：3／4 既像进度条又像「还差一处」，而且它按 need 算、跟栏里列了几行不是一回事。 */
+.who-state {
   margin-left: auto;
   color: #8a7c6a;
   font-size: 13px;
-  letter-spacing: 0.06em;
-  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.05em;
 }
-.who-count.done { color: #4f6b46; }
+.who-state.ready { color: #4f6b46; }
 .who-list { margin: 8px 0 0; padding: 0; list-style: none; }
 .who-row { display: flex; gap: 8px; font-size: 15px; line-height: 1.65; color: #2c2620; }
-.who-mark { flex: 0 0 10px; color: #b9ab95; font-size: 11px; line-height: 2.1; }
-.who-row.need .who-mark { color: #8a3c10; }
 .who-row.ghost { color: #a89a86; }
 .who-item {
   padding: 0;
@@ -8050,6 +8120,9 @@ html.screen-on body::after {
 @media (pointer: coarse) {
   .who-item:not(.plain) { min-height: 32px; padding: 4px 0; }
   .who-see { min-height: 32px; padding: 4px 0; }
+  .clue-owner-go { min-height: 32px; }
+  .todo-paper { min-height: 36px; }
+  .people-row { min-height: 40px; }
 }
 .who-miss { margin: 10px 0 0; color: #a89a86; font-size: 14px; line-height: 1.6; }
 .who-q { margin: 12px 0 8px; color: #8a3c10; font-size: 15px; font-weight: 700; letter-spacing: 0.06em; }
