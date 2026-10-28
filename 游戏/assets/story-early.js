@@ -2,7 +2,7 @@
 function goViewing() {
   closeModal();
   if (S.level !== 1) {
-    showPrompt("此盘已租出。");
+    showPrompt("此盘已租出");
     return;
   }
   if (flag("askedOld") && !flag("sawMail")) {
@@ -43,7 +43,7 @@ function startViewing() {
     door,
     line("章慧琪", "唔该。呢层……好静。", { zh: "谢谢。……这层，好静。" }),
     line("周", "日头静。夜晚旧楼会响：水喉、老鼠、隔篱电视。住惯就得。我自己都住前座。", { zh: "白天静。夜里就响——水管、老鼠、隔壁电视。住惯就好。我自己也住前座。" }),
-    line("", "他推开后座的门，站到一边。你可以自己看。"),
+    line("", "他推开后座的门，站到一边，让出的宽度刚够一个人侧身进去。"),
     { goto: () => enterHub("view", "hall") },
   ], "荣汇街 28 号 4 楼");
 }
@@ -68,7 +68,7 @@ HUBS.view = {
             line("章慧琪", "厅入面张相……一家人？", { zh: "厅里那张相……一家子？" }),
             line("周", "挂惯咗。自己屋企嘅。同你住冇关。相框后面嗰箱唔好郁就得。", { zh: "挂惯了，自家的。跟你住没关系。相框后面那箱别动就行。" }),
             line("章慧琪", "边个嚟㗎？……你太太？仲有细路？", { zh: "谁呀？……你太太？还有孩子？" }),
-            line("", "他笑了一下，没有接。墙上女人头发齐肩，缺一颗牙。小男孩望镜头外。"),
+            line("", "他笑了一下，没说话。墙上女人头发齐肩，缺一颗牙。小男孩望着镜头外。"),
             line("周", "屋企人。名你唔使知。相挂住，我唔想收。", { zh: "家里人。名字你就不用知道了。相挂着，我不想摘。" }),
           ]),
         },
@@ -108,7 +108,7 @@ HUBS.view = {
           go: () => {
             flag("sawSillTour", true);
             viewLook("sill", [
-              line("", "主房窗台有一圈浅色水印，形状像小孩鞋的印子。他走过来，手掌撑在窗台上，正好盖住那片水印。"),
+              line("", "主房窗台有一圈浅色水印，像小孩的鞋印。他走过来，手掌撑在窗台上，正好盖住那片水印。"),
             ]);
           },
         },
@@ -142,7 +142,7 @@ function askZhouView() {
           then: [
             { goto: () => { asked(); stepPast(); } },
             line("章慧琪", "周生，简介写屋入面仲有屋企人旧嘢。……系啲咩？", { zh: "周生，简介写屋里还有家人的旧东西。……是些什么？" }),
-            line("", "他顿了一下。"),
+            line("", "他想了想。"),
             line("周", "箱箱袋袋，衫同碗碟。未执完。你介意杂物多、觉得唔啱，自己睇过先。", { zh: "箱子袋子，衣服碗碟。没清完。你要是嫌杂物多、看不合适，就自己先看看。" }),
           ],
         },
@@ -181,10 +181,10 @@ function afterTour() {
     line("周", "冇印花，平就平喺呢度。我住四楼前座，隔一幅墙。有咩事拍门就得。重建嗰啲嘢，名单挂咗好耐，未轮到。到时我会同你讲，唔会无端端赶人。", { zh: "没印花，便宜就便宜在这儿。我住四楼前座，隔一道墙。有事敲门就行。重建那事，名单挂很久了，还没轮到。到时候我会跟你说，不会平白无故赶人。" }),
     line("章慧琪", "我会……好静。", { zh: "我会……很安静。" }),
     line("周", "安静最好。旧楼就系咁，住惯就得。", { zh: "安静最好。旧楼就这样，住惯就好。" }),
-    line("", "收条推过来，墨还没干。刚才那两个字他说得那么顺——重建。"),
+    line("", "收条推过来，墨还没干。刚才那两个字他说得很顺——重建。"),
     line("章慧琪", "周生，你头先讲重建。呢栋都有份？", { zh: "周生，你刚才说重建。这栋也有份？" }),
     line("周", "研究啫。挂咗好耐，未轮到。你唔使理。", { zh: "研究而已。挂很久了，还没轮到。你不用管。" }),
-    line("", "「研究」两个字他说得很轻，轻得像已经讲过很多遍，讲到自己都信。"),
+    line("", "「研究」两个字他说得很轻，比说「重建」时更轻。"),
     { goto: () => uraGate() },
   ];
 }
@@ -207,15 +207,15 @@ function uraGate() {
   };
   startTalk(again
     ? [
-        line("", "新闻页关掉了，字却没进日记簿。看过不算数——我要它留在簿里。"),
+        line("", "新闻页关掉了。字还在眼前，簿子里却什么都没有。"),
         open,
         { goto: () => uraGate() },
       ]
     : [
-        line("", "他在数第二遍钱。手机在袋里，隔着一层布。"),
-        line("", "你把笔电抽出来，搁在膝上——还没搬进来，它就一直在袋里。"),
+        line("", "他在数第二遍钱。手机在袋子里，隔着一层布。"),
+        line("", "你把笔电从袋子里抽出来，搁在膝上。机器还温着，塑料壳贴住膝盖。"),
         line("", "廿八屋新闻中心转载过市建局那条，七月廿二。研究范围写到荣汇街，写到唐楼。"),
-        line("", "研究到哪一步，补偿几时到，字里都没有。"),
+        line("", "研究到哪一步，补偿什么时候到，字里都没有。"),
         open,
         { goto: () => uraGate() },
       ], "荣汇街 28 号 4 楼");
@@ -231,7 +231,7 @@ function uraBrowse() {
 
 function uraKeys() {
   startTalk([
-    line("", "他从裤袋摸出一串钥匙，挑出两把，搁在收条上面。"),
+    line("", "他从裤袋摸出一串钥匙，挑出两把，搁在收条上面。一把铜色，一把磨得发黑。"),
     ...keyHandover(),
   ], "荣汇街 28 号 4 楼");
 }
@@ -296,7 +296,7 @@ function moveInStart() {
 
 function sillMoveInText() {
   if (flag("sawSillTour")) {
-    return "铁条窗。窗台上那一圈水印，是干的，像小孩鞋的印子。看房时周生的手撑在这里，正好盖住它——你认得那个形状。像搬东西时放过一双童鞋，不是这后座住过细路。";
+    return "铁条窗。窗台上那一圈水印，是干的，像小孩鞋的印子。看房时周生的手撑在这里，正好盖住它——你认得那个形状。像搬东西时放过一双童鞋，不是这后座住过小孩。";
   }
   return "铁条窗。外面是天井一侧，旧霓虹和对面的窗户。窗台上一圈水印，是干的——你按了按。形状清楚是小孩鞋印，像搬东西时放过，不是怪事。";
 }
@@ -307,7 +307,9 @@ function drawMoveIn() {
   const looks = [
     hot("大门与铁闸", "两道锁都试过。钥匙还能拧顺。", () => {
       markMoveIn("door");
-      showModal("大门与铁闸", "两道锁都试过。铁闸推开时会响。钥匙齿有些磨损，还能拧顺。你反手锁好，又试了一次。", "", null, () => drawMoveIn());
+      // 电表并在这里：它本来就在门边走廊墙角，为它单开一格热点不划算（热点盘会多一行，
+      // 盖掉半个房间）。它是「章自己的事／环境读数」，按设定不记进日记簿，所以只写在描述里。
+      showModal("大门与铁闸", "两道锁都试过。铁闸推开时会响。钥匙齿有些磨损，还能拧顺。你反手锁好，又试了一次。门边走廊墙角是电表，数字转得很慢。", "", null, () => drawMoveIn());
     }, pic(3, "示意-大门与铁闸"), moveInAct("door")),
     hot("全家福", S.base.family ? "记下了。" : "客厅墙上。相后靠着纸箱。", () => {
       markMoveIn("family");
@@ -358,23 +360,18 @@ function drawMoveIn() {
 function moveInActions() {
   const box = el("div", { class: "scene-actions" });
   box.classList.add("fork");
-  box.append(
-    forkChoice("甲", "scene-act", () => {
-      markMoveIn("tv");
-      showModal("电视", "旧楼天线，只有沙沙声。你又关掉。", "", null, () => drawMoveIn());
-    }, "开一下电视"),
-    el("div", { class: "fork-or", "aria-hidden": "true" }, ["或"]),
-    forkChoice("乙", "scene-act", () => {
-      markMoveIn("meter");
-      flag("meter", true);
-      showModal("电表", "电表在门边走廊墙角。数字转得很慢。", "", null, () => drawMoveIn());
-    }, "看一眼电表"),
-    el("div", { class: "fork-or", "aria-hidden": "true" }, ["或"]),
-    forkChoice("丙", "scene-act" + (baseCount() >= 4 ? " primary" : ""), finishMoveIn, "先睡一晚")
-  );
   const seen = Math.min(baseCount(), 4);
-  box.append(el("p", { class: "base-boxes", title: "屋里的样子", "aria-label": "屋里的样子，看清了 " + seen + " 样" },
-    [0, 1, 2, 3].map((i) => el("span", { class: i < seen ? "on" : "" }))));
+  const left = Math.max(0, 4 - baseCount());
+  // 这一关只有一个动作：睡。看屋子是右边那盘热点的事，不该在这里摆成「甲／乙／丙」——
+  // 三条路里两条不通，玩家会以为自己选错了、或者卡住了。
+  // 按钮上直接写还差几样，点之前就知道为什么还走不了，不必等弹窗来告诉他。
+  box.append(
+    forkChoice("睡", "scene-act" + (left ? "" : " primary"), finishMoveIn,
+      left ? "先睡一晚（还差 " + left + " 样）" : "先睡一晚"),
+    el("p", { class: "base-boxes", title: "屋里的样子", "aria-label": "屋里的样子，看清了 " + seen + " 样" },
+      [0, 1, 2, 3].map((i) => el("span", { class: i < seen ? "on" : "" }))),
+    left ? el("p", { class: "hub-hint" }, [H("右边一格一格点开，看清四样再睡。")]) : ""
+  );
   return box;
 }
 
@@ -384,9 +381,11 @@ function finishMoveIn() {
     return;
   }
   S.talk = null;
+  // 电视并在这里：后座这台开起来只有沙沙声，隔一幅墙的前座却在笑——
+  // 两个后座/前座的第一夜对照，比单开一个「开一下电视」的假按钮更有用。
   showModal(
     "08-01 夜",
-    "前座电视声隔着墙闷闷的，十一点前后关了。没有人敲门。储物室那边没有脚步声。你锁好门，躺下。",
+    "你开过后座那台电视，旧楼天线，只有沙沙声，又关掉。前座电视声隔着墙闷闷的，十一点前后关了。没有人敲门。储物室那边没有脚步声。你锁好门，躺下。",
     "荣汇街 28 号 后座",
     null,
     () => twoWeeks()
@@ -395,6 +394,9 @@ function finishMoveIn() {
 
 function twoWeeks() {
   setTime("2014年8月1日–13日");
+  // 这两周里也可能记笔记（开浏览器读留言之类）。不先给一天，笔记就会挂上整段区间。
+  // 没点某一天之前，先算八月一日；点开哪天，openCalDay 会把它改成那一天。
+  S.calNoteDay = "2014年8月1日";
   S.talk = null;
   S.mode = "cal";
   S.calOpen = true;
@@ -423,26 +425,35 @@ const CAL_DAYS = [
 // 才翻到那页小结——后面 8/14 的翻脸才有东西可碎。不产线索、不解谜、不暗示。
 function twoWeekCalm() {
   startTalk([
-    line("", "傍晚，楼梯上有脚步。是周生，抱着一竿晒干的衫，从天台下来。他在门口停住，没有进来。"),
+    line("", "傍晚，楼梯上有脚步。是周生，抱着一竿晒干的衣服，从天台下来。他在门口站住，没进来。"),
     line("周", "晒衫呀？天台最上嗰格我收返，唔阻你。", { zh: "晾衣服吗？天台最上面那格我收回来了，不挡你。" }),
     line("章慧琪", "唔阻。我用下面嗰格就得。", { zh: "不挡。我用下面那格就行。" }),
     line("周", "住咗半个月，惯唔惯？", { zh: "住了半个月，习惯了吗？" }),
     line("章慧琪", "……好静。静到有时会听见自己嘅声。", { zh: "……很静。静到有时听见自己的声音。" }),
-    line("", "他笑了一下，把衫换个手抱。"),
+    line("", "他笑了一下，把衣服换到另一只手。"),
     line("周", "旧楼系咁。我一个人坐前座，都系听收音机过日辰。", { zh: "旧楼就这样。我一个人坐前座，也是听收音机过日子。" }),
-    line("周", "有咩唔妥就拍门，唔使客气。重建嗰啲嘢讲咗好耐，未轮到，你安心住。", { zh: "有什么不方便就敲门，别客气。重建那事说了很久，还没轮到，你安心住。" }),
+    // 「重建嗰啲嘢讲咗好耐，未轮到」在收租那天已经说过一遍，她还追着问过。
+    // 半个月后再原样复述第三次，没有新东西——反而不提更可疑。这里只留招呼。
+    line("周", "有咩唔妥就拍门，唔使客气。你安心住。", { zh: "有什么不方便就敲门，别客气。你安心住。" }),
     line("章慧琪", "嗯。", { zh: "嗯。" }),
-    line("", "他没有多留，抱着衫往下走。脚步很稳，一级一级，像做过很多次。"),
+    line("", "他没有多留，抱着衣服往下走。脚步很稳，一级一级，像做过很多次。"),
     { goto: () => { S.talk = null; S.mode = "cal"; twoWeekPaper(); } },
   ], "荣汇街 28 号 4 楼后座门口");
 }
 
 // 8月14日傍晚前的一页：她自己写的两周小结。不产线索、不解谜，只做「日常结束」的分隔。
+//
+// 这一页原先是一张白纸弹窗：外面一层纸、里面一个带框的表格、七行格线、底下一颗通栏的
+// 「合上」。全游戏其它时候都是「人站在一个地方，画面是拍出来的」，只有这里像在填表——
+// 一翻开就出戏。现在把纸放回场景里：同一张后座的照片压暗，一页纸摆在上面，日期写在
+// 右上角（她自己习惯那样写），字是手写体，最后一行淡一点。底下不再是通栏按钮，
+// 只一点小字「合上」——像把纸折起来收好。不产状态，不进存档。
 function twoWeekPaper() {
   closeModal();
   if (notesLayer && !notesLayer.hidden) notesLayer.hidden = true;
   if (typeof ensureStageBackdrop === "function") ensureStageBackdrop();
   if (mapLayer) mapLayer.hidden = true;
+  clearStage();
   const lines = [
     "两个礼拜。",
     "箱没 unpack，衣服晾了三次。",
@@ -452,22 +463,46 @@ function twoWeekPaper() {
     "我把这里叫「屋企」，是第三日的事了。",
     "……应该可以住落去。",
   ];
-  const kids = [
-    el("h3", {}, ["我的纸　八月十四日"]),
-    el("div", { class: "diary-paper" }, lines.map((t, i) => el("p", { class: "diary-line" + (i === lines.length - 1 ? " soft" : "") }, [t]))),
-    el("button", {
-      type: "button",
-      class: "btn ghost scene-close",
-      onclick: () => { closeModal(); finishLevel(3); },
-    }, ["合上"]),
-  ];
-  S.modal = el("div", { class: "modal scene" }, [el("div", { class: "sheet scene clue-sheet" }, kids)]);
-  stage.append(S.modal);
+  let box = null;
+  const fold = () => {
+    if (!box || box.dataset.leaving) return;
+    box.dataset.leaving = "1";
+    box.classList.add("leaving");
+    sfx("paper");
+    setTimeout(() => finishLevel(3), 380);
+  };
+  const paper = el("div", { class: "my-paper" }, [
+    el("p", { class: "my-paper-date" }, ["八月十四日"]),
+    el("div", { class: "my-paper-body" }, lines.map((t, i) =>
+      el("p", { class: "my-paper-line" + (i === lines.length - 1 ? " soft" : "") }, [t]))),
+    el("button", { type: "button", class: "my-paper-fold", onclick: fold }, ["合上"]),
+  ]);
+  box = el("div", { class: "desk scene-desk paper-desk" }, [
+    imgSlot(pic(3, "场景-两周"), "scene-plate", "后座"),
+    paper,
+  ]);
+  stage.append(box);
+  renderPlaybar();
+}
+
+const CAL_WD = ["日", "一", "二", "三", "四", "五", "六"];
+function weekdayOf(id) {
+  return new Date(2014, 7, +id.slice(3)).getDay();
+}
+
+// 未点开的日格：一整张日期封面。没有摘要、没有照片——那天发生过什么，点开才知道。
+function calCover(id) {
+  return el("div", { class: "day-cover" }, [
+    el("span", { class: "cover-m" }, [H("八月")]),
+    el("strong", { class: "cover-d" }, [String(+id.slice(3))]),
+  ]);
 }
 
 function drawCalendar() {
   baseView("cal");
   clearStage();
+  const seenN = cnt(CAL13, S.calSeen);
+  const left = CAL13.length - seenN;
   const box = el("div", { class: "desk scene-desk" }, [
     imgSlot(pic(3, "场景-两周"), "scene-plate", "后座"),
     el("div", { class: "calendar" }, [
@@ -483,20 +518,36 @@ function drawCalendar() {
         },
       }, CAL_DAYS.map(([id, text, tone, name]) => {
         const img = name ? pic(3, name) : "";
+        const seen = !!S.calSeen[id];
+        // 没点开的那一天只露一张日期封面：文字和照片留着，点开才给。
+        const face = !seen
+          ? calCover(id)
+          : id === "08-08" ? dayMessage()
+          : img ? imgSlot(img, "day-img", id)
+          : el("div", { class: "day-img empty" }, [el("p", {}, [text])]);
         return el("button", {
           type: "button",
-          class: (S.calSeen[id] ? "seen " : "") + (tone || ""),
+          class: (seen ? "seen " : "unread ") + (tone || ""),
           "data-day": id,
           "data-text": text,
           "data-img": img,
+          "aria-label": H("八月 " + (+id.slice(3)) + " 日，") + (seen ? H("看过") : H("还没看")),
         }, [
-          id === "08-08" ? dayMessage()
-            : img ? imgSlot(img, "day-img", id)
-            : el("div", { class: "day-img empty" }, [el("p", {}, [text])]),
-          el("span", { class: "day-label" }, [id]),
+          face,
+          !seen
+            ? el("span", { class: "day-label week" }, [H("星期" + CAL_WD[weekdayOf(id)])])
+            : el("span", { class: "day-label" }, [id]),
+          // 没点开的格右上角一颗空心圈：一眼看得出「这一格还没开」，
+          // 点下去它会消失、纸也换色，玩家不会以为点了没反应。
+          !seen ? el("span", { class: "day-todo", "aria-hidden": "true" }) : "",
           tone === "crack" ? el("span", { class: "day-crack", "aria-hidden": "true" }, ["·"]) : "",
         ]);
       })),
+      el("p", { class: "cal-progress" + (left ? "" : " done") }, [
+        left
+          ? H("看过 " + seenN + "／13 天，还有 " + left + " 天没点开")
+          : H("十三天都点开过了。"),
+      ]),
     ]),
   ]);
   const hint = levelHint();
@@ -508,6 +559,9 @@ function drawCalendar() {
 
 function openCalDay(id, text) {
   S.calSeen[id] = true;
+  // 日历那一关的钟是整段「8月1日–13日」，直接抄会把十三天的笔记全挤进「8月1日」。
+  // 点开哪天，这一天的笔记就落哪天（core.js 的 noteDayText 只认第 3 关的这一个值）。
+  S.calNoteDay = "2014年8月" + (+id.slice(3)) + "日";
   if (id === "08-08") {
     startChat("0808");
     return;
@@ -559,7 +613,7 @@ const CAL_TALK = {
   ],
   "08-03": () => [
     line("", "八月三日。周蹲在厨房，扳手咬住水龙头。他拧紧，松手。你们一起等。"),
-    line("", "没有滴。"),
+    line("", "一滴也没有。"),
     line("周", "得喇。真系唔滴喇。", { zh: "好了。真不滴了。" }),
     line("章慧琪", "之前点解会滴？", { zh: "之前为什么会滴？" }),
     line("周", "旧喉，胶圈老咗。换过就得。", { zh: "管子旧了，胶圈老化。换个就好。" }),
@@ -577,13 +631,13 @@ const CAL_TALK = {
   "08-11": () => [
     line("", "八月十一日，夜里回来。楼道黑，你摸到铁闸。"),
     line("", "推到一半，铁闸响了一声——「咔」。"),
-    line("", "前几天也响，但没有这一下这么迟。像有什么让它晚了一拍才合上。"),
-    line("", "你回头看了一眼楼梯。没有灯，也没有人。你把铁闸推到底，锁上，回屋。"),
+    line("", "前几天也响，但没有哪一次像这样，慢了半拍才合上。"),
+    line("", "你回头看了一眼楼梯。楼梯黑着，一个人都没有。你把铁闸推到底，锁上，回屋。"),
   ],
   "08-12": () => [
     line("", "八月十二日。你顺手把茶几上的玩具车挪到墙角，免得挡路。"),
     line("", "第二天早上，它还在墙角，车头朝墙，跟你放下时一模一样。"),
-    line("", "没有动过。你蹲下去看了两秒，说不出为什么，心里反而不踏实。你把它放回茶几晒痕上，车头朝窗，跟搬进来那天一样。"),
+    line("", "没有动过。你蹲下去看了两秒，心里反而不踏实。你把它放回茶几晒痕上，车头朝窗，跟搬进来那天一样。"),
   ],
   "08-10": () => [
     line("", "八月十日。第二笔周租，现金。他把钞票数了一遍，又数一遍。"),
@@ -699,7 +753,8 @@ function drawCut(c) {
 // 这两格画面里没有窗，看不出时辰，白天也接得上；文件名沿用 04 夹旧名（见 图/游戏/README.md）。
 function startTakeback() {
   playCut([
-    { img: pic(4, "场景-过场-八月十四傍晚"), ms: 6000, push: true, origin: "52% 40%", cap: "08-16　出门前" },
+    // origin 压到 30%：推镜只放大 8%，锚点太高会把周头顶那点留白吃掉
+    { img: pic(4, "场景-过场-八月十四傍晚"), ms: 6000, push: true, origin: "52% 30%", cap: "08-16　出门前" },
     { img: pic(4, "场景-过场-信封角"), ms: 3200, push: true, origin: "45% 50%" },
   ], doorTalk);
 }
@@ -725,7 +780,7 @@ function doorTalk() {
   S.modal = null;
   setTime("2014年8月16日 周六 14:50");
   startTalk([
-    line("", "你锁好门要出门。楼梯口撞见他。衬衫皱，领口却是干的。手背青筋。信封角朝里，像怕你看见。"),
+    line("", "你锁好门要出门。楼梯口撞见他。衬衫皱，领口却是干的，手背上青筋凸着。信封角朝里，像怕你看见。"),
     line("周", "章小姐。后座……我想收回自住。定金我退你。周租都退。你再住两日，走得唔得？", { zh: "章小姐。后座……我想收回来自己住。定金退你，周租也退。你再住两天，走得开吗？" }),
     line("章慧琪", "我冇地方去。……我啱啱先当咗呢度系屋企。", { zh: "我没地方去。……我才刚把这儿当成家。" }),
     line("周", "……算。当我冇讲。水喉有问题我再睇。", { zh: "……算了。当我没说。水管有问题我再来看。" }),
@@ -877,6 +932,14 @@ function nightStart() {
   });
 }
 
+// 储物室门底的副标题分三档，中间那一档是这一章唯一一处「你正在错过」的告示。
+// 从前只写「那卷录音还在／锁着」——没开录音的时候写「锁着」，等于告诉她门本来就锁着，
+// 里面本来没声音，那一下也就白过了。告示要长在物件上，不长在界面上。
+function storageSub(n) {
+  if (!(n.fired && n.fired.voice)) return "锁着。";
+  return n.recording ? "那卷录音还在" : "门底有声音。手机在茶几上，没开。";
+}
+
 function drawNight() {
   baseView("night");
   clearStage();
@@ -904,7 +967,7 @@ function drawNight() {
       sfx("drip");
       showModal("水龙头", "八月三日修好之后一直不滴。今夜拧紧，等了三秒，又滴下来。");
     }, pic(4, "示意-水龙头"), nightAct("tap")),
-    hot("储物室门底", n.fired && n.fired.voice && n.recording ? "那卷录音还在" : "锁着。", () => {
+    hot("储物室门底", storageSub(n), () => {
       markTonight("storage");
       if (n.fired && n.fired.voice && n.recording) {
         markNight("heardAxuan");
@@ -1204,15 +1267,24 @@ function leaveNightToMei() {
   stopNightClock();
   setTime("2014年8月15日 周五 05:40");
   startTalk([
-    line("", "天快亮了。隔着墙，前座有人在说话，压得很低，只有他一个人的声音，像在讲电话。"),
+    line("", "天快亮了。隔着墙，前座有人压着嗓子说话，只有他一个人的声音。"),
     line("", "你只听清一个字：「吓。」之后就没有了。", { note: ["whisper", "前座有人说话。他说吓。"] }),
     { goto: () => finishLevel(4) },
   ], "后座", "face");
 }
 
 function passFrontDoor() {
+  // A-1：夜里敲过门的人已经听过「你对脚湿咗？」。天亮再从正门出去，只走，不再问第二遍。
+  const asked = flag("knockedZhou");
   flag("knockedZhou", true);
   setTime("2014年8月15日 周五 清晨");
+  if (asked) {
+    hubTalk([
+      line("", "天亮了。你经过前座门口。门关着，里头没有声音。"),
+      { goto: () => (ev("note-dry") ? stepPast() : keepMust(item("note-dry"), stepPast)) },
+    ], "4 楼前座门口", "face");
+    return;
+  }
   hubTalk([
     line("", "天亮了。你经过前座门口。"),
     line("周", "你对脚湿咗？", { zh: "你脚湿了？" }),
@@ -1285,11 +1357,16 @@ function waitDawn() {
   n.min = 101;
   n.phase = "leave";
   setTime(nightClockText());
-  if (missedVoice || unseenVoice || missedPrint || unseenPrint) {
+  // 录音是这一关的必做，所以这里也要拦一道。原来的判断是反的：missedVoice／unseenVoice
+  // 都以 n.recording 为前提，于是「压根没开录音」的人一个提示都收不到，直接被送去天亮。
+  const recDone = !!(hasEvidence("rec-axuan") || noted("voice"));
+  if (missedVoice || unseenVoice || missedPrint || unseenPrint || !recDone) {
     tip(
-      missedPrint || unseenPrint
-        ? "门底那边，天亮前再看一眼。"
-        : "储物室那边，天亮前再看一眼。",
+      !recDone
+        ? "录音还没开。开了，再等到天亮。"
+        : missedPrint || unseenPrint
+          ? "门底那边，天亮前再看一眼。"
+          : "储物室那边，天亮前再看一眼。",
       { nearBar: true }
     );
     S.talk = null;
@@ -1700,9 +1777,12 @@ function howardCall() {
     line("章慧琪", "车会自己转。……录音入面有个女人叫仔食饭。前两个礼拜冇㗎。", { zh: "车会自己转。……录音里有个女人叫孩子吃饭。前两个礼拜都没有。" }),
     line("陈家豪", "美娟话你搬咗去深水埗。荣汇街，系咪？旧楼。我带你去见个人。唔系急症。大学识嘅，佢读医——我读社会学，宿舍隔一层。日头喺医院，夜晚同礼拜六喺湾仔有私家诊所。我哋叫佢阿明。罗启明。团年饭我讲过。", { zh: "美娟说你搬去深水埗了。荣汇街，是吧？旧楼。我带你见个人。不是急症。大学认识的，他读医——我读社会学，宿舍隔一层。白天在医院，晚上和周六在湾仔开私家诊所。我们都叫他阿明。罗启明。年夜饭我提过。" }),
     line("章慧琪", "就系……你成日攞佢做借口嗰个？", { zh: "就是……你老拿他当借口那个？" }),
-    line("陈家豪", "系。佢肯听。我介绍，佢会收。你同佢讲真话。佢听完会揽晒上身。所以你……准时到就得。楼下嗰间面档，佢有时会唔记得食。", { zh: "是。他肯听。我介绍，他会收。你跟他说真话。他听完就全往自己身上揽。所以你……准时到就行。楼下那家面档，他有时候会忘了吃。" }),
+    line("陈家豪", "系。我识佢十几年，有事都系搵佢。佢唔会问你点解，净系问你食咗饭未。你照直讲就得，唔好同佢客气——你讲一句，佢会当成自己嘅事去做。忙起上嚟，诊所楼下嗰间面档，都要我打电话去叫。", { zh: "是。我认识他十几年，有事都找他。他不会问你为什么，只问你吃饭了没有。你照直说就行，别跟他客气——你说一句，他会当成自己的事去做。忙起来，诊所楼下那家面档，都得我打电话去叫。" }),
     line("章慧琪", "佢……点㗎？", { zh: "他……人怎么样？" }),
-    line("陈家豪", "专业。用心。佢本人精神有时唔太好。以前出过车祸，之后有时会懵。你当我冇讲。睇病人一流。", { zh: "专业。用心。他本人精神有时不太好。以前出过车祸，之后有时会懵。你就当我没说。看病一流。" }),
+    // 「车祸」不放这里。他先在电话里把这句讲完，玩家再选「『不太好』是什么意思」，
+    // 追问得到的是复述——同一件事说两遍。留白，让「太好了，只是精神有时不好」停在半句，
+    // 追问才吐出车祸，人物也才像在替谁遮着什么。
+    line("陈家豪", "专业。用心。佢本人精神有时唔太好。你当我冇讲。睇病人一流。", { zh: "专业。用心。他本人精神有时不太好。你就当我没说。看病一流。" }),
     {
       prompt: "听筒里静了半拍。",
       choices: [

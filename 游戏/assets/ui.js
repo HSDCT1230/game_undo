@@ -103,6 +103,8 @@ function openNotes() {
 /* 日记簿里一层层打开：记住上一层，「返回」一层层退回，退到目录停在原来那一页 */
 let diaryTrail = [];
 let diaryNow = null;
+// 刚点了「历史收集」的展开/收起，重排之后要跟到它所在的页去（不存进档）
+let diaryFocus = false;
 let diaryNested = false;
 
 function diaryShow(fn) {
@@ -193,12 +195,15 @@ function timelineBlocks() {
   if (old.length) {
     const n = old.reduce((s, k) => s + days.get(k).rows.length, 0);
     const span = days.get(old[0]).label + (old.length > 1 ? "～" + days.get(old[old.length - 1]).label : "");
-    out.push(el("button", {
+    const fold = el("button", {
       type: "button",
       class: "diary-fold" + (S.diaryOld ? " unfolded" : ""),
       "aria-expanded": S.diaryOld ? "true" : "false",
       onclick: () => {
         S.diaryOld = !S.diaryOld;
+        // 展开后这一块常常放不进本页，会被分到下一页——只重排不跟过去，
+        // 玩家按了「展开」看着本页没动静，会以为按坏了。让分页把他带过去。
+        diaryFocus = S.diaryOld;
         sfx("paper");
         renderDiaryIndex();
       },
@@ -206,23 +211,38 @@ function timelineBlocks() {
       el("span", { class: "diary-fold-name" }, ["历史收集（" + span + "）"]),
       el("span", { class: "diary-count" }, [String(n)]),
       el("span", { class: "diary-fold-go", "aria-hidden": "true" }, [S.diaryOld ? "收起 ▴" : "展开 ▾"]),
-    ]));
+    ]);
     if (S.diaryOld) {
       const hist = el("div", { class: "diary-hist", role: "region", "aria-label": "历史收集" });
       old.forEach((k) => hist.append(...dayChunk(k)));
-      out.push(hist);
-    }
+      // 开关和它开出来的那一块是一个整体：分页时不许拆。拆了就是「按钮在这页、
+      // 内容在下页」，而「收起」还留在玩家看不到的那一页上。
+      out.push(el("div", { class: "diary-old" }, [fold, hist]));
+    } else out.push(fold);
   }
   return out;
 }
 
+// 「按东西」：证物和笔记都按「关于哪样」归堆。
+// 先前这里只数证物，笔记一条都不出现——两个视图一翻，二十几条当场不见，
+// 看着就像收来的东西丢了。归不上的（论坛回帖之类）收在最后一组，不硬塞。
 function thingBlocks() {
-  const items = S.evidence || [];
+  const rows = [];
+  // 每条存「怎么造」，不存造好的节点：一条纸可以同时关于车和水喉，
+  // 两组各要自己的一个节点。共用同一个的话，后一组的 append 会把节点搬走，
+  // 前一组当场少几条（数着 9 件，只排出 5 件）。
+  (S.evidence || []).forEach((e) => rows.push({ t: e.time, about: itemAbout(e.id), make: () => evidenceEntry(e) }));
+  (S.notes || []).filter(noteShown).forEach((n) => rows.push({
+    t: noteTime(n),
+    about: noteAbout(n.id),
+    make: () => el("p", { class: "diary-note diary-line" }, [n.text]),
+  }));
   const out = [];
   [...THINGS, ""].forEach((t) => {
-    const group = items.filter((e) => (t ? itemAbout(e.id).includes(t) : !itemAbout(e.id).length));
+    const group = rows.filter((r) => (t ? r.about.includes(t) : !r.about.length));
     if (!group.length) return;
-    out.push(diarySubHead(t || "其他", group.length), ...group.map((e) => evidenceEntry(e)));
+    group.sort((a, b) => dayOf(a.t).key - dayOf(b.t).key);
+    out.push(diarySubHead(t || "只是记下的话", group.length), ...group.map((r) => r.make()));
   });
   return out;
 }
@@ -321,11 +341,15 @@ function renderDiaryIndex() {
   s.blocks.forEach((b) => {
     page.append(b);
     const isSub = b.classList.contains("diary-sub");
+    // 「历史收集」那两条（折叠按钮、展开后的整块）不是哪一天的事，
+    // 续页不该把上一天的日期头带过去——带了，下一页顶上一行「9月7日」，
+    // 看起来就像古老的东西都是九月七日收的。
+    const noCarry = b.classList.contains("diary-old") || b.classList.contains("diary-fold") || b.classList.contains("diary-hist");
     if (page.scrollHeight > page.clientHeight + 1 && page.children.length > 2) {
       const carry = [b];
       const prev = b.previousElementSibling;
-      if (!isSub && prev && prev.classList.contains("diary-sub") && page.children.length > 3) carry.unshift(prev);
-      else if (!isSub && sub) carry.unshift(sub.cloneNode(true));
+      if (!isSub && !noCarry && prev && prev.classList.contains("diary-sub") && page.children.length > 3) carry.unshift(prev);
+      else if (!isSub && !noCarry && sub) carry.unshift(sub.cloneNode(true));
       page = newPage(true);
       page.append(...carry);
     }
@@ -333,7 +357,28 @@ function renderDiaryIndex() {
   });
   const n = pages.length;
   S.diaryPage = Math.max(0, Math.min(S.diaryPage || 0, n - 1));
+  // 刚点开「历史收集」：跟到那一块所在的页去（它多半被挤到了下一页）。
+  if (diaryFocus) {
+    const i = pages.findIndex((p) => p.querySelector(".diary-old"));
+    if (i >= 0) S.diaryPage = i;
+    diaryFocus = false;
+  }
   pages.forEach((p, i) => { p.hidden = i !== S.diaryPage; });
+  // 「历史收集」那一块按本页还剩多少地方给高度。写死一个 px 值，窗口一大就空着半页、
+  // 窗口一小就把「8月3日」以下全切掉——两者都会让人以为日记簿坏了。
+  // 高度还要取整到格子（--diary-cell）：切在半行字上，看着就像页面坏了。
+  pages.forEach((p) => {
+    const h = p.querySelector(".diary-hist");
+    if (!h) return;
+    const cell = parseFloat(getComputedStyle(p).getPropertyValue("--diary-cell")) || 28;
+    const was = p.hidden;
+    p.hidden = false;
+    const box = p.getBoundingClientRect();
+    const room = Math.max(0, p.clientHeight - (h.getBoundingClientRect().top - box.top) - 4);
+    p.hidden = was;
+    const fit = Math.floor(room / cell) * cell;
+    if (fit > 0) h.style.maxHeight = fit + "px";
+  });
   renderDiaryTabs(secs, cur);
   renderDiaryNav(n, cur > 0, cur < secs.length - 1);
 }
@@ -522,7 +567,7 @@ function showClueModal(item, opts) {
           type: "button",
           class: "clue-kin-link",
           onclick: () => diaryPush(() => showClueModal(e, { canFile: false, fromIndex: true })),
-        }, [e.kind + "：" + e.title + " ›"])),
+        }, [H(e.kind) + "：" + H(e.title) + " ›"])),
       ]));
     }
     kids.push(el("div", { class: "clue-acts" }, [
@@ -555,10 +600,6 @@ function showClueModal(item, opts) {
     },
   }, [sheet]);
   stage.append(S.modal);
-}
-
-function showDiarySheet(item, opts) {
-  showClueModal(item, opts);
 }
 
 function showModal(title, p1, p2, kind, onClose, keep) {
@@ -661,9 +702,13 @@ function tip(text, opt) {
   setTimeout(() => node.remove(), opt.ms || 3200);
 }
 
-/* 她自己的拍立得。相纸一盒八张。租盘图、旧相框、别人的偷拍不走这里。 */
+/* 她自己的拍立得。相纸一盒八张。租盘图、旧相框、别人的偷拍不走这里。
+   快门之前那张相纸是白的——还没曝光，画面里什么都不该有。按下去才吐纸：
+   先一片灰白，药膜退开，影像才慢慢浮上来；白边上的时间要等显影完了才写。 */
 const POLAROID_IDS = ["photo-sill", "photo-print", "photo-car-out", "photo-tap-out"];
 const FILM_PACK = 8;
+const POLAROID_EJECT_MS = 420;
+const POLAROID_DEV_MS = 2200;
 
 function isPolaroid(it) {
   return !!(it && POLAROID_IDS.includes(it.id));
@@ -690,11 +735,15 @@ function shootPolaroid(it, next) {
   const btn = el("button", { type: "button", class: "btn" }, ["按快门"]);
   const sheet = el("div", { class: "sheet scene polaroid-sheet" }, [
     el("h3", {}, ["拍立得"]),
-    el("p", { class: "fine" }, ["自己的相机。按下去要等一会儿，白边再写时间。"]),
+    el("p", { class: "fine" }, ["自己的相机，按下去要等一会儿，白边再写时间"]),
     frame,
     film,
     btn,
   ]);
+  // 关掉动效的人不该等两秒半的空窗：三段照走，只是缩到几乎瞬时
+  const calm = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const ejectMs = calm ? 60 : POLAROID_EJECT_MS;
+  const devMs = calm ? 160 : POLAROID_DEV_MS;
   btn.addEventListener("click", () => {
     if (frame.classList.contains("ready")) {
       sfx("file");
@@ -704,20 +753,25 @@ function shootPolaroid(it, next) {
       if (next) next();
       return;
     }
-    if (frame.classList.contains("developing")) return;
-    sfx("tick");
-    frame.classList.add("developing");
+    if (frame.classList.contains("exposing") || frame.classList.contains("developing")) return;
+    sfx("shutter");
+    frame.classList.add("exposing"); // 吐纸：整张灰白，影还压在里面
     btn.disabled = true;
-    btn.textContent = "显影……";
+    btn.textContent = "吐纸……";
     setTimeout(() => {
-      frame.classList.remove("developing");
-      frame.classList.add("ready");
-      const cap = frame.querySelector(".polaroid-cap");
-      if (cap) cap.textContent = (it.time ? it.time + "　" : "") + (it.title || "");
-      film.textContent = "相纸还剩 " + Math.max(0, filmLeft() - 1) + " 张";
-      btn.disabled = false;
-      btn.textContent = "夹进日记簿";
-    }, 900);
+      frame.classList.remove("exposing");
+      frame.classList.add("developing"); // 药膜退开，影像浮上来
+      btn.textContent = "显影……";
+      setTimeout(() => {
+        frame.classList.remove("developing");
+        frame.classList.add("ready");
+        const cap = frame.querySelector(".polaroid-cap");
+        if (cap) cap.textContent = (it.time ? it.time + "　" : "") + (it.title || "");
+        film.textContent = "相纸还剩 " + Math.max(0, filmLeft() - 1) + " 张";
+        btn.disabled = false;
+        btn.textContent = "夹进日记簿";
+      }, devMs);
+    }, ejectMs);
   });
   S.modal = el("div", { class: "modal scene", id: "game-modal" }, [sheet]);
   stage.append(S.modal);

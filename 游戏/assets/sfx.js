@@ -243,6 +243,13 @@ const SFX = {
   recOff() { sfxNoise(0, 0.045, { freq: 750, gain: 0.6, attack: 0.012 }); },
   // 语音留言开始
   vm() { sfxTone(820, 0, 0.3, { gain: 0.033, attack: 0.025 }); },
+  // 拍立得快门：一声脆响，接着吐纸的马达转一下
+  shutter() {
+    sfxNoise(0, 0.045, { freq: 3100, q: 2.2, gain: 0.19, attack: 0.004 });
+    sfxNoise(0.034, 0.075, { filter: "lowpass", freq: 900, gain: 0.15, attack: 0.006 });
+    sfxTone(94, 0.1, 0.42, { type: "sawtooth", gain: 0.042, attack: 0.06 });
+    sfxNoise(0.1, 0.38, { freq: 640, q: 0.9, gain: 0.028, attack: 0.08 });
+  },
 };
 
 /* 打开廿八屋那一下才响；在站内翻页不再响，离开网页再回来又响 */

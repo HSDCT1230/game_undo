@@ -42,7 +42,13 @@ const PROBE = `JSON.stringify((()=>{
   const st=document.querySelector("#stage");
   const out={mode:(typeof S!=="undefined"?S:{}).mode,level:(typeof S!=="undefined"?S:{}).level,
     empty:!st||st.children.length===0, miss:[], broken:[], undef:0, err:null};
-  out.miss=[...document.querySelectorAll(".img-slot.missing")].map(e=>e.textContent.trim().slice(0,50));
+  /* img-slot 天生带 missing 类，图解码完才摘掉；冒烟是刚画完就快照的，
+     冷缓存那一下会拍到「还在下载」的槽，误报成缺图。
+     所以只算已经下载结束的：complete 且 naturalWidth 为 0 才是真缺。
+     out.broken 抓的是 img 层面，两边对得上。 */
+  out.miss=[...document.querySelectorAll(".img-slot.missing")].filter(e=>{
+    const im=e.querySelector("img"); return !im||im.complete;
+  }).map(e=>e.textContent.trim().slice(0,50));
   document.querySelectorAll("img").forEach(im=>{if(im.complete&&im.naturalWidth===0)out.broken.push((im.getAttribute("src")||"").slice(-40));});
   out.undef=(st?st.innerText:"").split("undefined").length-1;
   return out;

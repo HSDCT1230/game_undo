@@ -94,12 +94,14 @@ function Ts(yue, zh) {
   return T(yue, zh);
 }
 
-/** 只有一种写法的文本（界面标签、关卡清单、网页裸串）：粤语／粤＋普转港繁，普通话原样。
-    与 T() 的区别：T() 有双语来源，H() 只是把单语文本按模式繁化，幂等。 */
+/** 只有一种写法的文本（界面标签、关卡清单、日记、网页裸串）：粤语／粤＋普转港繁，普通话原样。
+    与 T() 的区别：T() 有双语来源，H() 只是把单语文本按模式繁化，幂等。
+    普通话模式先查 yue-zh.js 的对照表——单语文本里若写了粤语（「佢」「唔」「细路」），
+    这里是最后一个能拦住它的地方，不查就会原样漏给玩家。查不到才原样返回。 */
 function H(s) {
   if (s == null) return "";
   const mode = typeof langMode === "string" ? langMode : "yue";
-  if (mode === "zh") return String(s);
+  if (mode === "zh") return typeof zhOf === "function" ? zhOf(String(s)) : String(s);
   return typeof toHkTrad === "function" ? toHkTrad(String(s)) : String(s);
 }
 
@@ -358,6 +360,8 @@ const initial = () => ({
   pendingPost: "",
   newsId: "",
   newsSeen: {},
+  // 维基条目最底那几条新闻稿：同一张分页，靠这一项记住打开的是哪一篇。
+  wikiNews: "",
   talk: null,
   calSeen: {},
   night: { phase: 0, car: "窗", recording: false, print: false },
@@ -451,9 +455,32 @@ function baseView(mode) {
   S.talk = null;
 }
 
+/* 笔记写在哪一天：以「这一关的钟」为准。
+   S.time 有时会停在上一个日子（选关回来、读档回来、日历那一关写的是「8月1日–13日」），
+   照它抄下去，笔记就落到一个本关还没到的日子上——日记簿里会看见「八月一日登入九月才该有的帐户」
+   这种穿帮。所以只允许往前走：关卡钟比当前时间晚，就用关卡钟。
+
+   日历那一关另说：它的钟本来就是一整段「8月1日–13日」，十三天的笔记全会挤进「8月1日」
+   （diary.js 的 dayOf 取第一个日期当分组头）。所以点开哪天，就按哪天记。 */
+function noteDayText() {
+  if (S.level === 3 && S.calNoteDay) return S.calNoteDay;
+  const day = (t) => {
+    const m = /(\d+)月(\d+)日/.exec(t || "");
+    return m ? Number(m[1]) * 100 + Number(m[2]) : 0;
+  };
+  const L = typeof levelNow === "function" ? levelNow() : null;
+  const clock = (L && L.clock) || "";
+  if (clock && day(clock) > day(S.time)) return clock;
+  const out = S.time || "";
+  // 区间串（「8月1日–13日」）不是某一天：真让它落进日记簿，dayOf 会取头一个日期，
+  // 十三天的笔记全挤到「8月1日」那一组去。退回关卡钟，至少是一个真日子。
+  if (/日\s*[–—~－]\s*\d/.test(out) && clock) return clock;
+  return out;
+}
+
 function note(id, text) {
   if (S.notes.some((n) => n.id === id)) return;
-  S.notes.push({ id, text, time: S.time || "" });
+  S.notes.push({ id, text, time: noteDayText() });
   renderNotes();
 }
 
@@ -473,8 +500,12 @@ function renderNotes() {
   renderWeek();
 }
 
+/* 读回原值，不要强转布尔。
+   大部分 flag 存的就是 true，`if (flag(名))` 这类写法行为不变；
+   但少数 flag 要记事，存的是 "yes"/"no"/"none"、"mine"/"his" 这种字，
+   强转成 !! 之后 `=== "yes"` 永远不成立——分支会静默走 else。 */
 function flag(k, v) {
-  if (v === undefined) return !!S.flags[k];
+  if (v === undefined) return S.flags[k];
   S.flags[k] = v;
   renderWeek();
 }
@@ -504,10 +535,6 @@ const playbarAdvance = $("#playbar-advance");
 
 if (playbarNotes) playbarNotes.onclick = () => toggleNotes();
 if (playbarMap) playbarMap.onclick = () => openMap();
-
-function playReturnLabel() {
-  return S.paused ? "关闭网页" : "";
-}
 
 function openHouseFromScene() {
   // 已经叠在房间上的网页：再点一次等于关掉，不要 early-return 把人锁死

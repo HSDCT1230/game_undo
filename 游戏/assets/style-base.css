@@ -183,7 +183,7 @@ body {
   padding: 0 10px;
   background: #cfc6b6;
   /* 分页是动态开的，越开越多，整排不许换行。真正定宽度和溢出的是
-     style-chrome.css 里那套（170–230px，超了整排横向推），这里只是兜底。 */
+     style-chrome.css 里那套（每格一样宽 198px，超了整排横向推），这里只是兜底。 */
   overflow-x: auto;
   overflow-y: hidden;
   scrollbar-width: none;
@@ -199,7 +199,8 @@ body {
   color: #4a4339;
   flex: 0 0 auto;
   min-width: 84px;
-  max-width: 186px;
+  width: 160px;
+  max-width: none;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -501,7 +502,7 @@ html:not(.dev-pics) .img-slot.missing .img-mark { color: transparent; background
 .talk-loc { color: #b7ae9e; font-size: 12px; letter-spacing: 0.08em; margin-bottom: 18px; }
 .talk-name { color: #e2c48a; font-size: var(--who-face); line-height: var(--lh-who-face); margin-bottom: 6px; }
 .talk-body { max-width: 720px; min-height: 3.4em; }
-.talk-text { font-size: var(--say-face); line-height: var(--lh-say-face); max-width: 720px; min-height: 3.4em; }
+.talk-text { font-size: var(--say-face); line-height: var(--lh-say-face); max-width: 720px; min-height: 3.4em; text-wrap: pretty; }
 .talk-body > .talk-text { min-height: 0; }
 .talk-zh {
   margin-top: 0.35em;

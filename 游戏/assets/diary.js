@@ -33,6 +33,21 @@ function item(id) {
   const out = Object.assign({ id }, base);
   if (id === "paper-30") out.body = compareBody();
   if (id === "paper-06") out.body = weekCalBody();
+  // 楼梯口那一晚她怎么答的，这页纸就怎么写。三档共用一条必做，不改关卡结构。
+  if (id === "note-zhoutue") {
+    const told = flag("zhouTold");
+    if (told === "yes") {
+      out.title = "我讲了";
+      out.body = "周说：下星期六有人上来？我煮糖水。\n我答了是，医生上来。他从门边退开半步，让出楼梯。\n他说：糖水我先煮着。";
+      out.key = "我答了是";
+    } else if (told === "no") {
+      out.body = "周说：下星期六有人上来？我煮糖水。\n我说没人，他听错。他没再问。\n他说：你把门锁好。";
+      out.key = "我说没人";
+    } else if (told === "none") {
+      out.body = "周说：下星期六有人上来？我煮糖水。\n我没答。他没催，等了一会儿。\n他说：你把门锁好。";
+      out.key = "我没答";
+    }
+  }
   return out;
 }
 
@@ -46,7 +61,7 @@ function peekItem(id, next) {
 
 function itemLabel(id) {
   const it = hasEvidence(id) ? (S.evidence.find((e) => e.id === id) || item(id)) : item(id);
-  return it.kind + "：" + it.title;
+  return H(it.kind) + "：" + H(it.title);
 }
 
 /* ---------- 日记簿目录用：每样东西关于屋里哪样、哪句笔记和证物重复 ---------- */
@@ -82,6 +97,35 @@ const ITEM_ABOUT = {
 };
 
 const itemAbout = (id) => ITEM_ABOUT[id] || [];
+
+// 笔记也挂到某样东西上：「按东西」看的时候，一句「车头朝门」该出现在「车」下面，
+// 不该整批堆到最后一组去。挂不上的（比如藤先生在论坛回帖）落最后一组，不硬塞。
+const NOTE_ABOUT = {
+  "bbs-self": [],
+  "move-car": ["车"],
+  "car-still": ["车"],
+  "car-move": ["车"],
+  "move-tap": ["水喉"],
+  "tap-fixed": ["水喉"],
+  "wet": ["周生"],
+  "day-trace": ["储物室门", "周生"],
+  "phone-you": ["储物室门", "周生"],
+  "zhou-day": ["周生"],
+  "linWait": ["罗启明"],
+  "clinic2": ["罗启明"],
+  "clinic3": ["罗启明"],
+  "clinic4": ["罗启明"],
+  "notsame": ["罗启明"],
+  "delay": ["罗启明"],
+  "forget": ["罗启明"],
+  "stolen": ["罗启明"],
+  "offhours": ["罗启明"],
+  "vhu-school": ["罗启明"],
+  "vhu-news04": ["罗启明"],
+  "bento": ["表姐一家"],
+};
+
+const noteAbout = (id) => NOTE_ABOUT[id] || [];
 
 // 笔记和已记下的证物讲同一件事时，目录只列证物
 const NOTE_IN_ITEM = { print: "photo-print", voice: "rec-axuan", sill: "photo-sill", dirt: "mail-dirt", namecall: "rec-name", takeback: "letter-red" };
@@ -455,7 +499,7 @@ function handOver(n, onDone) {
             say = (HAND_REPLY[n] || {})[e.id] || "呢样我记低。";
             redraw();
           },
-        }, [e.kind + "：" + e.title]));
+        }, [H(e.kind) + "：" + H(e.title)]));
       });
       host.append(cards);
     },
@@ -692,6 +736,8 @@ function openCompare(onDone) {
       const n = compareDone().length;
       const guide = el("div", { class: "tool-guide" });
       guide.append(el("p", { class: "tool-lead" }, [pick ? "放到亮起来的空格。" : "点卡片，放进下面的格。"]));
+      // 「四行」只是数量，真正卡人的是鞋印那一行。写在这里，不让人凑满四行再来回试。
+      if (!compareReady()) guide.append(el("p", { class: "tool-lead" }, ["其中一行要是鞋印。"]));
       guide.append(el("span", { class: "tool-progress" + (compareReady() ? " done" : "") }, [
         compareReady() ? "✓ 齐了" : "已写 " + n + "／4",
       ]));
@@ -762,7 +808,7 @@ function openCompare(onDone) {
       disabled: !compareAlmost(),
       fn: () => {
         if (!compareReady()) {
-          if (hostEl) toolSay(hostEl, "四行有了，还缺最能对照的那一句。再翻翻你记下的。");
+          if (hostEl) toolSay(hostEl, "四行有了，还缺鞋印那一行。再翻翻你记下的。");
           return;
         }
         closeDiaryTool();

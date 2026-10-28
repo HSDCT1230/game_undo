@@ -11,6 +11,10 @@ const ev = (id) => hasEvidence(id);
 const nightOn = () => !!(S.night && S.night.min !== undefined);
 const cnt = (keys, obj) => keys.filter((k) => obj && obj[k]).length;
 
+// 第 3 关日历的十三天（08-01…08-13，与 CAL_DAYS 同一份顺序）。
+// 任务条计数与 done() 共用这一份，别再手抄两遍——抄两遍就会出现「条子写 13、判定看 12」。
+const CAL13 = ["08-01", "08-02", "08-03", "08-04", "08-05", "08-06", "08-07", "08-08", "08-09", "08-10", "08-11", "08-12", "08-13"];
+
 function seedItems(ids) {
   ids.forEach((id) => fileEvidence(item(id)));
 }
@@ -27,8 +31,8 @@ const LEVELS = [
     goal: "上廿八屋，今晚就搵到可以搬入去嘅房。",
     goalZh: "上廿八屋，今晚就找到能搬进去的房间。",
     tasks: [
-      { text: "把求助帖顶上去", need: true, done: () => flag("postedHelp"), hint: "帖子沉下去了，顶上去。" },
-      { text: "找到一间四条都过得去的房", need: true, done: () => !!(S.known && S.known.rong), hint: "打开日记簿找到四项条件，找到合适的房源。" },
+      { text: "把求助帖顶上去", need: true, done: () => flag("postedHelp"), hint: "帖子沉下去了，顶上去" },
+      { text: "找到一间四条都过得去的房", need: true, done: () => !!(S.known && S.known.rong), hint: "日记簿里那四条，一间一间对过去" },
       { text: "把「元朗 天水围」删掉，自己搜", done: () => flag("ownSearch") },
       { text: "看看墙簿", after: "墙簿上藤先生的广告", done: () => flag("sawLinAd") },
       { text: "看自己的帖有没有人回", done: () => flag("sawOwnPost") },
@@ -45,7 +49,7 @@ const LEVELS = [
       flag("postedHelp", true);
       flag("searched", true);
       flag("ownSearch", true);
-      S.helpSearches = 3;
+      S.viewTried = { tk: true, tw: true, wc: true };
       S.known.rong = true;
       S.four = { pay: ["荃湾两房"], guar: ["荃湾两房"], now: ["大角咀套房"] };
       seedNotes([["bbs-self", "藤先生回了我的求助帖。丢了个荣汇街的盘连结。"]]);
@@ -56,13 +60,16 @@ const LEVELS = [
     clock: "2014年8月1日 周五 15:20",
     goal: "看清这间屋，跟周生谈妥。",
     tasks: [
-      { text: "屋里看清四样东西", count: () => [cnt(["family", "car", "sill", "door"], S.view), 4], need: true, done: () => cnt(["family", "car", "sill", "door"], S.view) >= 4, hint: "厅里的相和车、走廊尽头的门、主房窗台，我还没看齐。" },
-      { text: "问周生一句", need: true, done: () => !!(S.view && S.view.asked), hint: "问他一句再说。" },
+      { text: "屋里看清四样东西", count: () => [cnt(["family", "car", "sill", "door"], S.view), 4], need: true, done: () => cnt(["family", "car", "sill", "door"], S.view) >= 4, hint: "厅里的相和车、走廊尽头的门、主房窗台，我还没看齐" },
+      { text: "问周生一句", need: true, done: () => !!(S.view && S.view.asked), hint: "问他一句再说" },
       { text: "跟他一起看主房窗台", after: "他的手盖住窗台那圈水印", done: () => flag("sawSillTour") },
       { text: "问他一个人住怕不怕", done: () => flag("debtSlip") },
-      { text: "上廿八屋，看清市建局那条「持续研究」", after: "市建局：深水埗指定范围持续研究", need: true, show: () => !!flag("uraGate"), done: () => noted("web-ura"), hint: "廿八屋新闻中心，七月廿二那条。看过不算，得按「记下来」留在簿里。" },
+      { text: "上廿八屋，看清市建局那条「持续研究」", after: "市建局：深水埗指定范围持续研究", need: true, show: () => !!flag("uraGate"), done: () => noted("web-ura"), hint: "廿八屋新闻中心，七月廿二那条。看过不算，要记进簿里" },
     ],
-    advance: { when: "8月1日", where: "交定金，拿钥匙", fn: () => payDeposit() },
+    // 这里不能用通用的 levelReady()：第 5 条要 flag("uraGate") 才现身，而 uraGate 是在
+    // 「交定金」那场对话里才置位的——等它，门就永远锁着（曾实测复现：四样看清、问过周生，
+    // 没有按钮也没有提示）。先按「现在看得见的必做」放行，进了对话那条自己会浮出来。
+    advance: { when: "8月1日", where: "交定金，拿钥匙", fn: () => payDeposit(), ready: readyShown },
     next: "当晚　后座",
     start: () => startViewing(),
     gives: () => {
@@ -77,9 +84,11 @@ const LEVELS = [
     clock: "2014年8月1日 夜",
     goal: "住下来，看清这间屋。",
     tasks: [
-      { text: "屋里的样子，记下至少四样", need: true, count: () => [baseCount(), 4], done: () => baseCount() >= 4, hint: "屋里的东西，我还没看清，至少四样。" },
-      { text: "日历上，夜里那卷录音", after: "08-13 的录音「只有水」", need: true, show: () => !!S.calOpen, done: () => ev("rec-water"), hint: "有一夜水管响，我开了录音。" },
-      { text: "日历上别的日子", show: () => !!S.calOpen, count: () => [cnt(["08-01", "08-02", "08-03", "08-04", "08-05", "08-06", "08-07", "08-08", "08-09", "08-10", "08-11", "08-12", "08-13"], S.calSeen), 13], done: () => cnt(["08-01", "08-02", "08-03", "08-04", "08-05", "08-06", "08-07", "08-08", "08-09", "08-10", "08-11", "08-12", "08-13"], S.calSeen) >= 13 },
+      { text: "屋里的样子，记下至少四样", need: true, count: () => [baseCount(), 4], done: () => baseCount() >= 4, hint: "屋里的东西，我还没看清，至少四样" },
+      { text: "日历上，夜里那卷录音", after: "08-13 的录音「只有水」", need: true, show: () => !!S.calOpen, done: () => ev("rec-water"), hint: "有一夜水管响，我开了录音" },
+      // 十三天是这一关的正事：一天一格，看完才翻到十四号。
+      // 从前这条不是必做，可任务条照样写「0／13」——点两格也能按「往下」，等于没住过这两个礼拜。
+      { text: "日历上十三天，一天一天看过", after: "八月一日到十三日，一天一天看过", need: true, show: () => !!S.calOpen, count: () => [cnt(CAL13, S.calSeen), 13], done: () => cnt(CAL13, S.calSeen) >= 13, hint: "日历上还有日子没点开，一直到十三号" },
     ],
     advance: { when: "8月14日　夜", where: "荣汇街后座", fn: () => twoWeekCalm(), modes: ["cal"] },
     next: "8月14日 夜　后座",
@@ -99,10 +108,16 @@ const LEVELS = [
   {
     part: 2, title: "异样", date: "8月14日 夜～8月15日 凌晨", place: "后座（夜）",
     clock: "2014年8月14日 周四 夜",
+    // 这一关原来没有 goal，关头底下靠一句「继续。」凑数。现在目标只在日记簿里露面，
+    // 空着就是一页空白，补一句真话：她今晚要做的就这两件。
+    goal: "再看一遍这间屋，天光之前做个决定。",
     tasks: [
-      { text: "夜里再看一遍这间屋", after: "三组不一样的，摆在一起", need: true, count: () => (nightOn() ? [pairCount(), 3] : null), done: () => pairCount() >= 3, hint: () => (nightOn() ? "先在屋里找出跟搬进来那晚不一样的东西，再点「摆在一起」。" : "") },
-      { text: "天光之前做个决定：敲门，或者忍到天亮", after: "这一夜的两种走法", need: true, show: nightOn, done: () => flag("knockedZhou") || noted("whisper"), hint: "摆好之后，门在那边——敲，或者不敲。" },
-      { text: "开录音", show: nightOn, done: () => ev("rec-axuan") || noted("voice") },
+      { text: "夜里再看一遍这间屋", after: "三组不一样的，摆在一起", need: true, count: () => (nightOn() ? [pairCount(), 3] : null), done: () => pairCount() >= 3, hint: () => (nightOn() ? "先在屋里找出跟搬进来那晚不一样的东西，再点「摆在一起」" : "") },
+      { text: "天光之前做个决定：敲门，或者忍到天亮", after: "这一夜的两种走法", need: true, show: nightOn, done: () => flag("knockedZhou") || noted("whisper"), hint: "摆好之后，门在那边——敲，或者不敲" },
+      // 这一条从前不是必做，于是录音整夜可以不按——第 8 关他照样「戴上耳机听录音」，
+      // 第 9 关又照样叫「有一晚唔好开录音」。剧本已经当她录过了，机制没跟上。
+      // 两种达成都要求录音键开着：一个是拿着那卷，一个是整夜在带子上（见 waitDawn）。
+      { text: "开录音", need: true, show: nightOn, done: () => ev("rec-axuan") || noted("voice"), hint: "手机在茶几上。录一晚会怎样" },
       { text: "打 999", show: nightOn, done: () => flag("called999") },
       { text: "打给阿乐", show: nightOn, done: () => flag("calledLok") },
       { text: "敲周生的门", show: nightOn, done: () => flag("knockedZhou") },
@@ -122,11 +137,11 @@ const LEVELS = [
     clock: "2014年8月15日 周五 早上",
     goal: "这里怪怪的，说不清，也没人信，怎么办？",
     tasks: [
-      { text: "出门，经过前座门口", after: "周问我脚湿不湿", need: true, done: () => ev("note-dry"), hint: "前座门口，我还没经过。" },
-      { text: "倾偈表姐", need: true, done: () => !!(S.chatLogs && S.chatLogs.mei16 && S.chatLogs.mei16.closed), hint: "表姐一直在等我回。" },
-      { text: "接陈家豪电话", need: true, show: () => !!(S.chatLogs && S.chatLogs.mei16 && S.chatLogs.mei16.closed), done: () => flag("howardCalled"), hint: "表姐说姐夫会打来。" },
-      { text: "拿到诊所地址", show: () => flag("howardCalled"), done: () => flag("clinicAddr"), hint: "地址他说会发到手机。" },
-      { text: "给玩具车和水龙头各拍一张", need: true, show: () => !!(S.chatLogs && S.chatLogs.mei16 && S.chatLogs.mei16.closed), count: () => [cnt(["photo-car-out", "photo-tap-out"], { "photo-car-out": ev("photo-car-out"), "photo-tap-out": ev("photo-tap-out") }), 2], done: () => ev("photo-car-out") && ev("photo-tap-out"), hint: "用自己的拍立得。车同水喉各按一次快门，夹进日记簿。" },
+      { text: "出门，经过前座门口", after: "周问我脚湿不湿", need: true, done: () => ev("note-dry"), hint: "前座门口，我还没经过" },
+      { text: "倾偈表姐", need: true, done: () => !!(S.chatLogs && S.chatLogs.mei16 && S.chatLogs.mei16.closed), hint: "表姐一直在等我回" },
+      { text: "接陈家豪电话", need: true, show: () => !!(S.chatLogs && S.chatLogs.mei16 && S.chatLogs.mei16.closed), done: () => flag("howardCalled"), hint: "表姐说姐夫会打来" },
+      { text: "拿到诊所地址", show: () => flag("howardCalled"), done: () => flag("clinicAddr"), hint: "地址他说会发到手机" },
+      { text: "给玩具车和水龙头各拍一张", need: true, show: () => !!(S.chatLogs && S.chatLogs.mei16 && S.chatLogs.mei16.closed), count: () => [cnt(["photo-car-out", "photo-tap-out"], { "photo-car-out": ev("photo-car-out"), "photo-tap-out": ev("photo-tap-out") }), 2], done: () => ev("photo-car-out") && ev("photo-tap-out"), hint: "用自己的拍立得。车同水喉，各拍一张，夹进簿里" },
       { text: "电话里，追问姐夫一句", after: "问陈「不太好」是什么意思", show: () => flag("howardCalled"), done: () => flag("askedWorry") },
       { text: "问姐夫为什么这么急", after: "问陈为什么这么快", show: () => flag("howardCalled"), done: () => flag("askedWhyFast") },
     ],
@@ -145,12 +160,11 @@ const LEVELS = [
   {
     part: 2, title: "澄心初诊", date: "8月16日 出门前～16:00", place: "后座门口、澄心候诊、诊室",
     clock: "2014年8月16日 周六 14:50",
-    goal: "终于有人肯听，把屋里的事说清楚。",
+    goal: "把屋里的事，一样一样说给他听。",
     tasks: [
-      { text: "记下门口收回，收好红圈信封", need: true, done: () => noted("takeback") && ev("letter-red"), hint: "楼梯口那一幕，信封角。记进日记簿再出门。" },
-      { text: "候诊，看上一个出来的人", after: "候诊，那个倒拿杂志的人", need: true, show: () => noted("takeback") && ev("letter-red"), done: () => noted("linWait"), hint: "候诊那个人。" },
-      { text: "诊室里看三样：执照、抽屉、电脑一角", need: true, show: () => noted("takeback") && ev("letter-red"), count: () => [cnt(["lic", "drawer", "list"], S.clinicLooked), 3], done: () => cnt(["lic", "drawer", "list"], S.clinicLooked) >= 3, hint: "这间房，我还没看清楚。" },
-      { text: "把你搜集的东西给他看", need: true, show: () => noted("takeback") && ev("letter-red"), done: () => !!(S.handed && S.handed.ok6), hint: "讲到屋的时候，把最要紧的给他看。" },
+      { text: "记下门口收回，收好红圈信封", need: true, done: () => noted("takeback") && ev("letter-red"), hint: "楼梯口那一幕，信封角。记进日记簿再出门" },
+      { text: "诊室里看三样：执照、抽屉、电脑一角", need: true, show: () => noted("takeback") && ev("letter-red"), count: () => [cnt(["lic", "drawer", "list"], S.clinicLooked), 3], done: () => cnt(["lic", "drawer", "list"], S.clinicLooked) >= 3, hint: "这间房，我还没看清楚" },
+      { text: "把你搜集的东西给他看", need: true, show: () => noted("takeback") && ev("letter-red"), done: () => !!(S.handed && S.handed.ok6), hint: "讲到屋的时候，把最要紧的给他看" },
     ],
     next: "8月16日 21:40　后座",
     start: () => startTakeback(),
@@ -169,9 +183,9 @@ const LEVELS = [
     clock: "2014年8月16日 周六 21:40",
     goal: "照他说的写时间，看它什么时候动。",
     tasks: [
-      { text: "拿出门前那两张相，写「十六号晚」", need: true, done: () => ev("paper-16"), hint: "出门前那两张相，拿出来。" },
-      { text: "试两次：盯住两分钟，离开两分钟", after: "8月20日试了两次：盯两分钟，离开两分钟", need: true, show: () => ev("paper-16"), count: () => [cnt(["watch", "bath"], S.tries), 2], done: () => ev("paper-20"), hint: () => (ev("paper-16") ? "望住它两分钟；再离开两分钟，两次都要试。" : "") },
-      { text: "发第一帖", need: true, done: () => flag("serial1"), hint: "厅里点「电脑：发一帖」，看完草稿再按「发布」。不按就不算发出去。" },
+      { text: "拿出门前那两张相，写「十六号晚」", need: true, done: () => ev("paper-16"), hint: "出门前那两张相，拿出来" },
+      { text: "试两次：盯住两分钟，离开两分钟", after: "8月20日试了两次：盯两分钟，离开两分钟", need: true, show: () => ev("paper-16"), count: () => [cnt(["watch", "bath"], S.tries), 2], done: () => ev("paper-20"), hint: () => (ev("paper-16") ? "望住它两分钟；再离开两分钟，两次都要试" : "") },
+      { text: "发第一帖", need: true, done: () => flag("serial1"), hint: "厅里那台电脑，这一帖还没发出去" },
       { text: "周在门口，听他说完", after: "周在门口说「两分钟」", show: () => !!S.tries.bath, done: () => noted("zhouTwo") },
       { text: "门口那锅汤", after: "阿乐的短讯，门口的凉汤", show: () => !!S.tries.bath, done: () => flag("lokSoup") },
     ],
@@ -188,9 +202,8 @@ const LEVELS = [
     clock: "2014年8月23日 周六 16:00",
     goal: "纸和录音都带齐了，看他怎么说。",
     tasks: [
-      { text: "候诊，看一眼", after: "候诊，那个人把杂志递给你", need: true, done: () => S.visitSeen && S.visitSeen[2], hint: "候诊。" },
-      { text: "把你搜集的东西给他看", need: true, done: () => !!(S.handed && S.handed.ok8), hint: "这一周写的纸，交给他。" },
-      { text: "分两堆", need: true, show: () => !!(S.handed && S.handed.ok8), done: () => !!S.sorted, hint: "纸上写的，同我心里信的，分开。" },
+      { text: "把你搜集的东西给他看", need: true, done: () => !!(S.handed && S.handed.ok8), hint: "这一周写的纸，交给他" },
+      { text: "分两堆", need: true, show: () => !!(S.handed && S.handed.ok8), done: () => !!S.sorted, hint: "纸上写的，同我心里信的，分开" },
     ],
     next: "当晚　后座",
     start: () => clinic2(),
@@ -204,13 +217,20 @@ const LEVELS = [
   {
     part: 3, title: "无声", date: "8月23日 夜～8月27日", place: "后座、美娟家、电话",
     clock: "2014年8月23日 周六 22:10",
-    goal: "关掉录音过一夜，再把前后对上。",
+    // 他有没有听过那卷录音，决定他下一句医嘱从哪儿说出口：听过的说「关一晚」，
+    // 没听过的只能说「由今晚起日日录」。目标句子跟着分两版。
+    goal: () => (flag("playedRec")
+      ? "他听过那卷。他叫我关一晚，睇下车仲郁唔郁。"
+      : "他叫我由今晚起日日录，留一晚唔开。我睇下分别。"),
+    goalZh: () => (flag("playedRec")
+      ? "他听过那卷。他叫我关一晚，看车还动不动。"
+      : "他叫我由今晚起天天录，留一晚不开。我看看分别。"),
     tasks: [
-      { text: "关掉录音，写「没有录音的一夜」", need: true, done: () => ev("paper-norec"), hint: "作业说，有一夜不开录音。" },
-      { text: "星期日去美娟家", after: "去美娟家吃饭", need: true, done: () => ev("note-notsaid"), hint: "星期日，去美娟家。" },
-      { text: "回后座，过几晚", after: "8月27日表姐来电，她听到水声", need: true, show: () => ev("note-notsaid"), done: () => ev("note-meiwater"), hint: () => (ev("note-notsaid") ? "水龙头又在滴。" : "") },
-      { text: "做对照纸：头两个礼拜，十五号之后", need: true, done: () => ev("paper-30"), hint: "对照纸还没写好。至少四行，哪边先不一样。" },
-      { text: "发第二帖", need: true, done: () => flag("serial2"), hint: "厅里点「电脑：发一帖」，看完草稿再按「发布」。不按就不算发出去。" },
+      { text: "关掉录音，写「没有录音的一夜」", need: true, done: () => ev("paper-norec"), hint: "作业说，有一夜不开录音" },
+      { text: "星期日去美娟家", after: "去美娟家吃饭", need: true, done: () => ev("note-notsaid"), hint: "星期日，去美娟家" },
+      { text: "回后座，过几晚", after: "8月27日表姐来电，她听到水声", need: true, show: () => ev("note-notsaid"), done: () => ev("note-meiwater"), hint: () => (ev("note-notsaid") ? "水龙头又在滴" : "") },
+      { text: "做对照纸：头两个礼拜，十五号之后", need: true, done: () => ev("paper-30"), hint: "对照纸还没写好。四行，其中一行要是鞋印" },
+      { text: "发第二帖", need: true, done: () => flag("serial2"), hint: "厅里那台电脑，这一帖还没发出去" },
     ],
     advance: { when: "8月30日　16:00", where: "湾仔澄心诊所", fn: () => finishLevel(9) },
     next: "8月30日 16:00　澄心",
@@ -225,9 +245,8 @@ const LEVELS = [
     clock: "2014年8月30日 周六 16:00",
     goal: "他还是不信是屋，怎么让他看见？",
     tasks: [
-      { text: "候诊，走廊里看一眼", after: "走廊擦肩那个人", need: true, done: () => S.visitSeen && S.visitSeen[3], hint: "候诊。" },
-      { text: "把你搜集的东西给他看", need: true, done: () => !!(S.handed && S.handed.ok10), hint: "对照纸交给他。" },
-      { text: "听他今日怎么说", after: "吵", need: true, done: () => flag("fought3"), hint: "听他讲完。" },
+      { text: "把你搜集的东西给他看", need: true, done: () => !!(S.handed && S.handed.ok10), hint: "对照纸交给他" },
+      { text: "听他今日怎么说", after: "吵", need: true, done: () => flag("fought3"), hint: "听他讲完" },
       { text: "看他读我的纸", after: "他读周问脚湿那行", need: true, done: () => noted("clinic3"), hint: "" },
     ],
     next: "8月31日　后座",
@@ -244,10 +263,10 @@ const LEVELS = [
     clock: "2014年8月31日 周日 夜",
     goal: "再记一个礼拜，撑到星期六。",
     tasks: [
-      { text: "8月31日夜车又转，打给他", need: true, done: () => noted("offhours"), hint: "车又转了，我想打给他。" },
-      { text: "去楼梯口看看", after: "周说星期六有人来", need: true, show: () => noted("offhours"), done: () => ev("note-zhoutue"), hint: "楼梯口，我还没去。" },
-      { text: "日历点开三天，收成补充纸", need: true, show: () => noted("offhours"), count: () => [cnt(["09-01", "09-02", "09-04"], S.cal11), 3], done: () => ev("paper-06"), hint: "九月头。点开三天就够。" },
-      { text: "发第三帖", need: true, done: () => flag("serial3"), hint: "厅里点「电脑：发一帖」，看完草稿再按「发布」。不按就不算发出去。" },
+      { text: "8月31日夜车又转，打给他", need: true, done: () => noted("offhours"), hint: "车又转了，我想打给他" },
+      { text: "去楼梯口看看，翻翻他门边的月历", after: "周说星期六有人来；月历上涂掉的那一格", need: true, show: () => noted("offhours"), done: () => ev("note-zhoutue") && !!flag("zhoucal"), hint: "楼梯口还没去。他门边那本月历也没关严" },
+      { text: "日历点开三天，收成补充纸", need: true, show: () => noted("offhours"), count: () => [cnt(["09-01", "09-02", "09-04"], S.cal11), 3], done: () => ev("paper-06"), hint: "九月头，点开三天就够" },
+      { text: "发第三帖", need: true, done: () => flag("serial3"), hint: "厅里那台电脑，这一帖还没发出去" },
       { text: "表姐来电", show: () => noted("offhours"), done: () => flag("meiTue") },
     ],
     advance: { when: "9月6日　16:00", where: "湾仔澄心诊所", fn: () => finishLevel(11) },
@@ -264,10 +283,9 @@ const LEVELS = [
     clock: "2014年9月6日 周六 16:00",
     goal: "他得亲自来看，不然说不清。",
     tasks: [
-      { text: "前台看一眼", after: "前台，阿文刚走", need: true, done: () => S.visitSeen && S.visitSeen[4], hint: "" },
-      { text: "再看一次抽屉", after: "抽屉：节拍器还在", need: true, done: () => !!(S.clinicLooked && S.clinicLooked.drawer4), hint: "抽屉。节拍器还在不在。" },
-      { text: "问他", need: true, done: () => flag("clinicAvoid"), hint: "姐夫那句，今日要问。" },
-      { text: "把你搜集的东西给他看", need: true, done: () => !!(S.handed && S.handed.ok12), hint: "补充纸交给他。" },
+      { text: "再看一次抽屉", after: "抽屉：节拍器还在", need: true, done: () => !!(S.clinicLooked && S.clinicLooked.drawer4), hint: "抽屉。节拍器还在不在" },
+      { text: "问他", need: true, done: () => flag("clinicAvoid"), hint: "姐夫那句，今日要问" },
+      { text: "把你搜集的东西给他看", need: true, done: () => !!(S.handed && S.handed.ok12), hint: "补充纸交给他" },
       { text: "偷看预约表", done: () => !!(S.clinicLooked && S.clinicLooked.sched) },
     ],
     next: "9月6日 21:40　后座",
@@ -283,9 +301,9 @@ const LEVELS = [
     clock: "2014年9月6日 周六 21:40",
     goal: "带他走一遍，让他亲眼看见。",
     tasks: [
-      { text: "走廊尽头", need: true, done: () => noted("notsame"), hint: "走廊尽头，那卷录音的地方。" },
-      { text: "水龙头", need: true, done: () => noted("delay"), hint: "带他去厨房。" },
-      { text: "他走后，贴储物室门听", need: true, show: () => !!(S.visit && S.visit.left), done: () => noted("phone-you"), hint: "储物室那边，我还没听过。" },
+      { text: "走廊尽头", need: true, done: () => noted("notsame"), hint: "走廊尽头，那卷录音的地方" },
+      { text: "水龙头", need: true, done: () => noted("delay"), hint: "带他去厨房" },
+      { text: "他走后，贴储物室门听", need: true, show: () => !!(S.visit && S.visit.left), done: () => noted("phone-you"), hint: "储物室那边，我还没听过" },
       { text: "送他到门口", after: "门口，周递毛巾", done: () => !!(S.visit && S.visit.towel) },
       { text: "带他看全家福", done: () => !!(S.visit && S.visit.family) },
     ],
@@ -301,8 +319,8 @@ const LEVELS = [
     clock: "2014年9月7日 周日 16:10",
     goal: "去拿他说整理好的笔记。",
     tasks: [
-      { text: "看一眼他的工作台", after: "他去倒水时，看工作台", need: true, done: () => noted("stolen"), hint: "桌上的东西，我还没看清。" },
-      { text: "去走廊", after: "走廊碰到陈家豪", need: true, show: () => noted("stolen"), done: () => !!(S.miss && S.miss.chen), hint: "走廊那边，我还没去。" },
+      { text: "看一眼他的工作台", after: "他去倒水时，看工作台", need: true, done: () => noted("stolen"), hint: "桌上的东西，我还没看清" },
+      { text: "去走廊", after: "走廊碰到陈家豪", need: true, show: () => noted("stolen"), done: () => !!(S.miss && S.miss.chen), hint: "走廊那边，我还没去" },
       { text: "手机响了，看完", show: () => !!(S.miss && S.miss.chen), after: "打开邮件，两个附件都看", need: true, count: () => (S.miss && (S.miss.att1 || S.miss.att2) ? [cnt(["att1", "att2"], S.miss), 2] : null), done: () => typeof missDirtReady === "function" ? missDirtReady() : ev("mail-dirt"), hint: "" },
       { text: "把那封信给他看", after: "给他看", show: () => typeof missDirtReady === "function" ? missDirtReady() : ev("mail-dirt"), done: () => flag("showedDirt") },
       { text: "空抽屉再拉一次", after: "空抽屉掉出鱼牌", show: () => !!(S.miss && S.miss.chen) && !ev("chen-wallet"), done: () => ev("fish-tag") },
@@ -337,24 +355,37 @@ const LEVELS = [
     clock: "2014年9月7日 周日 23:10",
     goal: "录音叫了我的名字。今晚他会不会来。",
     tasks: [
-      { text: "打给他", after: "录音叫了我的名字，打给他", need: true, done: () => flag("calledMing2"), hint: "打给他。" },
+      { text: "打给他", after: "录音叫了我的名字，打给他", need: true, done: () => flag("calledMing2"), hint: "打给他" },
       { text: "他到门口，听他讲", after: "他来了，在门口叫出一个字", need: true, show: () => flag("calledMing2"), done: () => noted("countbreath"), hint: "" },
       { text: "有人敲门，听他要什么", after: "周来要天台钥匙", show: () => noted("countbreath"), done: () => flag("roofKeyAsked"), hint: "" },
       { text: "还没看完廿八屋的旧闻", after: "翻了站内那两篇旧闻", show: () => flag("calledMing2") && !noted("twofiles"), done: () => noted("twofiles") },
       { text: "想想天台白天的样子", after: "想起天台白天的样子", show: () => flag("calledMing2"), done: () => !!S.searchRoof },
-      { text: "搜维港大学，登入校园网", after: "进了维港大学的校园网，登入第一个帐户", need: true, show: () => flag("calledMing2"), done: () => noted("vhu-law-in") || noted("vhu-chen-in"), hint: () => (noted("vhu-id")
-        ? "笔电在桌底。校名在剪报上，学号在钱夹那张学生证上。"
-        : "笔电在桌底。校名在剪报上；学号在墙簿那张毕业相的右下角。") },
-      { text: "两个人的学号，各登进去看一次", after: "两个帐户都进去了", need: true, show: () => noted("vhu-law-in") || noted("vhu-chen-in"), done: () => vhuBothIn(), hint: "他们之间那封「唔该晒」——信头那行地址就是另一个人的学号。" },
+      { text: "找到维港大学的校园网，登入", after: "进了维港大学的校园网，登入第一个帐户", need: true, show: () => flag("calledMing2"), done: () => noted("vhu-law-in") || noted("vhu-chen-in"), hint: () => (S.vhu && S.vhu.chal
+        ? "密码已经对了。它还要问一条开户时登记的问题——答案在维基百科「维港大学」条目里。"
+        : noted("vhu-id")
+          // 提示分三段，跟着她在浏览器里走到哪一步换：搜到了、进了学校网页、看见了那一行。
+          // 三段都只指方向，不写网址——门户的网址从来没有印在任何一页上，
+          // 只有官网页脚那一行「校园入门网站」通到它。
+          ? (S.sawVhuSite
+            ? "学校网页最底，页脚「快速连结」那一列。里头只有一行是学生每天要用的。"
+            : S.sawHkNews
+              ? "新闻里说的「校园入门网站」是另一部机器。学校网页的地址，维基条目右上的资料框里写着。"
+              : "笔电在桌底。校名在剪报上，学号在钱夹那张学生证上。搜到之后先读维基，条目里有学校网址。")
+          : "笔电在桌底。校名在剪报上；学号在墙簿那张毕业相的右下角。") },
+      { text: "两个人的学号，各登进去看一次", after: "两个帐户都进去了", need: true, show: () => noted("vhu-law-in") || noted("vhu-chen-in"), done: () => vhuBothIn(), hint: "他们之间那封「唔该晒」——信头那行地址就是另一个人的学号" },
+      // 维基条目最底「相关新闻」那三条是学校新闻稿；只有围栏那一条写着东翼平台出过什么事。
+      // 她读到的不是剪报上别人转述的一句，是学校自己写的那一句。
+      { text: "维基那条旧闻：天台围栏为什么加高", after: "二〇〇四年，东翼平台。之后围栏加高了半米", need: true, show: () => flag("calledMing2"), done: () => noted("vhu-news04"), hint: "搜「维港大学」。条目最底「外部链接」那几条都是学校新闻稿" },
       // 这一行是「B 档」加的：要她真的在目录里翻到那一册，不是登进去就算。
       // 任务条上把地方写清楚，不让人在站里瞎点；看懂多少仍留给愿意的人。
-      { text: "当年到底发生了什么？图书馆目录，搜「精神」", after: "那一册：二〇〇四年十一月借出，应还日期过了十年", need: true, show: () => noted("vhu-law-in") || noted("vhu-chen-in"), done: () => noted("vhu-lib-trace"), hint: "两个帐户里都有图书馆。目录里那一条点得开。" },
-      { text: "上楼前问他白天", after: "他认：站在楼梯口，没有按门铃", show: () => noted("countbreath"), done: () => noted("day-admit") },
+      { text: "当年到底发生了什么？图书馆目录，搜「精神」", after: "那一册：二〇〇四年十一月借出，应还日期过了十年", need: true, show: () => noted("vhu-law-in") || noted("vhu-chen-in"), done: () => noted("vhu-lib-trace"), hint: "两个帐户里都有图书馆。目录里那一条点得开" },
+      { text: "上楼前问他白天", after: "他认：站在楼梯口，没按门铃", show: () => noted("countbreath"), done: () => noted("day-admit") },
       { text: "他上去之后，打给家豪", after: "零点二十分打给家豪，他说马上到", show: () => noted("roofpause"), done: () => flag("calledChen") },
     ],
     // 别改成 levelReady()：这一关有一条必做是「他到门口」，那件事本身要按这颗按钮才发生，
-    // 用 levelReady() 会死锁。这里只挡三样：打过电话、两个帐户都进去过、目录里那一册看过。
-    advance: { when: "9月7日　夜", where: "他来了", fn: () => mingReturn(), modes: ["search"], ready: () => flag("calledMing2") && vhuBothIn() && noted("vhu-lib-trace") },
+    // 用 levelReady() 会死锁。这里只挡四样：打过电话、两个帐户都进去过、目录里那一册看过、
+    // 维基那条旧闻读过（围栏为什么加高——上天台之前要知道的那件事）。
+    advance: { when: "9月7日　夜", where: "他来了", fn: () => mingReturn(), modes: ["search"], ready: () => flag("calledMing2") && vhuBothIn() && noted("vhu-lib-trace") && noted("vhu-news04") },
     next: "零点四十一分　后楼梯",
     start: () => nightName(),
     gives: () => {
@@ -497,10 +528,42 @@ function taskText(t) {
   return (done && t.after ? t.after : t.text) + (c && !done ? "（" + c[0] + "／" + c[1] + "）" : "");
 }
 
+/* 墙簿上今天有人问她话：并进这一关的必做，回了才走得了。
+   只看「今天」发的那一条——旧帖仍然能回，但不拿它们卡住日子。
+   这一关一旦出现过，这条就留在簿里（打了勾才算过），下一关重新算。 */
+function wallTaskFor() {
+  if (typeof wallToday !== "function" || S.mode === "end") return [];
+  const now = wallToday();
+  if (now.open.length) S.wallTaskLv = S.level;
+  if (S.wallTaskLv !== S.level) return [];
+  return [{
+    text: "墙簿上，回一句",
+    need: true,
+    count: () => [now.all.length - now.open.length, now.all.length],
+    done: () => now.open.length === 0,
+    hint: "墙簿上有新回复，你还没回",
+  }];
+}
+
+// 关卡自带的任务 + 随剧情长出来的那条（墙簿）
+function tasksOf(L) {
+  if (!L) return [];
+  return L.tasks.concat(wallTaskFor());
+}
+
 function levelReady() {
   const L = levelNow();
   if (!L) return true;
-  return L.tasks.every((t) => !t.need || t.done());
+  return tasksOf(L).every((t) => !t.need || t.done());
+}
+
+// 「看得见的必做都做完了」——给那种「必做要靠按往下才发生」的关用。
+// levelReady() 不认 show()，会去等一条还没放行的任务，然后永远等下去；
+// 但整体放宽也不对（比如第 6 关要等表姐的电话挂断才算数）。所以只在这里放开。
+function readyShown() {
+  const L = levelNow();
+  if (!L) return true;
+  return tasksOf(L).every((t) => !t.need || t.done() || (t.show && !t.show()));
 }
 
 const hintSay = (x) => (typeof x.hint === "function" ? x.hint() : x.hint);
@@ -508,7 +571,7 @@ const hintSay = (x) => (typeof x.hint === "function" ? x.hint() : x.hint);
 function hintTask() {
   const L = levelNow();
   if (!L) return null;
-  return L.tasks.find((x) => x.need && !x.done() && (!x.show || x.show()) && hintSay(x)) || null;
+  return tasksOf(L).find((x) => x.need && !x.done() && (!x.show || x.show()) && hintSay(x)) || null;
 }
 
 function levelHint() {
@@ -536,7 +599,8 @@ function levelAdvance() {
 let taskHeard = { level: -1, done: [] };
 
 function taskTick(L) {
-  const done = L.tasks.map((t) => !!t.done());
+  const list = tasksOf(L);
+  const done = list.map((t) => !!t.done());
   const fresh = taskHeard.level === S.level && done.some((d, i) => d && !taskHeard.done[i]);
   taskHeard = { level: S.level, done };
   if (fresh) sfx("tick");
@@ -552,7 +616,7 @@ function renderLevelBox() {
 function levelBlocks() {
   const L = levelNow();
   if (!L || S.mode === "end") return [];
-  const shown = L.tasks.filter((t) => !t.show || t.done() || t.show());
+  const shown = tasksOf(L).filter((t) => !t.show || t.done() || t.show());
   const row = (t) => {
     const done = t.done();
     return el("li", { class: (done ? "done" : "") + (t.need ? "" : " opt") }, [
@@ -682,22 +746,27 @@ const CARD_LUM = { "场景-候诊": 0.4, "场景-后座厅": 0.7, "场景-天台
 
 // 过关卡第一句：把「刚才那一关做成了什么」说出来，别只列下一站。
 // 只写单语（H() 按语言模式繁化），不写粤语口语，免得普通话模式里突然冒一句粤语。
+/* 关头那一句：她自己的一句心里话，不是这一关的清单。
+   右边「本次新增」已经把这一趟拿到的东西一条条列出来了，这里再数一遍
+   （「你都记下了」「这一夜你记住了：车转了向，门底有脚印，水又滴」），
+   就成了念清单——一进关就出戏。所以这里只写她此刻身上的一点感觉，
+   剩下半句留白，人自己会往下走。 */
 const DONE_LINE = {
-  1: "帖子有人回。荣汇街二十八号，四楼，后座——今晚搬。",
-  2: "钥匙在你手上。周生说：静一点，水喉旧。",
-  3: "两个礼拜住下来。屋里的样子、日历上的夜，你都记下了。",
-  4: "这一夜你记住了：车转了向，门底有脚印，水又滴。",
-  5: "有人肯听，也有人先替你说「你太累」。明天下午四点，澄心。",
-  6: "他真的坐下来听。作业带回来了：几点、哪间房、怎样动。",
-  7: "纸上第一次有了钟点。他站在门口说：两分钟。",
-  8: "纸归纸，心里归心里。两堆你都分开了。",
-  9: "录音关掉，车还是转。表姐在电话那头听见了水声。",
-  10: "那句最不敢讲的，你说出来了。他没有写病。",
-  11: "一个礼拜记满了。他答应星期六来。",
-  12: "他说今晚来：只听门底，不过夜。",
-  13: "他亲耳听到了那三秒。本子上写的是「延迟三秒」。",
-  14: "本子不在，细节他讲得出；上门行程被删了。",
-  15: "录音叫了你的名字。他叫出了一个字：鱼。",
+  1: "网上真的有人回我了。荣汇街二十八号，四楼后座——去看看，反正也花不了半天。",
+  2: "钥匙是真的。门一推开，屋里比走廊凉一点，也静一点。",
+  3: "两个礼拜住下来，闭着眼也摸得到开关。只是……",
+  4: "天亮了。我得找个人，从头讲一遍。",
+  5: "终于有人肯听了，我把东西都装进袋子里，出门时抱在腿上。",
+  6: "他真的坐下来听我讲完。回家的车上，我把那张纸折了两次才放好。",
+  7: "照他说的做了两遍，一遍盯着，一遍走开。两遍的结果不一样。",
+  8: "纸上的放一堆，心里的放一堆。分完才发现，两堆差不多一样高。",
+  9: "那一夜我故意不开录音。第二天早上，车还是转了方向。",
+  10: "最不敢讲的那句，我说出来了。他低头写字，笔停了一下，最后没写「病」。",
+  11: "又一个礼拜记满了。他门口那本月历上，星期六那格涂得很用力。",
+  12: "他答应今晚来。挂电话之前又补一句：只听门底，不过夜。",
+  13: "他亲耳听到了那三秒。走的时候一句话没说，只在本子上写了一行。",
+  14: "本子说不在，细节他却讲得出。回来一查，昨晚那页行程没了。",
+  15: "录音里那把声音，叫了我的名字。零点四十一分，楼梯上有脚步，一级一级，往上。",
 };
 
 function stageFilled() {
@@ -829,6 +898,82 @@ function captionShell(bg, lum) {
   return { desk, go, leave };
 }
 
+/* 一行「时段　地点」拆两截：前半截是时间，后半截是地方。全角空格是作者写死的分隔符。 */
+function splitWhere(s) {
+  const t = String(s || "");
+  const i = t.indexOf("　");
+  return i < 0 ? ["", t] : [t.slice(0, i), t.slice(i + 1)];
+}
+
+/* 「类别：标题」拆成两截：类别只是标签，标题才是要看的东西。标题里还有冒号，只切第一个。 */
+function splitKept(s) {
+  const t = String(s || "");
+  const i = t.indexOf("：");
+  return i < 0 ? ["", t] : [t.slice(0, i), t.slice(i + 1)];
+}
+
+const CAP_NEW_MAX = 3;
+
+/* 关卡开头：三块固定，中间只留一句。
+   以前旁白、记下的、时间地点、目标、按钮全叠在中轴一列，只靠字号分出先后：
+   一件事说完，眼睛得自己找下一件，同一屏里五样东西都长一个样。
+   现在四处各管一件，位置再也不动——左上「在哪、什么时候」，中间「刚才」，
+   右下「这一趟多了什么」，目标贴着底边整条可点，不用再去够那个小按钮。 */
+function sceneZones(c, L, leave) {
+  const n = c.n;
+  const prev = c.from ? LEVELS[c.from] : null;
+  const where = (prev && prev.next) || [L && L.date, L && L.place].filter(Boolean).join("　");
+  const whenSpot = splitWhere(where);
+  const one = (c.from && DONE_LINE[c.from]) || DONE_LINE[n - 1] || "";
+  const kept = (Array.isArray(c.kept) ? c.kept : []).map(splitKept);
+  const out = [];
+
+  out.push(el("p", { class: "cap-where" }, [
+    whenSpot[0] ? el("span", { class: "cap-where-when" }, [whenSpot[0]]) : "",
+    whenSpot[1] ? el("span", { class: "cap-where-spot" }, [whenSpot[1]]) : "",
+  ]));
+
+  if (one) out.push(el("p", { class: "cap-say" }, [one]));
+
+  if (kept.length) {
+    const list = el("ul", { class: "cap-new-list" + (kept.length > CAP_NEW_MAX ? " fold" : "") },
+      kept.map(([k, t]) => el("li", {}, [
+        k ? el("span", { class: "cap-new-k" }, [k]) : "",
+        el("span", { class: "cap-new-t" }, [t]),
+      ])));
+    const zone = el("aside", { class: "cap-new", "aria-label": "本次新增" }, [
+      el("p", { class: "cap-new-h" }, ["本次新增"]),
+      list,
+    ]);
+    if (kept.length > CAP_NEW_MAX) {
+      const rest = kept.length - CAP_NEW_MAX;
+      const more = el("button", { type: "button", class: "cap-new-more", "aria-expanded": "false" }, ["+" + rest]);
+      more.onclick = () => {
+        const open = list.classList.contains("fold");
+        list.classList.toggle("fold", !open);
+        more.setAttribute("aria-expanded", open ? "true" : "false");
+        more.textContent = open ? "收起" : "+" + rest;
+        sfx("paper");
+      };
+      zone.append(more);
+    }
+    out.push(zone);
+  }
+
+  // 底下只留一颗「嗯……」，靠右。原来左半边还印着这一关的目标，可目标在日记簿
+  // 「要做的」那一页顶上天天开着，关头再念一遍，等于同一句话读两次，还把这句
+  // 心理独白挤成了一个说明栏。整条仍然是按钮（不必去够那颗小字），只是不再写字。
+  out.push(el("button", {
+    type: "button",
+    class: "caption-go cap-bar",
+    "aria-label": H("继续"),
+    onclick: leave(startLevelNow),
+  }, [
+    el("span", { class: "cap-bar-go" }, ["嗯……"]),
+  ]));
+  return out;
+}
+
 function drawCaption(c, L) {
   c = c || {};
   const kept = Array.isArray(c.kept) ? c.kept : [];
@@ -842,23 +987,16 @@ function drawCaption(c, L) {
     desk.classList.add("resume-card");
     kids.push(...resumeCaption(c, L, go, leave));
   } else if (c.type === "start") {
-    const prev = c.from && LEVELS[c.from];
-    if (prev) desk.classList.add("has-prev");
-    if (prev && !kept.length) desk.classList.add("no-kept");
-    kids.push(
-      prev && DONE_LINE[c.from] ? el("p", { class: "caption-done" }, [H(DONE_LINE[c.from])]) : "",
-      prev && kept.length ? el("ul", { class: "caption-kept" }, kept.map((t) => el("li", {}, [t]))) : "",
-      prev && prev.next ? el("p", { class: "caption-next" }, [prev.next]) : "",
-      el("p", { class: "caption-line" }, [levelGoalText(L) || H("继续。")]),
-      el("div", { class: "caption-acts" }, [go("嗯……", startLevelNow)])
-    );
+    // 三块固定区，不再走 .caption-text 那条中轴
+    desk.classList.add("scene-card");
+    desk.append(...sceneZones(c, L, leave));
   } else {
     kids.push(
       kept.length ? el("ul", { class: "caption-kept" }, kept.map((t) => el("li", {}, [t]))) : "",
       el("div", { class: "caption-acts" }, [go("……", () => ending())])
     );
   }
-  desk.append(el("div", { class: "caption-text" }, kids));
+  if (kids.length) desk.append(el("div", { class: "caption-text" }, kids));
   stage.append(desk);
   renderPlaybar();
   const app = document.getElementById("app");
@@ -897,10 +1035,13 @@ function openingLineText(pair) {
   return typeof T === "function" ? T(pair, pair) : pair;
 }
 
+// goal／goalZh 可以是函数：第 9 关那一句取决于第 8 关他有没有听过那卷录音。
 function levelGoalText(lv) {
   if (!lv) return "";
-  if (lv.goalZh != null && typeof T === "function") return T(lv.goal, lv.goalZh);
-  return typeof H === "function" ? H(lv.goal || "") : (lv.goal || "");
+  const g = typeof lv.goal === "function" ? lv.goal() : lv.goal;
+  const gz = typeof lv.goalZh === "function" ? lv.goalZh() : lv.goalZh;
+  if (gz != null && typeof T === "function") return T(g, gz);
+  return typeof H === "function" ? H(g || "") : (g || "");
 }
 
 // 开场一旦开始就不许跳：盖一层透明罩吃掉所有点击，键盘也拦下（浏览器自己的组合键放行）。
@@ -1165,15 +1306,12 @@ function saveProgress() {
   writeStore(store);
 }
 
-function readSave() {
-  const store = readStore();
-  if (!store) return null;
-  const n = (store.current && store.current.n) || store.max;
-  return LEVELS[n] ? { n, store } : null;
-}
-
 function applySnap(snap) {
   S = Object.assign(initial(), snap && typeof snap === "object" ? snap : {});
+  // 存档是磁盘上的明文，可能被改坏或来自旧版本。关卡号一旦落空，
+  // levelNow() 会返回 undefined，后面所有 tasks／draw 全线连锁报错，所以先钉回一个存在的关。
+  const n = Math.round(Number(S.level));
+  S.level = LEVELS[n] ? n : 1;
   if (!Array.isArray(S.notes)) S.notes = [];
   if (!Array.isArray(S.evidence)) S.evidence = [];
   if (!S.flags || typeof S.flags !== "object") S.flags = {};

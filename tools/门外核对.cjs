@@ -107,7 +107,7 @@ function reset(level) {
 const WANT = [
   { visit: 2, level: 8, name: "澄心候诊", img: "场景-候诊", spots: ["阿文坐过的那张椅", "茶几上的杂志", "诊室的门"] },
   { visit: 3, level: 10, name: "澄心走廊", img: "场景-诊所走廊", spots: ["洗手间的门", "墙上那块牌子", "走廊尽头"] },
-  { visit: 4, level: 12, name: "澄心前台", img: "场景-候诊", spots: ["预约表", "搁在前台的杂志", "前台姑娘"] },
+  { visit: 4, level: 12, name: "澄心前台", img: "场景-前台", spots: ["预约表", "搁在前台的杂志", "前台姑娘"] },
 ];
 
 // 看点的标题是 .hot-copy 的第一个文本节点（后面紧跟 <small> 副题）
@@ -136,6 +136,10 @@ for (const w of WANT) {
 
   const hots = all(".room-map .hot");
   ok(hots.length === 3, `visit${w.visit} 应有 3 个看点，实际 ${hots.length}`);
+  // 三个看点都要有缩图：门外这三段曾经只有文字卡片，缩图位置空着
+  const poke = all(".room-map .hot .hot-img img");
+  ok(poke.length === 3 && poke.every((i) => (i.getAttribute("src") || "").length > 20),
+    `visit${w.visit} 三个看点应都有缩图，实际 ${poke.length} 张`);
   const got = hots.map(hotTitle);
   for (const st of w.spots) ok(got.includes(W(st)), `visit${w.visit} 缺少看点「${st}」（实得 ${got.join("／")}）`);
 

@@ -499,13 +499,16 @@ a:hover {
 }
 
 .browser-tabs {
+  --tab-w: 198px;
   gap: 3px;
   min-height: 28px;
   padding: 3px 8px 0;
   border-bottom: 1px solid #9da6af;
   background: #d7dbe0;
   /* 分页是动态开的：廿八屋、墙簿两个固定格，中间是这趟开过的网页，最右永远一格空的。
-     开到装不下时不缩格、不换行，整排横向推（滚条收起来，2014 年的 IE 上没有现代灰条）。 */
+     开到装不下时不缩格、不换行，整排横向推（滚条收起来，2014 年的 IE 上没有现代灰条）。
+     每格一样宽：宽度以前跟着标题长短在 170–230 之间伸缩，四格长短不齐像撕坏的纸条；
+     真浏览器里的分页是等宽的，写不下的标题一律截断加省略号。 */
   overflow-x: auto;
   overflow-y: hidden;
   scrollbar-width: none;
@@ -513,8 +516,9 @@ a:hover {
 .browser-tabs::-webkit-scrollbar { display: none; }
 
 .browser-tabs button {
-  min-width: 170px;
-  max-width: 230px;
+  width: var(--tab-w);
+  flex: 0 0 var(--tab-w);
+  max-width: none;
   overflow: hidden;
   padding: 5px 12px 4px;
   border: 1px solid #a7adb3;
@@ -535,6 +539,42 @@ a:hover {
   color: #111;
   font-weight: 700;
 }
+
+/* 网页分页右上角那颗 ×。廿八屋、墙簿、「新分页」三格没有——前两格是这部机固定的，
+   最后那一格要永远留着。结构见 web-ui.js 的 tabCell()／closeWebTab()。 */
+.browser-tabs .tab-cell {
+  position: relative;
+  display: inline-flex;
+  flex: 0 0 var(--tab-w);
+  width: var(--tab-w);
+}
+
+.browser-tabs button.closable { padding-right: 26px; }
+
+.browser-tabs .tab-x {
+  position: absolute;
+  top: 50%;
+  right: 5px;
+  transform: translateY(-50%);
+  width: 15px;
+  min-width: 0;
+  max-width: none;
+  height: 15px;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 2px;
+  background: transparent;
+  color: #828991;
+  font: 700 12px/15px Arial, sans-serif;
+  text-align: center;
+  overflow: visible;
+  cursor: pointer;
+}
+
+.browser-tabs .tab-x:hover { background: #c75050; color: #fff; }
+.browser-tabs .tab-cell .on + .tab-x { color: #565d65; }
 
 .browser-status {
   box-sizing: border-box;
@@ -650,6 +690,28 @@ a:hover {
   margin-bottom: 13px;
   color: #777;
 }
+
+/* 首页「最近搜过」：三笔搜寻各占一格，点一下重搜。从前是一条长串拼在一起。 */
+.recent-searches {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 3px 16px;
+  margin: 2px 0 15px;
+  font-size: 12px;
+  color: #888;
+}
+.recent-h { color: #999; }
+/* 每组词自己一块浅底：词里本来就有空格（「元朗 天水围」），
+   不加边就分不清哪几个字是一组——看图会读成一串六个词。 */
+.recent-q {
+  color: #3b6ea5;
+  text-decoration: none;
+  padding: 1px 7px;
+  border: 1px solid #e2e2e2;
+  background: #f7f7f7;
+}
+.recent-q:hover { border-color: #b9cde2; background: #eef4fa; }
 
 .search-row {
   gap: 4px;
@@ -842,7 +904,10 @@ a:hover {
 }
 .scene-actions.fork.task-note {
   width: min(152px, 20vw);
-  right: 8px;
+  /* 23 = 8 留白 + 15 视窗滚动条。房间／日历那一屏的 .desk 是整幅宽的，
+     它自己的竖滚动条贴在视窗最右 15px 上；便条原来 right:8 正好压在那一段，
+     那一截滚不动。 */
+  right: 23px;
   padding: var(--rule) 10px 10px 26px;
   z-index: 30;
   box-shadow: 0 10px 22px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(0, 0, 0, 0.3);
@@ -1817,7 +1882,9 @@ button.phone-act.done {
   flex: 0 1 auto;
   max-height: 42%;
   min-height: 0;
-  margin: 8px 0 12px;
+  /* 这一格自己吃掉上方的空档：对白贴着按键往上长，按键不动。
+     空白留在头像下面（真手机的通话界面本来也是这样），不夹在对白和按键中间。 */
+  margin: auto 0 12px;
   padding: 10px 12px;
   overflow-y: auto;
   border-radius: 8px;
@@ -1850,6 +1917,9 @@ button.phone-act.done {
 .phone-pad {
   display: grid;
   flex-shrink: 0;
+  /* 钉在底部：这句对白长短不一，按钮以前紧贴在对话框下面，一句话说长了
+     「听下句」就往下一跳。真手机上的通话键是固定的，只有上面的字在动。 */
+  margin-top: 0;
   gap: 6px;
   max-height: 38%;
   overflow-y: auto;
@@ -1874,7 +1944,8 @@ button.phone-act.done {
   display: flex;
   flex-shrink: 0;
   justify-content: space-around;
-  margin-top: auto;
+  /* 底部那条「静音／免提／键盘」不动，让位给上面的按键去顶底 */
+  margin-top: 0;
   padding-top: 14px;
   color: #5c6a78;
   font-size: 10px;
@@ -2882,6 +2953,7 @@ button.mail-row:hover { background: #121a23; }
   text-align: center;
   font-size: 13px;
   cursor: pointer;
+  position: relative;
 }
 
 .days button:focus-visible {
@@ -2984,6 +3056,69 @@ button.mail-row:hover { background: #121a23; }
   letter-spacing: 0.04em;
 }
 
+/* 未点开的日格：只有日期。暖的那几日纸偏米黄，裂缝那三日纸一样米黄、只字与边框偏灰——
+   分色靠细节，不靠换底，也不剧透。 */
+.days .day-cover {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  width: 100%;
+  min-height: 0;
+  aspect-ratio: 4 / 3;
+  background:
+    linear-gradient(#fdfaf3, #f3ead8);
+  color: #6b5334;
+}
+
+.days .day-cover .cover-m {
+  color: #a08a63;
+  font-size: 10px;
+  letter-spacing: 0.36em;
+  text-indent: 0.36em;
+}
+
+.days .day-cover .cover-d {
+  font-family: Georgia, "Times New Roman", "Songti SC", "Noto Serif SC", serif;
+  font-size: 40px;
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: 0.02em;
+}
+
+.days button.unread:hover .day-cover {
+  background: linear-gradient(#fff9e8, #f8efdb);
+}
+
+/* 裂缝那三日：纸维持米黄，只把日期墨色调偏灰、边框偏冷一丝。
+   曾经整块铺冷灰（#f2f5f7→#e4eaee）——冷色面积一大就把「隐约不对」读成
+   「这三格与别的不是一类」，像禁用态。分色要靠细节，不靠换底。 */
+.days button.crack .day-cover {
+  background: linear-gradient(#fdfaf3, #f3ead8);
+  color: #6a6459;
+}
+
+.days button.crack .day-cover .cover-m {
+  color: #8d877e;
+}
+
+.days button.crack:hover .day-cover {
+  background: linear-gradient(#fff9e8, #f8efdb);
+}
+
+.days button.unread .day-label.week {
+  background: #fbf7ee;
+  color: #8d7b5c;
+  border-top-color: #ece2cd;
+}
+
+.days button.unread.crack .day-label.week {
+  background: #f1f4f6;
+  color: #6c7a86;
+  border-top-color: #dde4e9;
+}
+
 /* Calendar: warm/crack accents only when unread; .seen uses warm done above. */
 .days button.warm:not(.seen) .day-label {
   background: #fbf4e6;
@@ -3014,24 +3149,107 @@ button.mail-row:hover { background: #121a23; }
   opacity: 0.45;
 }
 
-/* 8月14日傍晚前，她自己的两周小结（一页纸，不是日记簿弹窗） */
-.diary-paper {
-  margin: 10px 0 4px;
-  padding: 16px 18px;
-  border: 1px solid #d8d2c4;
-  background:
-    repeating-linear-gradient(180deg, transparent 0 27px, #e6e1d4 27px 28px),
-    #fdfbf4;
+/* 没点开的格：右上角一颗空心圈。点开就没，纸也换色——「点过了」要看得见。 */
+.days .day-todo {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 7px;
+  height: 7px;
+  border: 1px solid #b9a682;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .82);
+  pointer-events: none;
 }
-.diary-paper .diary-line {
+.days button.crack .day-todo { border-color: #9aa7b0; }
+
+/* 日历下面那行进度：还有几天没点开，写清楚，别让人猜自己卡在哪里 */
+.cal-progress {
+  margin: 10px 0 0;
+  color: #7c6742;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  text-align: center;
+}
+.cal-progress.done { color: #5f7a63; }
+
+/* 8月14日傍晚前，她自己的两周小结：一页纸摆在后座上，不是一张弹窗表格。
+   纸留一点点歪（-1.1deg）、不带硬边框，靠阴影立起来；横线极淡，只是让眼睛知道
+   有七行；字用手写体。底下那点「合上」是一条细横线，像把纸折起来收好。 */
+.paper-desk img { filter: saturate(.5) brightness(.46); }
+.my-paper {
+  position: relative;
+  z-index: 1;
+  width: min(420px, 86vw);
+  max-height: min(86vh, 560px);
+  overflow: auto;
+  margin: 0 auto;
+  padding: 30px 34px 18px;
+  transform: rotate(-1.1deg);
+  background:
+    linear-gradient(168deg, #f7f0de 0%, #f0e7d1 64%, #e9dec5 100%);
+  box-shadow:
+    0 22px 46px rgba(0, 0, 0, .6),
+    0 0 0 1px rgba(255, 255, 255, .35) inset,
+    -22px 0 30px -22px rgba(56, 40, 20, .55) inset;
+  font-family: "LXGW WenKai", "KaiTi", "楷体", "STKaiti", "FangSong", serif;
+  color: #333f4c;
+  animation: paper-down .9s cubic-bezier(.22, .7, .2, 1) both;
+}
+.my-paper-date {
+  margin: 0 0 14px;
+  color: #7d6a4c;
+  font-size: 13px;
+  letter-spacing: .22em;
+  text-align: right;
+}
+.my-paper-body {
+  background: repeating-linear-gradient(180deg, transparent 0 27px, rgba(104, 88, 62, .17) 27px 28px);
+}
+.my-paper-line {
   margin: 0;
   min-height: 28px;
   line-height: 28px;
-  color: #2f3a44;
-  font-size: 15px;
+  font-size: 15.5px;
+  letter-spacing: .03em;
 }
-.diary-paper .diary-line.soft {
-  color: #6d6660;
+.my-paper-line.soft { color: #6c675f; }
+.my-paper-fold {
+  display: block;
+  margin: 20px 0 0 auto;
+  padding: 3px 1px 2px;
+  border: 0;
+  border-bottom: 1px solid rgba(90, 78, 58, .38);
+  background: none;
+  color: #6a5c46;
+  font-family: inherit;
+  font-size: 13px;
+  letter-spacing: .18em;
+  text-indent: .18em;
+  cursor: pointer;
+}
+.my-paper-fold:hover,
+.my-paper-fold:focus-visible {
+  color: #3a3226;
+  border-bottom-color: rgba(58, 50, 38, .85);
+  outline: none;
+}
+@keyframes paper-down {
+  from { opacity: 0; transform: translateY(14px) rotate(-2.6deg); }
+  to { opacity: 1; transform: rotate(-1.1deg); }
+}
+.paper-desk.leaving .my-paper {
+  opacity: 0;
+  transform: translateY(-10px) scale(.985) rotate(-.4deg);
+  transition: opacity .36s ease, transform .36s ease;
+}
+@media (max-width: 430px) {
+  .my-paper { width: 88vw; padding: 22px 20px 12px; }
+  .my-paper-line { font-size: 14.5px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .my-paper { animation-duration: .14s; }
+  .paper-desk.leaving .my-paper { transition-duration: .1s; }
 }
 
 /* 日历框不许比屏幕宽；讯息格跟图片格一样高，整行不被撑开 */
@@ -3046,6 +3264,11 @@ button.mail-row:hover { background: #121a23; }
   margin-block: auto;
 }
 .days { align-items: start; }
+/* 十三天现在是一张封面一格，比原来矮：宽屏排五列，三行就全在眼前，
+   不用滚下去才看得见 08-13（那一格是必读的）。 */
+@media (min-width: 760px) {
+  .days { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+}
 .days .day-msg {
   min-height: 0;
   overflow: hidden;
@@ -3062,6 +3285,8 @@ button.mail-row:hover { background: #121a23; }
   .days .day-msg strong { font-size: 12px; }
   .days .day-msg p { font-size: 11px; -webkit-line-clamp: 1; }
   .days .day-label { padding: 6px 4px 7px; font-size: 12px; }
+  .days .day-cover .cover-d { font-size: 28px; }
+  .days .day-cover .cover-m { font-size: 9px; letter-spacing: 0.28em; text-indent: 0.28em; }
 }
 
 .room {
@@ -4347,9 +4572,8 @@ button.mail-row:hover { background: #121a23; }
     min-width: 0;
   }
 
-  .browser-tabs button {
-    min-width: 0;
-    flex: 1;
+  .browser-tabs {
+    --tab-w: 142px;
   }
 
   .site-header {
@@ -5135,18 +5359,19 @@ body .wall-photo-sheet .img-slot.wall-photo-lg::after { content: none; }
   cursor: text;
 }
 .wall-draft-input:focus { outline: 1px solid #4e8a58; border-color: #3d7a48; }
+/* 备选是一张摊开的清单，不是浮在输入框下面的下拉层：
+   绝对定位会盖住「发送」，看着像按钮被吃掉。改成占位的行，选完再收起。 */
 .wall-draft-menu {
-  position: absolute;
-  z-index: 4;
-  left: 0;
-  right: 0;
-  top: 100%;
-  margin: 1px 0 0;
+  position: static;
+  left: auto;
+  right: auto;
+  top: auto;
+  margin: 4px 0 0;
   padding: 2px 0;
   list-style: none;
   border: 1px solid #8aab90;
   background: #fff;
-  box-shadow: 0 2px 6px rgba(40, 60, 40, .18);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .6);
 }
 .wall-draft-menu[hidden] { display: none; }
 .wall-draft-opt {
@@ -5204,6 +5429,15 @@ body .wall-photo-sheet .img-slot.wall-photo-lg::after { content: none; }
   cursor: pointer;
 }
 .wall-draft-send:hover { filter: brightness(1.05); }
+/* 还没挑一句之前按不下去：这句得她自己选。 */
+.wall-draft-send[disabled] {
+  border-color: #b6c4b8;
+  background: linear-gradient(#dfe7de, #cbd6cb);
+  color: #8a9a8c;
+  text-shadow: none;
+  cursor: default;
+}
+.wall-draft-send[disabled]:hover { filter: none; }
 .wall-draft-drop {
   margin: 0;
   padding: 0;
@@ -5242,10 +5476,11 @@ body .wall-photo-sheet .img-slot.wall-photo-lg::after { content: none; }
 #playbar-house.has-new::after {
   content: "";
   position: absolute;
-  top: 1px;
-  right: 0;
-  width: 10px;
-  height: 10px;
+  /* 挪到字框外：right:0 时那颗点正压在「器」的右上角，看着像错字 */
+  top: -1px;
+  right: -5px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
   background: #e23b2e;
   box-shadow: 0 0 0 1px rgba(0, 0, 0, .35);
@@ -6434,6 +6669,245 @@ img.map-photo {
   margin-top: var(--cap-gap);
   animation: caption-rise 1s ease 2.2s both;
 }
+
+/* ---------- 关卡开头：三个固定区，中间只留一句话 ----------
+   从前旁白、记下的、时间地点、目标、按钮全叠在中轴一条竖线上，只靠字号分先后；
+   一件事读完，眼睛得自己找下一件。现在各处各管一件，位置每关都一样：
+     左上 在哪·什么时候 ／ 中间 她自己的一句 ／ 右下 这一趟多了什么 ／ 右下角 一颗继续。
+   做成网格而不是绝对定位：换窗口、放长句、加第三条，谁也不压谁。 */
+.desk.caption-card.scene-card {
+  display: grid;
+  /* 中列给宽一点：那句话是最要紧的一行，宁可它一行读完，也不要断在「門底／有腳印」中间 */
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 2.1fr) minmax(0, 0.9fr);
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    "where where where"
+    ".     say   new"
+    "bar   bar   bar";
+  padding: 0;
+  overflow: hidden;
+  /* 「新拿到的东西」沿用游戏里「还没看过」那一档暖琥珀，别另起一种颜色 */
+  --cap-amber: #c9a163;
+  --cap-amber-line: rgba(201, 161, 99, .55);
+}
+/* 上、下压暗：小字要压得住照片，中段留亮给画面本身 */
+.scene-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(180deg,
+    rgba(4, 5, 7, .58) 0%,
+    rgba(4, 5, 7, .10) 16%,
+    rgba(4, 5, 7, 0) 32%,
+    rgba(4, 5, 7, 0) 56%,
+    rgba(4, 5, 7, .74) 100%);
+}
+
+/* 左上：时段 · 地点，底下一道细线收住 */
+.scene-card .cap-where {
+  grid-area: where;
+  justify-self: start;
+  align-self: start;
+  z-index: 2;
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  max-width: min(560px, 78%);
+  margin: clamp(18px, 3.2vh, 34px) 0 0 clamp(20px, 4.4vw, 60px);
+  padding: 0 0 10px;
+  border-bottom: 1px solid rgba(197, 184, 173, .26);
+  text-align: left;
+  animation: caption-rise 1.1s ease .2s both;
+}
+.scene-card .cap-where-when {
+  color: var(--brand-mute);
+  font-family: var(--brand-face);
+  font-size: calc(var(--say-face) * .66);
+  letter-spacing: var(--brand-track);
+  font-variant-numeric: tabular-nums;
+}
+.scene-card .cap-where-spot {
+  color: var(--brand-ink-hi);
+  font-family: var(--brand-face);
+  font-size: calc(var(--say-face) * .76);
+  letter-spacing: .18em;
+}
+
+/* 中间：只有一句。多写就换行，不再往下堆第二段 */
+.scene-card .cap-say {
+  grid-area: say;
+  align-self: center;
+  justify-self: stretch;
+  z-index: 2;
+  margin: 0;
+  padding: 0 10px 0 0;
+  color: var(--brand-ink-hi);
+  font-family: var(--brand-face);
+  font-size: calc(var(--say-face) * .95);
+  font-weight: 300;
+  line-height: 1.9;
+  letter-spacing: .1em;
+  text-align: left;
+  /* 换行只许断在标点：不然「第／二天」「四十／一分」这种断法一眼就看出是机器排的 */
+  word-break: keep-all;
+  line-break: strict;
+  text-wrap: balance;
+  text-shadow: 0 1px 16px rgba(0, 0, 0, .92), 0 0 44px rgba(0, 0, 0, .6);
+  animation: caption-rise 1.4s ease .55s both;
+}
+
+/* 右下：这一趟新拿到的东西。只列本次解锁的，离开这一格就清空 */
+.scene-card .cap-new {
+  grid-area: new;
+  align-self: end;
+  justify-self: stretch;
+  z-index: 2;
+  margin: 0 clamp(20px, 3.6vw, 52px) clamp(18px, 2.6vh, 30px) 8px;
+  padding-left: 12px;
+  border-left: 1px solid var(--cap-amber-line);
+  text-align: left;
+}
+.scene-card .cap-new-h {
+  margin: 0 0 9px;
+  color: var(--cap-amber);
+  font-family: var(--brand-face);
+  font-size: calc(var(--say-face) * .6);
+  letter-spacing: .24em;
+  text-indent: .24em;
+}
+.scene-card .cap-new-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.scene-card .cap-new-list li {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  animation: cap-slip .34s ease both;
+}
+.scene-card .cap-new-list li:nth-child(1) { animation-delay: 1.0s; }
+.scene-card .cap-new-list li:nth-child(2) { animation-delay: 1.16s; }
+.scene-card .cap-new-list li:nth-child(3) { animation-delay: 1.32s; }
+.scene-card .cap-new-list li:nth-child(n+4) { animation-delay: 1.48s; }
+/* 收起来的那些不占位：+N 展开才让它们出现 */
+.scene-card .cap-new-list.fold li:nth-child(n+4) { display: none; }
+.scene-card .cap-new-k {
+  color: var(--cap-amber);
+  font-family: var(--brand-face);
+  font-size: calc(var(--say-face) * .6);
+  letter-spacing: .16em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.scene-card .cap-new-k::before {
+  content: "";
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin-right: 8px;
+  vertical-align: .14em;
+  background: var(--cap-amber);
+}
+.scene-card .cap-new-t {
+  color: var(--brand-ink);
+  font-family: var(--brand-face);
+  font-size: calc(var(--say-face) * .72);
+  line-height: 1.5;
+  letter-spacing: .04em;
+  overflow-wrap: anywhere;
+}
+.scene-card .cap-new-more {
+  margin-top: 9px;
+  padding: 2px 8px 3px;
+  border: 1px solid var(--cap-amber-line);
+  background: rgba(8, 9, 11, .45);
+  color: var(--cap-amber);
+  font-family: var(--brand-face);
+  font-size: calc(var(--say-face) * .58);
+  letter-spacing: .1em;
+  cursor: pointer;
+}
+.scene-card .cap-new-more:hover,
+.scene-card .cap-new-more:focus-visible {
+  border-color: var(--cap-amber);
+  background: rgba(201, 161, 99, .12);
+  outline: none;
+}
+@keyframes cap-slip {
+  from { opacity: 0; transform: translateX(9px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* 贴底：只剩一颗「嗯……」，靠右。没有字要读，底下就不该压一条藏青色的块——
+   画面自己会沉下去（::before 底那道渐黑已经压够了），这里只留一颗能按的东西。
+   整条仍然是按钮：手机上不必去够那颗小字。 */
+.scene-card .cap-bar.caption-go {
+  grid-area: bar;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 20px;
+  width: 100%;
+  min-width: 0;
+  min-height: clamp(44px, 6.6vh, 58px);
+  margin: 0;
+  padding: 9px clamp(20px, 4.4vw, 60px) calc(9px + env(safe-area-inset-bottom, 0px));
+  border: 0;
+  background: none;
+  text-align: right;
+  animation: caption-rise 1s ease 1.5s both;
+}
+.scene-card .cap-bar.caption-go:hover,
+.scene-card .cap-bar.caption-go:focus-visible {
+  background: none;
+  outline: none;
+}
+.scene-card .cap-bar-go {
+  flex: 0 0 auto;
+  padding: 5px 18px 6px;
+  border: 1px solid rgba(197, 184, 173, .45);
+  color: var(--brand-ink-hi);
+  font-size: calc(var(--say-face) * .78);
+  letter-spacing: var(--brand-track);
+  text-indent: var(--brand-track);
+  transition: border-color .25s ease, color .25s ease;
+}
+.scene-card .cap-bar.caption-go:hover .cap-bar-go,
+.scene-card .cap-bar.caption-go:focus-visible .cap-bar-go { border-color: rgba(197, 184, 173, .9); color: #f2ebe0; }
+
+/* 窄屏：三块改成竖着排，中间那句仍然只占一块，右下那堆仍然靠右 */
+@media (max-width: 960px) {
+  .desk.caption-card.scene-card {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr) auto auto;
+    grid-template-areas:
+      "where"
+      "say"
+      "new"
+      "bar";
+  }
+  .scene-card .cap-say {
+    justify-self: stretch;
+    padding: 0 clamp(20px, 4.4vw, 60px);
+    font-size: calc(var(--say-face) * .92);
+  }
+  .scene-card .cap-where { margin-right: 20px; max-width: none; }
+  .scene-card .cap-new {
+    justify-self: end;
+    width: min(300px, 74%);
+    margin: 0 clamp(20px, 4.4vw, 60px) 14px 8px;
+  }
+  .scene-card .cap-bar.caption-go { gap: 12px; padding: 9px 20px calc(9px + env(safe-area-inset-bottom, 0px)); }
+}
+
 /* 开局存档：标题、上次停在、继续（唯一有框）→ 选关 → 重来（最小灰字）；选关和确认在同一张卡里换页 */
 /* 色板只在 :root 定义一次（文件头那份），这里不再复写一份；
    这块只负责把底色压成炭黑，其余全部继承品牌变量 */
@@ -7153,7 +7627,8 @@ html.screen-on body::after {
     --rule: 26px;
     position: absolute;
     top: auto;
-    right: 8px;
+    /* 右边留 23：视窗滚动条占最右 15px，便条压上去那一截滚不动 */
+    right: 23px;
     bottom: 8px;
     left: 8px;
     width: auto;
@@ -7274,7 +7749,7 @@ html.screen-on body::after {
 @media (prefers-reduced-motion: reduce) {
   .rotate-phone { animation: none; }
 }
-/* 她自己的拍立得：快门、显影、白边 */
+/* 她自己的拍立得：白纸 → 快门 → 吐纸 → 显影 → 白边写时间 */
 .polaroid-sheet { text-align: center; }
 .polaroid {
   width: min(260px, 78%);
@@ -7283,13 +7758,46 @@ html.screen-on body::after {
   background: #f7f4ee;
   box-shadow: 0 10px 22px rgba(0, 0, 0, .28);
 }
-.polaroid-well { background: #1a1a1a; aspect-ratio: 1; overflow: hidden; }
+/* 相纸：快门之前是一张白的，只有一道很淡的压边 */
+.polaroid-well {
+  position: relative;
+  background: #f3f0e9;
+  aspect-ratio: 1;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px rgba(92, 78, 60, .085), inset 0 1px 2px rgba(92, 78, 60, .07);
+}
 .polaroid-pic, .polaroid-well .img-slot { width: 100%; height: 100%; min-height: 0; }
-.polaroid.developing .polaroid-well { filter: contrast(.25) brightness(1.7); transition: filter .4s ease; }
-.polaroid.ready .polaroid-well { filter: none; animation: polaroid-in .7s ease; }
+/* 影像层：未曝光时不存在，吐出来之后才慢慢浮上来 */
+.polaroid-pic {
+  opacity: 0;
+  filter: blur(10px) saturate(.2) brightness(1.16);
+  transform: scale(.99);
+}
+.polaroid.developing .polaroid-pic {
+  opacity: 1;
+  filter: none;
+  transform: none;
+  transition: opacity 2.2s ease-out, filter 2.2s ease-out, transform 2.2s ease-out;
+}
+.polaroid.ready .polaroid-pic { opacity: 1; filter: none; transform: none; }
+/* 药膜：吐纸那一下整张盖住，显影时退开 */
+.polaroid-well::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(178deg, #e9ece6, #ccd3cd);
+  opacity: 0;
+}
+.polaroid.exposing .polaroid-well::after { opacity: 1; }
+.polaroid.developing .polaroid-well::after { opacity: 0; transition: opacity 1.7s ease-out; }
+/* 吐纸：相纸从下方落定 */
+.polaroid.exposing { animation: polaroid-eject .46s ease-out; }
 .polaroid-cap {
   margin: 10px 0 0;
-  min-height: 1.3em;
+  /* 写上去之前就留够一行的高度：定影那一下整张纸不会往上跳 */
+  min-height: 1.6em;
+  line-height: 1.6;
   color: #3c342c;
   font-family: "KaiTi", "楷体", "STKaiti", serif;
   font-size: 14px;
@@ -7301,4 +7809,18 @@ html.screen-on body::after {
   background: #f7f4ee;
   box-shadow: 0 6px 16px rgba(0, 0, 0, .18);
 }
-@keyframes polaroid-in { from { opacity: .15; } to { opacity: 1; } }
+@keyframes polaroid-eject {
+  0% { transform: translateY(-9px) scale(.975); opacity: .65; }
+  55% { transform: translateY(1px) scale(1); opacity: 1; }
+  100% { transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .polaroid.developing .polaroid-pic,
+  .polaroid.developing .polaroid-well::after { transition-duration: .12s; }
+  .polaroid.exposing { animation: none; }
+}
+/* 窄屏：白边要容得下一行手写，相纸放宽、字略小，别把「出门前的车」拆成两截 */
+@media (max-width: 430px) {
+  .polaroid { width: min(260px, 90%); }
+  .polaroid-cap { font-size: 12.5px; letter-spacing: .02em; }
+}

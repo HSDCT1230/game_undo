@@ -32,7 +32,10 @@ function startTalk(beats, loc, kind, meta) {
     callSec: meta.incoming ? 0 : 6,
     waiting: false,
     clue: CLUE_IMG,
-    hereBg,
+    // meta.bg 是「这一场不在刚才那间房」：给空串就交给 locImg 按地点挑，
+    // 给图号就钉死。她刚从一个地方走开、下一句已经到别处时，舞台底图会留在原处，
+    // 不钉就会把厕所铺成客厅、把楼梯铺成诊室。
+    hereBg: meta.bg !== undefined ? meta.bg : hereBg,
     herePlace,
   };
   drawTalk();
@@ -53,6 +56,15 @@ function applyChoice(c) {
     S.talk.callSec += 4;
               drawTalk();
             }
+}
+
+/* 选项要记的不是 true，是一句话（"yes"/"no"/"none"）时用它：
+   then: pickFlag(() => flag("zhouTold", "yes"), line(...), ...)。
+   选项节拍本身不前进，所以先写 flag 再 stepPast。
+   flag 那一下写在做调用方，让 `flag("名",` 这种字面写法留在源码里（全检靠它统计设了哪些 Flag）。 */
+function pickFlag(set) {
+  const beats = Array.prototype.slice.call(arguments, 1);
+  return [{ goto: () => { set(); stepPast(); } }].concat(beats);
 }
 
 function advanceBeat(b) {
@@ -411,6 +423,9 @@ function drawTalk() {
     sfx(b.sfx);
   }
   if (b.clue !== undefined) t.clue = b.clue;
+  // 一句话里换地方（走进厕所／出来站在客厅）：底图跟着这一句走，并且贴住，
+  // 后面没写 bg 的句子继续用它——不然第三句又跳回进门时那张。
+  if (b.bg !== undefined) t.hereBg = b.bg;
   if (b.goto) {
     if (b.note) note(b.note[0], b.note[1]);
     if (b.flag) flag(b.flag, true);

@@ -72,14 +72,23 @@ function threadTime(id) {
   return isSerial(id) ? webStamp(serialAt(id)) : THREADS[id].time;
 }
 
-function helpRepliesOpen() {
-  return (S.helpSearches || 0) >= 3 || (typeof noted === "function" && noted("bbs-self"));
+function viewTriedCount() {
+  return Object.keys(S.viewTried || {}).length;
 }
 
-// 点三次「预约睇楼」之后，求助帖才露出藤先生那层。同一间连点也算。
-function countViewTry() {
-  if (helpRepliesOpen()) return;
-  S.helpSearches = (S.helpSearches || 0) + 1;
+function helpRepliesOpen() {
+  // S.helpSearches 是旧档留下的计数，只读不再写——跳关补前情那条路径还在用它。
+  return viewTriedCount() >= 3 || (S.helpSearches || 0) >= 3
+    || (typeof noted === "function" && noted("bbs-self"));
+}
+
+// 问过三间不同的盘，求助帖才露出藤先生那层。
+// 曾按「点三次」算，同一间连点也算——她只碰过一间，帖子就有人回了，
+// 与日记簿「一间一间对过去」对不上。现在按盘算。
+function countViewTry(id) {
+  if (helpRepliesOpen() || !id) return;
+  S.viewTried = S.viewTried || {};
+  S.viewTried[id] = true;
 }
 
 function threadReplies(id) {
@@ -126,21 +135,18 @@ function pinSerial(id) {
   S.postAt[id] = serialWhen(id);
 }
 
-// 钟一过剧本上的钟点就发，时间钉死，不跟「你哪一刻点发布」走。不然回复被推到还没到的钟，下一帖对不上。
+// 刊登时间钉死在剧本那一点，不跟「你哪一刻点发布」走——不然回复会被推到还没到的钟，下一帖对不上。
+// 但「几点刊登」不等于「已经发出」：发帖只能由草稿页那个「发布」按钮成立（publishSerial）。
+// 从前这里按钟点自己 flag(serialN, true)，玩家还没按，讨论区就先挂着「阿琪V」的帖，
+// 「发第 N 帖」也跟着自己勾上——她莫名其妙多了一篇帖，这一关也白送了。
 /* data -> web-data.js: SERIAL_DUE */
 
 function ensureSerials() {
   if (!S || !S.flags) return;
-  const now = clockDate().getTime();
   SERIAL_DUE.forEach((d) => {
+    if (!flag(d.key)) return;
     const when = serialWhen(d.id);
-    if (flag(d.key)) {
-      if (!S.postAt || S.postAt[d.id] !== when) pinSerial(d.id);
-      return;
-    }
-    if (!d.ready() || now < when) return;
-    pinSerial(d.id);
-    flag(d.key, true);
+    if (!S.postAt || S.postAt[d.id] !== when) pinSerial(d.id);
   });
 }
 
@@ -314,7 +320,7 @@ function needPostFirst() {
 }
 
 function blockedLogout() {
-  showPrompt(T("登出失败。", "退出失败。"), T("网页无回应，请稍后再试。", "网页无响应，请稍后再试。"));
+  showPrompt(T("登出失败", "退出失败"), T("网页无回应，请稍后再试", "网页无响应，请稍后再试"));
 }
 
 // 网页里的任务提示，和其他场景一样别在荧幕右边的便条上
@@ -434,7 +440,7 @@ function laptop(inner, opts) {
   const tabs = el("div", { class: "browser-tabs" }, [
     btnTab(wallCountLabel("廿八屋", houseForumUnread().length) + " - 香港租盘", "house", tab, scene),
     btnTab(wallCountLabel("墙簿", wallUnread().n) + " - 我的首页", "wall", tab, scene),
-    ...webTabs().map((id) => btnTab(webTabTitle(id), id, tab, scene)),
+    ...webTabs().map((id) => tabCell(webTabTitle(id), id, tab, scene)),
     btnTab("新分页", "newtab", tab, scene),
   ]);
   revealTab(tabs);
@@ -516,6 +522,58 @@ function btnTab(label, id, on, scene) {  return el("button", {
   }, [label]);
 }
 
+/* 网页分页外面再包一格，好让右上角那颗 × 单独成键。
+   廿八屋、墙簿是这部机固定的两格，照旧只用 btnTab，没有 ×。
+   「新分页」也不给 ×——那一格永远要留在最右边（见 closeWebTab 的说明）。 */
+function tabCell(label, id, on, scene) {
+  const btn = btnTab(label, id, on, scene);
+  if (scene) return btn;
+  btn.className += " closable";
+  return el("span", { class: "tab-cell" }, [
+    btn,
+    el("button", {
+      type: "button",
+      class: "tab-x",
+      title: "关闭分页",
+      onclick: (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        closeWebTab(id);
+      },
+    }, ["×"]),
+  ]);
+}
+
+/* 关一格网页分页。关掉的若正是眼前这一格，把邻格提上来（先右后左，都没有就回
+   「新分页」）；「新分页」那一格本身由 laptop() 无条件画出来，所以关到只剩它也不会没了。 */
+function closeWebTab(id) {
+  const list = webTabs();
+  const i = list.indexOf(id);
+  if (i < 0) return;
+  const wasOn = S.tab === id;
+  const next = list[i + 1] || list[i - 1] || "newtab";
+  S.webTabs = list.filter((x) => x !== id);
+  if (S.tabMem) delete S.tabMem[id];
+  if (S.tabHist) delete S.tabHist[id];
+  if (!wasOn) {
+    draw();
+    return;
+  }
+  if (typeof sfxWebClose === "function") sfxWebClose();
+  webAddrDraft = null;
+  const mem = next !== "newtab" ? tabMemory(next) : null;
+  if (mem) {
+    swapTabHist(id, next);
+    restoreWebSnap(mem);
+    S.tab = next;
+    webStartLoad();
+    draw();
+    return;
+  }
+  swapTabHist(id, "newtab");
+  goWeb("newtab", { tab: "newtab", noHist: true });
+}
+
 function webLink(text, fn, cls) {
   return el("a", {
     href: "#",
@@ -539,6 +597,10 @@ function snapWeb() {
     adId: S.adId,
     query: S.query,
     listFilter: S.listFilter || "all",
+    // 维基条目最底那几条新闻稿是同一个 screen，靠这一项分开是哪一篇。
+    wikiNews: S.wikiNews || "",
+    // 官网内页同理：栏目页／新闻／活动各是一个 screen，靠这一项分开是哪一页。
+    siteArg: S.siteArg || "",
     // 校园网站内页（收件箱／公告栏）是同一个 screen，靠这两项分开列表与单条。
     vhuMail: (S.vhu && S.vhu.mail) || "",
     vhuNotice: (S.vhu && S.vhu.notice) || "",
@@ -598,7 +660,19 @@ function webTabTitle(id) {
   const s = tabScreen(id);
   if (s.indexOf("vhu-") === 0) return "VHU Portal - 维港大学";
   if (s === "engine") return "通搜　搜寻";
-  if (s === "wiki") return "维港大学 - 维基百科";
+  // 真维基的分页标题是「条目名 - 维基百科，自由的百科全书」，一行写全，截不截是浏览器的事。
+  if (s === "wiki") return "维港大学 - 维基百科，自由的百科全书";
+  if (s === "wiki-news") return "大学新闻稿 - 维港大学";
+  if (s === "wiki-cat") return "Category:香港的大学 - 维基百科，自由的百科全书";
+  // 官网与门户的标题刻意不同：一部是「维港大学」，一部是「VHU Portal」。
+  // 分页条上并排两格的时候，这一行字就是她分辨「哪个才是能登入的」的唯一依据。
+  if (s === "vhusite") return "维港大学";
+  // 内页标题：真站的浏览器标题是「栏目 - 站名」，不写篇名——篇名长了会被截，
+  // 而且分页上并排几格时，认出「还是同一部机器」比认出「是哪一篇」要紧。
+  if (s === "vhusite-page") return "维港大学";
+  if (s === "vhusite-story") return "新闻稿 - 维港大学";
+  if (s === "vhusite-event") return "活动 - 维港大学";
+  if (s === "hknews") return "维港大学 - 院校动态 - 香港日报";
   if (s === "web-error") return "无法显示网页";
   return "about:blank";
 }
@@ -726,8 +800,8 @@ function closeRental() {
   if (S.pendingPost && typeof THREADS !== "undefined" && THREADS[S.pendingPost]) {
     if (!S.modal) {
       showPrompt(
-        T("还没发布。", "还没发布。"),
-        T("先按「发布」。关掉窗口不会把帖发出去。", "先按「发布」。关掉窗口不会把帖发出去。")
+        T("还没发布", "还没发布"),
+        T("先按「发布」，关掉窗口不会把帖发出去", "先按「发布」，关掉窗口不会把帖发出去")
       );
     }
     return;
@@ -748,11 +822,15 @@ document.addEventListener("keydown", (e) => {
   closeRental();
 });
 
-// 落「新分页」那一格的都是外来站：空白页、打不开的网址、搜索结果、维基、整个校园网。
+// 落「新分页」那一格的都是外来站：空白页、打不开的网址、搜索结果、维基、学校官网、报纸、整个校园网。
 // 三处（goWeb／browseFromScene／分页标题）都得用同一套判法，不然分页高亮会跟页面对不上。
 function isBlankSite(screen) {
   const s = String(screen || "");
-  return s === "newtab" || s === "web-error" || s === "engine" || s === "wiki" || s.indexOf("vhu-") === 0;
+  // 官网内页（vhusite-page／vhusite-story／vhusite-event）跟首页一样落在外来页那一格，
+  // 所以这里要按前缀认，不能只认 "vhusite" 一个字符串。
+  return s === "newtab" || s === "web-error" || s === "engine" || s === "wiki" ||
+    s === "wiki-news" || s === "wiki-cat" || s.indexOf("vhusite") === 0 ||
+    s === "hknews" || s.indexOf("vhu-") === 0;
 }
 
 function goWeb(screen, extra) {
@@ -787,6 +865,8 @@ function goWeb(screen, extra) {
   S.webFwd = [];
   S.screen = screen;
   S.wallFresh = null;
+  // 一走动就把没答完的回覆丢掉：草稿不该跟着人跑，更不该下次打开还挂在帖下面。
+  S.wallDraft = null;
   S.wallNav = (S.wallNav || 0) + 1;
   if (extra.tab) S.tab = extra.tab;
   // 站内页之间走动时留在自己这一格：从哪张分页搜进去，就一直在那张分页里。
@@ -798,6 +878,8 @@ function goWeb(screen, extra) {
   if ("newsId" in extra) S.newsId = extra.newsId;
   if ("adId" in extra) S.adId = extra.adId;
   if ("query" in extra) S.query = extra.query;
+  if ("wikiNews" in extra) S.wikiNews = extra.wikiNews || "";
+  if ("siteArg" in extra) S.siteArg = extra.siteArg || "";
   if ("filter" in extra) S.listFilter = extra.filter;
   // 收件箱／公告栏的列表与单条是同一个 screen，用这两个走历史栈。
   if ("mailId" in extra && S.vhu) S.vhu.mail = extra.mailId || "";
@@ -848,6 +930,8 @@ function restoreWebSnap(p) {
   S.adId = p.adId;
   S.query = p.query;
   S.listFilter = p.listFilter || "all";
+  if (p.screen === "wiki-news") S.wikiNews = p.wikiNews || "";
+  S.siteArg = p.siteArg || "";
   if (S.vhu) {
     if (p.screen === "vhu-mail") S.vhu.mail = p.vhuMail || "";
     if (p.screen === "vhu-notice") S.vhu.notice = p.vhuNotice || "";
@@ -1027,8 +1111,28 @@ function webAddr() {
     "wall-user": "http://wallbook.hk/profile/" + (S.wallWho || ""),
     newtab: "about:blank",
     "web-error": (S.vhu && S.vhu.errUrl) || "http://",
-    engine: "http://" + SE_SITE.host + "/search?q=" + encodeURIComponent(seQueryText()),
-    wiki: "http://zh.wikipedia.org/wiki/" + encodeURIComponent("维港大学"),
+    // 地址栏上是她刚打的那几个中文字，不是一串 %E7%BB%B4。空格仍旧转成 %20——
+    // 真浏览器只把空白转义，汉字照原样显示。
+    // 还没搜的时候地址栏是站点首页（不带 q）——从前一律带着 ?q=，页面明明是首页、
+    // 地址栏却像搜过，看着像刚搜完又把结果清掉了。
+    engine: S.seSearched
+      ? "http://" + SE_SITE.host + "/search?q=" + String(seQueryText()).split(" ").join("%20")
+      : "http://" + SE_SITE.host + "/",
+    // 真正的浏览器把路径上的中文显示出来，不会给她看一串 %E7%BB%B4。
+    wiki: "http://zh.wikipedia.org/wiki/" + "维港大学",
+    // 新闻稿存档在对外那一头：门户要登入，这一头不用——她读到的那条旧闻就在这里。
+    "wiki-news": "http://www.vhu.edu.hk/press/" +
+      ((typeof WIKI_NEWS === "object" && WIKI_NEWS[S.wikiNews] && WIKI_NEWS[S.wikiNews].slug) || ""),
+    // 分类页跟条目同在 zh.wikipedia.org 底下，只是名字空间换成 Category:。
+    "wiki-cat": "http://zh.wikipedia.org/wiki/Category:香港的大学",
+    // 对外那一页。维基资料框里写的 www.vhu.edu.hk，就是这一串。
+    vhusite: "http://www.vhu.edu.hk/",
+    // 内页三个。地址跟真站一样走路径：栏目挂在根下，新闻与活动按年份分夹。
+    // siteArg 就是那一页的 slug（about／0912／1031…），直接拼进去。
+    "vhusite-page": "http://www.vhu.edu.hk/" + (S.siteArg || "") + "/",
+    "vhusite-story": "http://www.vhu.edu.hk/news/2014/" + (S.siteArg || "") + "/",
+    "vhusite-event": "http://www.vhu.edu.hk/events/2014/" + (S.siteArg || "") + "/",
+    hknews: "http://news.hkdaily.com.hk/edu/vhu",
     "vhu-login": "https://" + VHU_HOST + "/login",
     "vhu-home": "https://" + VHU_HOST + "/home",
     "vhu-profile": "https://" + VHU_HOST + "/profile",
@@ -1077,6 +1181,13 @@ function webInner() {
     "web-error": viewWebError,
     engine: viewSearchEngine,
     wiki: viewWiki,
+    "wiki-news": viewWikiNews,
+    "wiki-cat": viewWikiCat,
+    vhusite: viewVhuSite,
+    "vhusite-page": viewVhuSitePage,
+    "vhusite-story": viewVhuSiteStory,
+    "vhusite-event": viewVhuSiteEvent,
+    hknews: viewHkNews,
     "vhu-login": viewVhuLogin,
     "vhu-home": viewVhuHome,
     "vhu-profile": viewVhuProfile,
@@ -1250,6 +1361,8 @@ function viewHome() {
   ));
   const news = el("div", { class: "mini-list" }, newsIds(5).map((id) => newsLink(id, true)));
   const mainKids = [chips];
+  // 两条分支从前正文一字不差。底下那条更糟：藤先生还没回，也说「有新回复」，
+  // 她点进去看见自己那帖底下空着——提示在替网站撒谎。没人回就写没人回。
   if (postedHelp() && helpRepliesOpen() && !(typeof noted === "function" && noted("bbs-self"))) {
     mainKids.unshift(siteNotice(T("讨论区通知", "论坛通知"), [
       el("p", { class: "notice-line" }, [
@@ -1260,7 +1373,7 @@ function viewHome() {
   } else if (postedHelp() && !flag("sawOwnPost")) {
     mainKids.unshift(siteNotice(T("讨论区通知", "论坛通知"), [
       el("p", { class: "notice-line" }, [
-        T("你在「求助」的帖子有新回复。", "你在「求助」的帖子有新回复。"),
+        T("你的帖子还在，暂时没有人回。", "你的帖子还在，暂时没有人回复。"),
         webLink(T("查看帖子", "查看帖子"), () => goWeb("thread", { forumId: "helpzhang" })),
       ]),
     ]));
@@ -1289,7 +1402,16 @@ function viewHome() {
       input,
       el("button", { type: "button", class: "btn", onclick: doSearch }, [W("search")]),
     ]),
-    el("p", { class: "hint" }, [W("recentSearch")]),
+    // 「最近搜过」从前是一行「元朗　天水围／荃湾　新楼／大角咀　套房」：
+    // 三笔不同的搜寻用全角空格和斜线拼在一条线上，只有机器看得顺。拆成三行，点一下重搜。
+    el("div", { class: "recent-searches" }, [
+      el("span", { class: "recent-h" }, [W("recentSearch")]),
+      ...["元朗 天水围", "荃湾 新楼", "大角咀 套房"].map((q) =>
+        webLink(q, () => {
+          S.query = q;
+          doSearch();
+        }, "recent-q")),
+    ]),
     el("div", { class: "home-grid" }, [
       el("section", {}, [el("h2", { class: "sec-h" }, [W("latest")]), latest]),
       el("section", {}, [el("h2", { class: "sec-h" }, [W("siteNews")]), news]),
@@ -1461,11 +1583,11 @@ function favBtn(l) {
       if (isFav(l.id)) {
         S.favs = S.favs.filter((x) => x !== l.id);
         draw();
-        showPrompt(T("已从我的收藏移除。", "已从我的收藏移除。"));
+        showPrompt(T("已从我的收藏移除", "已从我的收藏移除"));
       } else {
         S.favs.push(l.id);
         draw();
-        showPrompt(T("已加入我的收藏。", "已加入我的收藏。"), T("右上角「收藏」可再打开。", "右上角「收藏」可再打开。"));
+        showPrompt(T("已加入我的收藏", "已加入我的收藏"), T("右上角「收藏」可再打开", "右上角「收藏」可再打开"));
       }
     },
   }, [isFav(l.id) ? T("已收藏", "已收藏") : W("fav")]);
@@ -1541,8 +1663,10 @@ function specTable(rows) {
 
 function detailTk() {
   const l = listingById("tk");
-  const bodyY = "最短租约一年。约睇楼须先过一个月订金，唔过订唔约。本站不负责订金。";
-  const bodyZ = "最短租约一年。预约看房须先交一个月订金，不交订不约。本站不负责订金。";
+  // 业主说的就是业主说的：从前这行尾巴挂着一句「本站不负责订金」，
+  // 那是网站的口径，不该从业主嘴里出来。
+  const bodyY = "最短租约一年。约睇楼要先过一个月订金，唔过订唔约。";
+  const bodyZ = "最短租约一年。预约看房要先交一个月订金，不交订不约。";
   const body = T(bodyY, bodyZ);
   return el("div", { class: "detail hk-detail" }, [
     imgSlot(l.img, "photo-lg", Ty(l, "title")),
@@ -1564,9 +1688,9 @@ function detailTk() {
       el("p", { class: "fine" }, [T("地点近奥海城，空房可即睇——条款写在上面。", "地点近奥海城，空房可即看——条款写在上面。")]),
       el("div", { class: "actions" }, [
         el("button", { class: "btn", type: "button",         onclick: () => {
-          countViewTry();
+          countViewTry(l.id);
           strikeFour(bodyY, listingShort(l));
-          showPrompt(T("业主已回覆。", "房东已回复。"), body);
+          showPrompt(T("业主已回覆", "房东已回复"), body);
         } }, [W("bookView")]),
         el("button", { class: "btn ghost", type: "button", onclick: () => goWeb("list") }, [W("backList")]),
         favBtn(l),
@@ -1577,8 +1701,8 @@ function detailTk() {
 
 function detailTw() {
   const l = listingById("tw");
-  const bodyY = "请先提供在职证明及担保人资料，再安排睇楼。本盘不接受周租。";
-  const bodyZ = "请先提供在职证明及担保人资料，再安排看房。本盘不接受按周付租。";
+  const bodyY = "在职证明、担保人。两样齐了再约。周租不做。";
+  const bodyZ = "在职证明、担保人资料。两样齐了再约。按周付租不做。";
   return el("div", { class: "detail hk-detail" }, [
     imgSlot(l.img, "photo-lg", Ty(l, "title")),
     el("div", { class: "kv" }, [
@@ -1600,9 +1724,9 @@ function detailTw() {
           class: "btn",
           type: "button",
           onclick: () => {
-            countViewTry();
+            countViewTry(l.id);
             strikeFour(bodyY, listingShort(l));
-            showPrompt(T("代理已回覆。", "中介已回复。"), T(bodyY, bodyZ));
+            showPrompt(T("代理已回覆", "中介已回复"), T(bodyY, bodyZ));
           },
         }, [W("bookView")]),
         el("button", { class: "btn ghost", type: "button", onclick: () => goWeb("list") }, [W("backList")]),
@@ -1635,9 +1759,9 @@ function detailGeneric(l) {
           class: "btn",
           type: "button",
           onclick: () => {
-            countViewTry();
+            countViewTry(l.id);
             strikeFour(l.failBody, listingShort(l));
-            showPrompt(Ty(l, "failTitle") || T("已回覆。", "已回复。"), Ty(l, "failBody"));
+            showPrompt(Ty(l, "failTitle") || T("已回覆", "已回复"), Ty(l, "failBody"));
           },
         }, [W("bookView")]),
         el("button", { class: "btn ghost", type: "button", onclick: () => goWeb("list") }, [W("backList")]),
@@ -1680,7 +1804,7 @@ function detailSsp() {
       sspRented() ? siteNotice("盘源状态", [el("p", {}, ["业主已标示：已租出（08-01）。"])]) : "",
       el("div", { class: "actions" }, [
         sspRented() ? "" : el("button", { class: "btn", type: "button", onclick: () => {
-          if (!flag("sawMail")) countViewTry();
+          if (!flag("sawMail")) countViewTry(l.id);
           goViewing(false);
         } }, [
           flag("sawMail") ? W("goViewing") : W("bookView"),
@@ -1763,7 +1887,7 @@ function reachMorning() {
 function sendPm() {
   const text = (S.pmBody || "").trim();
   if (!text) {
-    showPrompt("请填写讯息内容。");
+    showPrompt("请填写讯息内容");
     return;
   }
   if (flag("askedOld")) return;
@@ -1839,7 +1963,7 @@ function viewPm() {
 function viewInbox() {
   if (replyReady() && !flag("sawMail")) {
     flag("sawMail", true);
-    note("zhou-reply", "周先生回了留言。今日下昼。旧嘢如果怕，可以叫他把相收起。");
+    note("zhou-reply", "周先生回了留言。今日下昼，他在。");
   }
   const body = [];
   body.push(
@@ -1862,7 +1986,9 @@ function viewInbox() {
           el("span", {}, ["周先生"]),
           el("span", { class: "mm-sub" }, ["回复了你"]),
         ]),
-        el("div", { class: "mail-body" }, ["今日下昼得。我喺度等。简介写过屋内有旧嘢，你见过怕就同我讲，相可以收起一部分。"]),
+        // 他只回这一句。旧嘢那句放到看房时当面说——留言里先交代一遍，
+        // 等于把后面的戏提前讲完，见面再讲就成复读。短到近乎冷淡，才是这个人。
+        el("div", { class: "mail-body" }, ["今日下昼得。我喺度等。"]),
       ]),
       el("div", { class: "actions" }, [
         sspRented() ? "" : el("button", { class: "btn", type: "button", onclick: () => goViewing(true) }, ["赴约看房"]),
@@ -1984,7 +2110,7 @@ function viewThread() {
   }
   if (S.forumId === "wk3") {
     flag("sawWk3", true);
-    note("serial3", "第三帖底下，藤先生又没有出声。");
+    note("serial3", "第三帖底下，藤先生还是没出声。");
   }
   const floorBlock = (no, metaKids, bodyKids) => el("div", { class: "mail-body floor" }, [
     el("p", { class: "mail-meta floor-head" }, [
@@ -2026,15 +2152,18 @@ function viewRules() {
     el("h2", { class: "sec-h" }, ["租务须知（摘录）"]),
     el("p", { class: "mail-meta" }, ["最后修订：2012年3月。一般说明，并非法律意见。"]),
     el("h3", { class: "sec-h" }, ["一、印花税"]),
-    el("p", {}, ["租住权合约应按《印花税条例》加盖印花。即使先以口头谈妥、其后补书面纪录，原则上仍须加盖。未加盖印花的文书，一旦出现欠租、提早收回等争议，民事程序中可能不被接纳为证据。印花税由业主或租客缴付可自行约定，加盖责任属双方。查询可向税务局印花税署。"]),
+    el("p", {}, ["租约应按《印花税条例》加盖印花。口头谈妥、之后补书面纪录的，原则上仍要盖。未加盖的文书一旦闹上法庭，可能不被接纳为证据。由哪一方付，双方自己约定。"]),
     el("h3", { class: "sec-h" }, ["二、口头协议"]),
     el("p", {}, ["双方若已就租金、年期及交收达成一致，即使未签书面租约，在香港亦可构成租住权。举证则视乎交租纪录、讯息往来、证人等。本站仍建议尽量书面写明起租日、通知期及交租方式。"]),
     el("h3", { class: "sec-h" }, ["三、业主自让与本站角色"]),
     el("p", {}, ["「业主自让」指业主自行放盘，不经地产代理。睇楼、议价、交钥匙、收按金均由双方直接安排。本站只提供分类广告，不代收款项，不保证盘源，不对成交负责。"]),
-    el("p", {}, ["交租方式（月结、周结、转账或现金）由双方约定。市场常见为两个月按金加一个月上期；亦有业主按周计租。即时交收钥匙并不罕见，仍建议先点齐屋况并拍照。"]),
+    // 这一段原有一句「市场常见为两个月按金加一个月上期」，首页侧栏那条提示
+    // 说的是同一件事——同一页里讲两遍，就只剩一遍的分量。删掉。
+    el("p", {}, ["交租方式（月结、周结、转账或现金）由双方约定。亦有业主按周计租。即日交收钥匙并不罕见，仍建议先点齐屋况并拍照。"]),
     el("h3", { class: "sec-h" }, ["四、出租范围与屋内物件"]),
     el("p", {}, ["租约应列明出租范围（例如整层、后座、套房）。阁楼、工人房、储物室、天台、后楼梯等若未写进合约，一般不视为租客专用范围。屋内家具、杂物、私人用品如非订明随楼附送，产权仍属业主；搬入前宜与业主点齐。"]),
-    el("p", { class: "fine" }, ["个案情况请自行向律师查询。本页如与现行法例不符，以法例为准。"]),
+    // 页脚每页都写着「成交前建议咨询律师」，这里不必再说一次。
+    el("p", { class: "fine" }, ["本页如与现行法例不符，以法例为准。"]),
   ], [{ text: "首页", go: () => goWeb("home") }, { text: "租务须知" }]);
 }
 
@@ -2130,15 +2259,6 @@ function viewLogin() {
       onclick: blockedLogout,
     }, ["登出"]),
   ], [{ text: "首页", go: () => goWeb("home") }, { text: "账户" }]);
-}
-
-function openSerialDraft(id) {
-  S.pendingPost = id;
-  S.talk = null;
-  S.mode = "web";
-  S.tab = "house";
-  S.screen = "post";
-            draw();
 }
 
 function publishSerial() {
@@ -2319,6 +2439,20 @@ function wallShown(list) {
   return list.map((e) => ({ e, t: wallTime(e) })).filter((x) => x.t && webPast(x.t)).sort((a, b) => b.t - a.t);
 }
 
+/* 今天的那几条：发在「今天」，有可挑的话，她还没回。
+   关卡拿它当必做——回一句才走得了；旧帖照样能回，但不拿它们卡住日子。 */
+function wallToday() {
+  const today = typeof storyDay === "function" ? storyDay() : 0;
+  const dayNum = (s) => {
+    const m = /^(\d{2})-(\d{2})$/.exec(String(s || ""));
+    return m ? Number(m[1]) * 100 + Number(m[2]) : 0;
+  };
+  const all = wallShown(WALL_FEED.concat(WALL_MAIL))
+    .map((x) => x.e)
+    .filter((e) => e.answer && e.answer.length && dayNum(e.at[0]) === today);
+  return { all, open: all.filter((e) => !wallMine(e)) };
+}
+
 function wallMine(e) {
   return (S.wallReplied && S.wallReplied[e.id]) || null;
 }
@@ -2353,6 +2487,7 @@ function wallDrafting(e) {
 }
 
 function wallSendAnswer(e, a) {
+  if (!a) return;
   S.wallReplied = S.wallReplied || {};
   S.wallReplied[e.id] = { text: a.text, back: a.back || "", t: clockDate().getTime(), nav: S.wallNav || 0 };
   wallMarkSeen([e.id + ":me"]);
@@ -2366,7 +2501,8 @@ function wallDropDraft() {
   draw();
 }
 
-// 「回应」在帖子底下展开预制草稿，不弹网页提示
+// 「回应」在帖子底下展开预制草稿，不弹网页提示。
+// 打开时一句都不预选：这句要她自己挑，挑完备选自动收起，才按得了「发送」。
 function wallAnswer(e) {
   if (e.mute) {
     tip(e.mute);
@@ -2374,25 +2510,32 @@ function wallAnswer(e) {
   }
   if (!e.answer || !e.answer.length) return;
   if (wallDrafting(e)) S.wallDraft = null;
-  else S.wallDraft = { id: e.id, i: 0 };
+  else S.wallDraft = { id: e.id, i: -1 };
   draw();
 }
 
 function wallDraftBox(e) {
   const list = e.answer || [];
   if (!list.length) return null;
-  let i = Math.max(0, Math.min((S.wallDraft && S.wallDraft.i) || 0, list.length - 1));
+  const saved = S.wallDraft && S.wallDraft.id === e.id ? S.wallDraft.i : -1;
+  let i = typeof saved === "number" && saved >= 0 ? Math.min(saved, list.length - 1) : -1;
   const input = el("input", {
     type: "text",
     class: "wall-draft-input",
     readOnly: true,
-    value: list[i].text,
+    // value 走的是属性，不经过 el() 的 H()，粤语模式要自己转一次，
+    // 不然下拉里是「遲啲講。」、格子里是「迟啲讲。」，一句话两种字。
+    value: i >= 0 ? H(list[i].text) : "",
+    placeholder: H("选一句回覆"),
     "aria-label": "回复",
   });
-  const menu = el("ul", {
-    class: "wall-draft-menu",
-    hidden: list.length < 2,
-  }, list.map((opt, idx) => el("li", {}, [
+  const send = el("button", {
+    type: "button",
+    class: "wall-draft-send",
+    disabled: i < 0,
+    onclick: () => { if (i >= 0) wallSendAnswer(e, list[i]); },
+  }, ["发送"]);
+  const menu = el("ul", { class: "wall-draft-menu" }, list.map((opt, idx) => el("li", {}, [
     el("button", {
       type: "button",
       class: "wall-draft-opt" + (idx === i ? " on" : ""),
@@ -2400,23 +2543,24 @@ function wallDraftBox(e) {
         ev.preventDefault();
         i = idx;
         S.wallDraft = { id: e.id, i: idx };
-        input.value = opt.text;
+        input.value = H(opt.text);
+        input.blur();
+        // 选完就收起来：备选框不该一直摊在那里挡着「发送」，也不该留半截没答的话。
+        menu.hidden = true;
+        send.disabled = false;
         menu.querySelectorAll(".wall-draft-opt").forEach((b, n) => b.classList.toggle("on", n === idx));
-        input.focus();
       },
     }, [opt.text]),
   ])));
-  if (list.length > 1) {
-    input.addEventListener("focus", () => { menu.hidden = false; });
-    input.addEventListener("blur", () => { setTimeout(() => { menu.hidden = true; }, 160); });
-  }
+  // 选过了想换一句：点一下输入框，备选再翻出来
+  input.addEventListener("focus", () => { menu.hidden = false; });
   return el("div", { class: "wall-draft" }, [
     el("div", { class: "wall-draft-box" }, [
       el("span", { class: "wall-draft-who" }, ["章慧琪"]),
       el("div", { class: "wall-draft-field" }, [input, menu]),
     ]),
     el("div", { class: "wall-draft-acts" }, [
-      el("button", { type: "button", class: "wall-draft-send", onclick: () => wallSendAnswer(e, list[i]) }, ["发送"]),
+      send,
       el("button", { type: "button", class: "wall-draft-drop", onclick: () => wallDropDraft() }, ["不发"]),
     ]),
   ]);
@@ -2576,8 +2720,12 @@ function wallTick() {
     }
   }
   S.houseLastN = houseN;
+  // 红点不只看「没看过」：有人问了话、她还没回，也算这里有事。
+  // 那种帖早就读过了，未读数掉到零，可任务还卡着——先前只有一张文字便条，
+  // 底栏干干净净，看着像没事。回覆之前红点一直亮（那一条也是必做，不回走不了）。
+  const openN = typeof wallToday === "function" ? wallToday().open.length : 0;
   const b = document.getElementById("playbar-house");
-  if (b) b.classList.toggle("has-new", (n > 0 || houseN > 0) && S.mode !== "web" && !S.paused);
+  if (b) b.classList.toggle("has-new", (n > 0 || houseN > 0 || openN > 0) && S.mode !== "web" && !S.paused);
 }
 
 // 这格跟他在论坛出没同步：她搬进去后收起，08-24 回帖那天冒一天，09-07 论坛发帖同一分钟回来。字从来不改。
@@ -2752,7 +2900,7 @@ function wallAdCta(a) {
   return el("button", {
     class: "wall-ad-cta",
     type: "button",
-    onclick: () => showPrompt(T("未能完成", "未能完成"), a.ctaFail ? hkAd(a.ctaFail) : T("请稍后再试。", "请稍后再试。")),
+    onclick: () => showPrompt(T("提交失败", "提交失败"), a.ctaFail ? hkAd(a.ctaFail) : T("请稍后再试", "请稍后再试")),
   }, [a.cta ? hkAd(a.cta) : T("提交", "提交")]);
 }
 
@@ -2791,7 +2939,9 @@ function viewAdShop(a) {
       wallKv((a.rows || []).map(([k, v]) => [hkAd(k), hkAd(v)])),
     ]),
     a.note ? el("div", { class: "wall-ad-floor muted" }, [el("p", { class: "fine" }, [hkAd(a.note)])]) : "",
-    el("div", { class: "wall-ad-acts" }, [wallAdCta(a)]),
+    // 小商户的落地页本来没有按钮：电话就写在资料里，人自己打。从前这里挂一个
+    // 「亲临门市」的钮，按下去回一句「本页不收预约」——钮说要人做的事，弹窗说做不了。
+    a.cta ? el("div", { class: "wall-ad-acts" }, [wallAdCta(a)]) : "",
     el("p", { class: "wall-ad-disc" }, [T("墙簿不对赞助内容负责。", "墙簿不对赞助内容负责。")]),
   ]);
 }

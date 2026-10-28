@@ -602,8 +602,19 @@
 .se-title a { text-decoration: underline; }
 .se-url { color: var(--se-green); font-size: 11.5px; }
 .se-snip { margin: 2px 0 0; color: #333; line-height: 1.85; }
-.se-picks { margin: 6px 0 0; padding: 0; list-style: none; color: var(--se-mute); font-size: 12px; }
+.se-picks { margin: 6px 0 0; padding: 0; list-style: none; color: var(--se-mute); font-size: 12px;
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 12px; }
 .se-picks li { padding: 3px 0; }
+.se-picks .se-picks-h { color: #999; }
+/* 热门词各自一块浅底：词里本来就有空格（「深水埗 重建」），
+   不加边就分不清哪几个字是一组。 */
+.se-picks .web-link {
+  padding: 1px 7px;
+  border: 1px solid #e2e2e2;
+  background: #f7f7f7;
+  text-decoration: none;
+}
+.se-picks .web-link:hover { border-color: #b9cde2; background: #eef4fa; }
 .se-fine { margin: 18px 0 0; color: #999; font-size: 10.5px; }
 
 /* 空白分页上那一格：当年装了搜索栏的 IE 就是这样，一格吃得下网址和关键词。
@@ -622,38 +633,82 @@
 
 /* ---------- 维基 ---------- */
 
+/* 仿 2014 年的 Vector 版型：头顶一条浅灰带（标志、搜索框、右上角那串人名），
+   左边一列导航，正文右上角浮资料框、左边浮目录，每个小标题右端挂「[编辑]」，
+   页脚三行授权声明。字号比门户小一档——维基正文本来就只有 12.5px 上下。 */
 .wk-site {
   --wk-ink: #14141a;
   --wk-line: #a2a9b1;
   --wk-link: #0b4f9e;
   --wk-mute: #54595d;
+  --wk-fill: #f8f9fa;
   background: #fff;
   color: var(--wk-ink);
   font: 12.5px/1.75 Georgia, "Times New Roman", "Microsoft JhengHei", serif;
 }
-.wk-site a { color: var(--wk-link); }
+.wk-site a { color: var(--wk-link); text-decoration: none; }
+.wk-site a:hover { text-decoration: underline; }
 
 .wk-head {
   display: flex;
-  align-items: baseline;
-  gap: 8px;
-  padding: 8px 18px;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 12px 5px;
   border-bottom: 1px solid var(--wk-line);
   background: #f6f6f6;
 }
-.wk-mark {
+.wk-brand { display: flex; align-items: center; gap: 8px; }
+/* 标志：拼图地球，中文版球面中间一个「維」。用径向渐变压出球面，不用图片。 */
+.wk-globe {
   display: inline-flex;
+  flex: 0 0 auto;
   align-items: center;
   justify-content: center;
-  width: 22px;
-  height: 22px;
-  border: 1px solid #333;
+  width: 34px;
+  height: 34px;
+  border: 1px solid #c8ccd1;
   border-radius: 50%;
-  font: 700 12px/1 Georgia, serif;
-  align-self: center;
+  background: radial-gradient(circle at 34% 30%, #fdfefe 0%, #e8eef3 50%, #c9d4dd 100%);
+  box-shadow: inset 0 0 0 2px #fff;
+  color: #2b3a45;
+  font: 400 17px/1 "Microsoft JhengHei", Georgia, serif;
 }
-.wk-word { font: 15px/1.2 "Microsoft JhengHei", serif; letter-spacing: .04em; }
-.wk-head small { color: var(--wk-mute); font-size: 10.5px; }
+.wk-word { display: flex; flex-direction: column; line-height: 1.15; }
+.wk-word strong { font: 400 15px/1.2 "Microsoft JhengHei", Georgia, serif; letter-spacing: .06em; }
+.wk-word small { color: var(--wk-mute); font: 10px/1.3 "Microsoft JhengHei", sans-serif; }
+
+.wk-tools { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; min-width: 0; }
+.wk-user {
+  display: flex;
+  gap: 9px;
+  color: var(--wk-mute);
+  font: 11px/1.4 "Microsoft JhengHei", sans-serif;
+  white-space: nowrap;
+}
+.wk-user-in { color: var(--wk-link); }
+.wk-search { display: flex; gap: 3px; }
+.wk-q {
+  width: 168px;
+  height: 19px;
+  padding: 0 5px;
+  border: 1px solid var(--wk-line);
+  border-radius: 2px;
+  background: #fff;
+  color: var(--wk-ink);
+  font: 11px/17px "Microsoft JhengHei", sans-serif;
+}
+.wk-qbtn {
+  height: 21px;
+  padding: 0 8px;
+  border: 1px solid var(--wk-line);
+  border-radius: 2px;
+  background: var(--wk-fill);
+  color: #333;
+  font: 11px/19px "Microsoft JhengHei", sans-serif;
+  cursor: pointer;
+}
+.wk-qbtn:hover { background: #eef1f3; }
 
 .wk-cols { display: flex; align-items: flex-start; }
 .wk-side {
@@ -677,29 +732,66 @@
 .wk-dead { color: #7c8a99; }
 
 .wk-article { flex: 1 1 auto; min-width: 0; padding: 10px 18px 30px; }
-.wk-crumb { color: var(--wk-mute); font-size: 10.5px; }
-.wk-title {
-  margin: 0 0 6px;
-  padding-bottom: 4px;
+
+/* 「条目／讨论」那一排索引，左半边是这一条的两面，右半边是「阅读／编辑／查看历史」。
+   当前那一格底色转白、压掉下边框，跟下面的正文连成一片。 */
+.wk-tabs {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0 0 10px;
   border-bottom: 1px solid var(--wk-line);
-  font: 400 23px/1.3 "Microsoft JhengHei", Georgia, serif;
+  font: 11.5px/1.2 "Microsoft JhengHei", sans-serif;
+}
+.wk-tabs ul { display: flex; margin: 0; padding: 0; list-style: none; }
+.wk-tabs li { padding: 5px 9px; color: var(--wk-link); }
+.wk-tabs li.on {
+  margin-bottom: -1px;
+  padding-bottom: 6px;
+  border: 1px solid var(--wk-line);
+  border-bottom-color: #fff;
+  background: #fff;
+  color: var(--wk-ink);
+}
+.wk-tabs-r li.on { margin-bottom: 0; padding: 5px 6px; border: 0; background: none; color: var(--wk-mute); }
+.wk-tabs-r li { padding: 5px 6px; }
+
+.wk-title {
+  margin: 0;
+  padding: 0 0 3px;
+  border-bottom: 1px solid var(--wk-line);
+  font: 400 24px/1.35 "Microsoft JhengHei", Georgia, serif;
   letter-spacing: .02em;
 }
+.wk-sub { margin: 2px 0 8px; color: var(--wk-mute); font: 10.5px/1.5 "Microsoft JhengHei", sans-serif; }
 .wk-warn {
   margin: 0 0 10px;
-  padding: 6px 9px;
+  padding: 5px 9px;
   border: 1px solid #c8ccd1;
   background: #fbfbfb;
   color: var(--wk-mute);
   font: 10.5px/1.6 "Microsoft JhengHei", sans-serif;
 }
+.wk-warn-d { margin-left: 2px; color: #7c8a99; }
+/* 搜索框按下去要有下文：不认得的词，照二〇一四年那句回，不留一个空白的动作。 */
+.wk-noresult {
+  margin: 0 0 12px;
+  padding: 8px 12px;
+  border-left: 3px solid #c8ccd1;
+  background: #f6f6f6;
+  color: #333;
+  font: 12.5px/1.75 "Microsoft JhengHei", sans-serif;
+}
+.wk-noresult p { margin: 0; }
+.wk-noresult p + p { color: var(--wk-mute); }
 .wk-info {
   float: right;
   width: 224px;
   margin: 2px 0 10px 14px;
   border: 1px solid var(--wk-line);
   border-collapse: collapse;
-  background: #f8f9fa;
+  background: var(--wk-fill);
   font: 11px/1.6 "Microsoft JhengHei", sans-serif;
 }
 .wk-info caption {
@@ -713,24 +805,795 @@
 .wk-info th,
 .wk-info td { padding: 3px 7px; border-top: 1px solid #e2e5e9; text-align: left; vertical-align: top; }
 .wk-info th { width: 62px; color: #333; font-weight: 700; }
+/* 资料框里的网址在真维基是可点的外链；这里只是印着，不给她多一条假路。 */
+.wk-plain { color: #202122; }
 .wk-lead { margin: 0 0 10px; }
 .wk-article p { margin: 0 0 9px; }
+
+/* 目录：浮在正文左侧，点一条跳到那一节。 */
+.wk-toc {
+  float: left;
+  width: 176px;
+  margin: 0 14px 10px 0;
+  padding: 7px 10px 9px;
+  border: 1px solid var(--wk-line);
+  background: var(--wk-fill);
+  font: 11.5px/1.65 "Microsoft JhengHei", sans-serif;
+}
+.wk-toc-h { margin-bottom: 3px; text-align: center; font-size: 11.5px; }
+.wk-toc-hide { margin-left: 6px; color: var(--wk-link); font-size: 10.5px; }
+.wk-toc ol { margin: 0; padding-left: 17px; }
+.wk-toc li { padding: 0; }
+
 .wk-h2 {
-  margin: 14px 0 6px;
+  clear: left;
+  margin: 15px 0 7px;
   padding-bottom: 3px;
   border-bottom: 1px solid var(--wk-line);
-  font: 400 15px/1.4 "Microsoft JhengHei", Georgia, serif;
+  font: 400 15.5px/1.4 "Microsoft JhengHei", Georgia, serif;
 }
-.wk-fine { margin-top: 16px; color: #7c8a99; font-size: 10.5px; }
+.wk-edit { float: right; color: var(--wk-link); font: 10.5px/1.9 "Microsoft JhengHei", sans-serif; }
+
+/* 外部链接：一行一条，圆点、标题、括号里的日期。第四条是死链，字压灰。 */
+.wk-ext { margin: 0 0 6px; padding-left: 20px; font-size: 12.5px; }
+.wk-ext li { margin: 1px 0; }
+.wk-ext-n { color: var(--wk-mute); font-size: 11px; }
+.wk-ext-dead { margin-left: 4px; color: #7c8a99; font-size: 10.5px; }
+
+/* 分类框：灰底、粗体「分类」，竖线分开，是条目最底那一行。 */
+.wk-cat {
+  margin: 16px 0 0;
+  padding: 5px 8px;
+  border: 1px solid var(--wk-line);
+  background: var(--wk-fill);
+  font: 11px/1.7 "Microsoft JhengHei", sans-serif;
+}
+.wk-cat-sep { color: var(--wk-mute); }
+
 .wk-foot {
-  padding: 8px 18px;
+  margin-top: 18px;
+  padding: 8px 14px 12px;
   border-top: 1px solid var(--wk-line);
+  background: #f6f6f6;
   color: var(--wk-mute);
-  font: 10.5px/1.6 "Microsoft JhengHei", sans-serif;
+  font: 10.5px/1.65 "Microsoft JhengHei", sans-serif;
 }
+.wk-foot-rev { margin-bottom: 4px; }
+.wk-foot-lic { margin-bottom: 3px; }
+.wk-foot-links { display: flex; flex-wrap: wrap; gap: 10px; margin: 6px 0 0; padding: 0; list-style: none; }
 
 @media (max-width: 720px) {
   .wk-side { display: none; }
   .wk-info { float: none; width: auto; margin: 0 0 10px; }
+  .wk-toc { float: none; width: auto; margin: 0 0 12px; }
+  .wk-h2 { clear: none; }
+  .wk-q { width: 104px; }
   .se-nav { display: none; }
 }
+
+/* ---------- 大学新闻稿存档页（www.vhu.edu.hk/press/…） ---------- */
+
+/* 二十〇〇年代的大学网站：一条深青横带、一张白纸、正文一栏到底。
+   跟门户（portal）不同一套皮——这是对外那台机器，没登入也读得到。 */
+.press-site {
+  background: #fff;
+  color: #1d2b2c;
+  font: 13px/1.95 "Microsoft JhengHei", Georgia, serif;
+}
+.press-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 18px;
+  border-bottom: 3px solid #1f4f52;
+  background: #2c6166;
+  color: #f2f6f5;
+}
+.press-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid rgba(242, 246, 245, .7);
+  font: 700 11px/1 Georgia, serif;
+  letter-spacing: .04em;
+}
+.press-word strong { display: block; font-size: 15px; letter-spacing: .06em; }
+.press-word small { display: block; color: rgba(242, 246, 245, .72); font-size: 10.5px; }
+.press-body {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 26px 24px 40px;
+}
+.press-kicker {
+  margin: 0 0 4px;
+  color: #7a8a88;
+  font: 10.5px/1.6 "Microsoft JhengHei", sans-serif;
+  letter-spacing: .18em;
+}
+.press-title {
+  margin: 0 0 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #d5dcda;
+  font: 400 20px/1.45 "Microsoft JhengHei", Georgia, serif;
+  letter-spacing: .02em;
+}
+.press-meta {
+  margin: 0 0 16px;
+  color: #6d7c7a;
+  font: 11px/1.7 "Microsoft JhengHei", sans-serif;
+}
+.press-body p { margin: 0 0 12px; text-align: justify; }
+.press-fine {
+  margin-top: 22px !important;
+  padding-top: 8px;
+  border-top: 1px dotted #d5dcda;
+  color: #8a9694;
+  font: 10.5px/1.7 "Microsoft JhengHei", sans-serif;
+}
+.press-back { margin-top: 14px !important; font-size: 11.5px; }
+.press-back a { color: #0b4f9e; }
+
+/* ---------- 学校官网（www.vhu.edu.hk）：对外那一头 ---------- */
+
+/* 同一间学校，两套皮：门户（portal）是深青横带 + 左边导航 + 灰底表格，
+   像内联网；这一页是对外那台机器，白底、大标题、三块快讯、页脚四列，
+   2014 年那些大学网站的首页都长这样，一年只改一两次。
+   这一页唯一非做不可的事，是把「校园入门网站」四个字放在页脚最下面那一排里。 */
+.vhu-o-site {
+  --o-teal: #1d3c40;
+  --o-teal-2: #2b555a;
+  --o-gold: #b49a63;
+  --o-ink: #23302f;
+  --o-mute: #6f7b78;
+  --o-line: #ddd7c8;
+  background: #fff;
+  color: var(--o-ink);
+  font: 12.5px/1.7 Arial, "Microsoft JhengHei", "Microsoft YaHei", sans-serif;
+}
+.vhu-o-site a { color: #15507a; }
+
+/* 站点撑满窗口剩余高度，页脚压到底——官网首页本来就该整屏，页脚在她滚到底时才出现。
+   跟门户那条规则同一套写法，只是类名不同（门户叫 .vhu-site）。 */
+.laptop-screen > .hk-site.vhu-o-site {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.vhu-o-site .vhu-o-body { flex: 0 0 auto; }
+
+.vhu-o-dead { color: inherit; }
+
+/* 页头一条深青。原来这上面还压着一条细条放地址与三语，地址在页脚又写一遍，
+   现在并进来：一行里校徽、校名、地址，右端对齐。 */
+.vhu-o-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 16px 12px;
+  background: var(--o-teal);
+  color: #f4f0e5;
+}
+/* 校徽：校名旁边那枚盾。深青底上不能再填深青，改成只留金线与三个衬线字母——
+   真校徽是绣出来的，网页上这一枚只用 46px，画得太细反而像图标。 */
+.vhu-o-crest {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 46px;
+  width: 46px;
+  height: 46px;
+  border: 1px solid rgba(180, 154, 99, .72);
+  color: #e8dcc0;
+}
+.vhu-o-crest i {
+  position: absolute;
+  inset: 3px;
+  border: 1px solid rgba(180, 154, 99, .38);
+  border-radius: 2px 2px 50% 50% / 2px 2px 40% 40%;
+}
+.vhu-o-crest b { position: relative; font: 700 11.5px/1 Georgia, serif; letter-spacing: .06em; }
+.vhu-o-word { display: flex; flex-direction: column; line-height: 1.2; }
+.vhu-o-word strong { color: #f4f0e5; font-size: 19px; font-weight: 600; letter-spacing: .14em; }
+.vhu-o-word small { margin-top: 2px; color: rgba(244, 240, 229, .55); font-size: 8.5px; letter-spacing: .1em; }
+.vhu-o-addr {
+  margin: 0 0 0 auto;
+  color: rgba(244, 240, 229, .62);
+  font-size: 10.5px;
+  letter-spacing: .04em;
+}
+
+.vhu-o-nav {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 0 10px;
+  border-bottom: 1px solid var(--o-line);
+  background: #f6f3ea;
+}
+/* 导航项现在有两种：点得动的 a 与点不动的 span。两样都吃这一份排版，
+   否则真的那五项会比死项小一圈，一眼看出哪些加过工。 */
+.vhu-o-nav > span,
+.vhu-o-nav > a {
+  padding: 7px 9px;
+  color: #3c4a48;
+  font-size: 11.5px;
+  letter-spacing: .04em;
+  text-decoration: none;
+}
+/* 项与项之间一道发丝线，真站的导航条就是这样分格的 */
+.vhu-o-nav > * + * { border-left: 1px solid #e2dbcb; }
+.vhu-o-nav > a.vhu-o-navi:hover { background: #efe9db; color: var(--o-teal); }
+/* 当前所在的那一项：白底、加粗、底下压一线金——2014 年的站用「当前栏目」代替面包屑。 */
+.vhu-o-nav > a.vhu-o-navi.on {
+  background: #fff;
+  color: var(--o-teal);
+  font-weight: 600;
+  box-shadow: inset 0 -2px 0 var(--o-gold);
+}
+
+.vhu-o-body { padding: 0 0 6px; }
+
+/* 首图。两张照片叠着放，靠 .on 换一张——2014 年那些大学首页就是这个做法，
+   换了之后不重排。图下压一层从下往上的黑，白字才落得住。
+   高度写死 360px：这一页的横幅是一条固定的片子，不随窗口长高。 */
+.vhu-o-hero {
+  position: relative;
+  overflow: hidden;
+  height: 360px;
+  background: #173230;
+  color: #f4f0e5;
+}
+.vhu-o-slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity .55s ease;
+  pointer-events: none;
+}
+.vhu-o-slide.on { opacity: 1; pointer-events: auto; }
+.vhu-o-photo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* 46%：主校舍那张的檐口在上三分之一，压到正中会把檐线切掉 */
+  object-position: center 46%;
+}
+/* 图上压黑。主校舍那张下半截是白墙，压得不够时标题像印在纸上。
+   从下往上 0.92 → 0.46 → 0.06，标题落在 0.5 左右的黑上，檐口还透得出来。 */
+.vhu-o-veil {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to top, rgba(9, 22, 22, .92) 0%, rgba(9, 22, 22, .78) 22%, rgba(9, 22, 22, .46) 44%, rgba(9, 22, 22, .06) 72%, rgba(9, 22, 22, 0) 86%),
+    linear-gradient(to right, rgba(9, 22, 22, .4) 0%, rgba(9, 22, 22, 0) 58%);
+}
+.vhu-o-cap {
+  position: absolute;
+  left: 20px;
+  right: 20px;
+  bottom: 22px;
+  max-width: 30em;
+}
+.vhu-o-kicker {
+  margin: 0 0 5px;
+  color: #d9c58f;
+  font-size: 10.5px;
+  letter-spacing: .26em;
+}
+.vhu-o-hero h1 {
+  margin: 0 0 7px;
+  font: 400 21px/1.42 "Microsoft JhengHei", Georgia, serif;
+  letter-spacing: .02em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, .55);
+}
+.vhu-o-hero h1 span { display: block; }
+.vhu-o-h1a { font-weight: 600; }
+.vhu-o-h1b { margin-top: 2px; color: rgba(244, 240, 229, .84); font-size: 15px; font-weight: 400; }
+.vhu-o-hero-p {
+  margin: 0;
+  max-width: 34em;
+  color: rgba(244, 240, 229, .8);
+  font-size: 11.5px;
+  line-height: 1.78;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, .45);
+}
+/* 右下角那一组：页码在上、圆点在下。两个格子都在图里，不占版面。
+   主校舍那张的右下是白墙，淡色描边的圆点会化掉，所以都带一层影。 */
+.vhu-o-count {
+  position: absolute;
+  right: 18px;
+  bottom: 33px;
+  z-index: 3;
+  color: rgba(244, 240, 229, .78);
+  font: 10px/1 Arial, sans-serif;
+  letter-spacing: .1em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, .7);
+}
+.vhu-o-dots {
+  position: absolute;
+  right: 18px;
+  bottom: 16px;
+  z-index: 3;
+  display: flex;
+  gap: 6px;
+}
+.vhu-o-dot {
+  width: 9px;
+  height: 9px;
+  padding: 0;
+  border: 1px solid rgba(244, 240, 229, .85);
+  border-radius: 50%;
+  background: transparent;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, .22), 0 1px 3px rgba(0, 0, 0, .55);
+  cursor: pointer;
+}
+.vhu-o-dot.on {
+  background: #efe5ca;
+  border-color: #efe5ca;
+}
+
+/* 主区两栏：左边新闻配图，右边「即将举行」。右栏底色浅一档、左边一道线，
+   两栏的分界靠这两样，不靠留白——2014 年的表格式排版都这么分。 */
+.vhu-o-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1.62fr) minmax(0, 1fr);
+  border-bottom: 1px solid var(--o-line);
+}
+.vhu-o-sec { padding: 14px 16px 12px; }
+/* 右栏：浅底、左边一道线。捐款那一格拿掉之后不必再撑成一列，两栏自然一样高。 */
+.vhu-o-side {
+  padding: 14px 16px 12px;
+  border-left: 1px solid var(--o-line);
+  background: #fbfaf4;
+}
+.vhu-o-sec-h {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 6px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--o-line);
+}
+.vhu-o-sec-h h2 {
+  margin: 0;
+  padding-left: 8px;
+  border-left: 3px solid var(--o-gold);
+  color: var(--o-teal);
+  font: 600 14px/1.4 "Microsoft JhengHei", Georgia, serif;
+  letter-spacing: .06em;
+}
+/* 新闻一列排下来：左边一张 92×62 的缩图，右边两行字。
+   标题在上、栏目与日期在下，日期压灰——点不点得开是另一回事，
+   这一页要的是「像有人天天在校对」。 */
+.vhu-o-news { margin: 0; padding: 0; list-style: none; }
+.vhu-o-news li {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  padding: 9px 0;
+  border-bottom: 1px dotted #e2dccd;
+}
+.vhu-o-news li:last-child { border-bottom: 0; }
+.vhu-o-thumb {
+  flex: 0 0 92px;
+  width: 92px;
+  height: 62px;
+  object-fit: cover;
+  background: #e8e3d6;
+}
+.vhu-o-ntx { min-width: 0; }
+.vhu-o-nt {
+  margin: 0 0 5px;
+  color: #22312f;
+  font-size: 12.5px;
+  line-height: 1.62;
+}
+.vhu-o-nmeta { display: flex; align-items: center; gap: 7px; margin: 0; }
+.vhu-o-chip {
+  padding: 0 5px;
+  background: #ecefe9;
+  color: var(--o-teal-2);
+  font-size: 9.5px;
+  line-height: 1.7;
+  letter-spacing: .08em;
+}
+.vhu-o-nmeta .vhu-o-date {
+  flex: 0 0 auto;
+  color: #8b948f;
+  font-size: 10px;
+  line-height: 1.7;
+}
+
+/* 点得开的行：整行都能按（缩图也算）。鼠标过去只换标题颜色、加一道下划线——
+   2014 年的站不会给整行铺背景，铺了就不像那一年了。 */
+.vhu-o-news li.vhu-o-hit,
+.vhu-o-events li.vhu-o-hit { cursor: pointer; }
+.vhu-o-news li.vhu-o-hit:hover .vhu-o-nt,
+.vhu-o-events li.vhu-o-hit:hover .vhu-o-evtitle { color: #15507a; text-decoration: underline; }
+
+/* 右栏：日期块 + 三行字。日期块是白底细框，数字用衬线——
+   跟报纸的分类广告同一个道理，一眼扫得到日子。 */
+.vhu-o-events { margin: 0; padding: 0; list-style: none; }
+.vhu-o-events li {
+  display: flex;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px dotted #e2dccd;
+}
+.vhu-o-events li:last-child { border-bottom: 0; }
+.vhu-o-evd {
+  flex: 0 0 43px;
+  padding: 3px 0 4px;
+  border: 1px solid var(--o-line);
+  background: #fff;
+  text-align: center;
+  line-height: 1.1;
+}
+.vhu-o-evd b { display: block; color: var(--o-teal); font: 700 16px/1.15 Georgia, serif; }
+.vhu-o-evd span { display: block; margin-top: 1px; color: var(--o-mute); font-size: 9px; letter-spacing: .04em; }
+.vhu-o-evt { min-width: 0; }
+.vhu-o-evtitle { margin: 0 0 2px; color: #22312f; font-size: 12px; line-height: 1.55; }
+.vhu-o-evwhere { margin: 0 0 3px; color: var(--o-teal-2); font-size: 10px; line-height: 1.5; }
+.vhu-o-evwhen { margin: 0; color: #6d7876; font-size: 10.5px; line-height: 1.62; }
+
+/* 页脚。两列：左边「快速连结」里有一行带下划线，那是全校唯一一个通到
+   portal.vhu.edu.hk 的门；右边是电话与电邮。地址在页头，这里不再重复。
+   原来四列十七行，滚到底像一份目录——玩家要滚到底，但不必读一份目录。 */
+.vhu-o-foot {
+  flex: 0 0 auto;
+  margin-top: auto;
+  padding: 14px 16px 12px;
+  background: var(--o-teal);
+  color: rgba(241, 237, 226, .72);
+  font-size: 11px;
+}
+.vhu-o-foot-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.vhu-o-foot h4 {
+  margin: 0 0 6px;
+  color: var(--o-gold);
+  font: 600 11px/1.4 "Microsoft JhengHei", sans-serif;
+  letter-spacing: .1em;
+}
+.vhu-o-foot p { margin: 0 0 2px; line-height: 1.75; }
+.vhu-o-foot ul { margin: 0; padding: 0; list-style: none; }
+.vhu-o-foot li { padding: 1px 0; line-height: 1.8; }
+/* 页脚每一行都带一道极淡的下划线——真站的页脚链接就是这样。
+   二十行里只有「校园入门网站」那一行点得动，下划线的颜色只比别家亮一点点：
+   要找的人认得出来，不想找的人不会觉得被指着鼻子。 */
+.vhu-o-foot .vhu-o-dead {
+  text-decoration: underline;
+  text-decoration-color: rgba(241, 237, 226, .16);
+  text-underline-offset: 2px;
+}
+.vhu-o-portal {
+  color: #e8dcc0 !important;
+  text-decoration: underline;
+  text-decoration-color: rgba(232, 220, 192, .5);
+  text-underline-offset: 2px;
+}
+.vhu-o-pt { margin-left: 4px; color: rgba(241, 237, 226, .45); font-size: 9.5px; letter-spacing: .04em; }
+.vhu-o-copy {
+  margin: 12px 0 0;
+  padding-top: 8px;
+  border-top: 1px solid rgba(241, 237, 226, .16);
+  color: rgba(241, 237, 226, .5);
+  font-size: 10px;
+  line-height: 1.7;
+}
+
+/* ---------- 官网内页（/about/、/news/2014/0912/…） ---------- */
+
+/* 内页不是另做一个站：页头那条深青、导航条、页脚全不动，中间换成 640 宽的一栏。
+   真站的内页都是这个骨架——一栏到底，不摆第二列。 */
+.vhu-o-pbody { padding: 16px 0 26px; }
+.vhu-o-page { max-width: 640px; margin: 0 auto; padding: 0 20px; }
+
+.vhu-o-crumb {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  margin: 0 0 11px;
+  color: #8b948f;
+  font-size: 10.5px;
+  line-height: 1.6;
+}
+.vhu-o-crumb .vhu-o-clink { color: #5c6a67; text-decoration: none; }
+.vhu-o-crumb .vhu-o-clink:hover { text-decoration: underline; }
+.vhu-o-crumb .vhu-o-csep { color: #bfc6c1; }
+.vhu-o-crumb .vhu-o-cnow { color: #8b948f; }
+
+.vhu-o-ph {
+  margin: 0 0 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--o-line);
+  color: var(--o-teal);
+  font: 600 19px/1.45 "Microsoft JhengHei", Georgia, serif;
+  letter-spacing: .03em;
+}
+
+/* 通栏图 640×208。图注永远是下面一行小灰字，比正文小两号。 */
+.vhu-o-figure { margin: 0 0 14px; }
+/* 跟在资料表后面时要自己空一格——活动页的顺序是「表格在上、图在下」，
+   不隔开的话表格那条细线就贴着照片顶边。（必须写在上面那条之后，否则被简写覆盖） */
+.vhu-o-facts + .vhu-o-figure { margin-top: 14px; }
+.vhu-o-figure img {
+  display: block;
+  width: 100%;
+  height: 208px;
+  object-fit: cover;
+  background: #e8e3d6;
+}
+.vhu-o-figcap { margin: 5px 0 0; color: #8b948f; font-size: 10px; line-height: 1.65; }
+
+.vhu-o-lede {
+  margin: 0 0 11px;
+  color: #2c3a38;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.85;
+}
+/* 活动页资料表压在导语上面，导语要跟表格隔开一点 */
+.vhu-o-lede2 { margin: 14px 0 11px; }
+.vhu-o-prose p { margin: 0 0 10px; color: #33413f; font-size: 12.5px; line-height: 1.95; }
+
+/* 资料小表：左窄右宽，一路拉到底的细线。拿表格当版面，比一排图标加粗体字像真的。 */
+.vhu-o-facts {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  margin: 14px 0 0;
+  border-top: 1px solid var(--o-line);
+  font-size: 11.5px;
+}
+.vhu-o-facts dt { padding: 6px 0; border-bottom: 1px solid var(--o-line); color: var(--o-mute); }
+.vhu-o-facts dd {
+  margin: 0;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--o-line);
+  color: #2c3a38;
+  line-height: 1.7;
+}
+
+/* 学院与学系两列。第五个学院落在左边、右边空着——不为了齐整假装还有第六个。 */
+.vhu-o-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 22px;
+  margin: 14px 0 0;
+}
+.vhu-o-col h3 {
+  margin: 0 0 4px;
+  padding-left: 7px;
+  border-left: 3px solid var(--o-gold);
+  color: var(--o-teal);
+  font: 600 12px/1.5 "Microsoft JhengHei", sans-serif;
+  letter-spacing: .04em;
+}
+.vhu-o-col ul { margin: 0; padding: 0; list-style: none; }
+.vhu-o-col li { color: #3c4a48; font-size: 11.5px; line-height: 1.85; }
+.vhu-o-col li::before { content: "·"; margin-right: 6px; color: var(--o-gold); }
+
+/* 「新闻与活动」栏目页：一栏到底，新闻在上、活动在下。首页那两条列表是并排的
+   两栏（左新闻右活动），这里改成一前一后——同一批稿子，读起来是归档，不是又读一遍首页。
+   两道分隔标题之间要自己空一格，否则上一条列表的最后一行贴着下一个标题。 */
+.vhu-o-index { margin: 16px 0 2px; }
+.vhu-o-sec-h2 { margin-top: 20px; }
+
+/* 新闻正文：栏目与日期在标题上头（报纸的做法），署名右对齐压在最末，
+   上面一道极淡的线——「传讯及公共事务处」那行永远在右下。 */
+.vhu-o-ameta { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; }
+.vhu-o-ah { font-size: 20px; line-height: 1.5; }
+.vhu-o-tail {
+  margin: 16px 0 0;
+  padding-top: 9px;
+  border-top: 1px solid #efeade;
+  color: #8b948f;
+  font-size: 10.5px;
+  text-align: right;
+}
+
+/* ---------- 香港日报：院校动态 ---------- */
+
+/* 报头衬线、正文衬线、日期灰、栏目标签红。2014 年香港报纸网站的稿子
+   就这么排：标题大、导语黑、正文缩两格。一条一条往下，没有分页。 */
+.hkd-site {
+  --h-red: #a3211d;
+  background: #fff;
+  color: #1b1b1b;
+  font: 12.5px/1.9 "Microsoft JhengHei", Georgia, "Times New Roman", serif;
+}
+.hkd-head {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  padding: 10px 16px 8px;
+  border-bottom: 3px double #1b1b1b;
+}
+.hkd-brand { display: flex; align-items: baseline; gap: 8px; }
+.hkd-brand strong {
+  color: #141414;
+  font: 700 24px/1 "Songti SC", "SimSun", "宋体", Georgia, serif;
+  letter-spacing: .1em;
+}
+.hkd-brand small { color: #7a7a7a; font-size: 8.5px; letter-spacing: .18em; }
+.hkd-head-side {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-left: auto;
+  color: #6d6d6d;
+  font: 10.5px/1.6 "Microsoft JhengHei", sans-serif;
+}
+.hkd-ed {
+  padding: 1px 6px;
+  background: var(--h-red);
+  color: #fff;
+  font-size: 10.5px;
+  letter-spacing: .1em;
+}
+.hkd-body { padding: 8px 16px 20px; }
+.hkd-crumb { color: #7a7a7a; font: 10.5px/1.7 "Microsoft JhengHei", sans-serif; }
+.hkd-slash { margin: 0 5px; color: #b1b1b1; }
+.hkd-dead { color: #3a5f8a; }
+.hkd-h1 {
+  margin: 6px 0 2px;
+  font: 600 21px/1.4 "Songti SC", "SimSun", "宋体", Georgia, serif;
+  letter-spacing: .04em;
+}
+.hkd-lead { margin: 0 0 4px; color: #7a7a7a; font: 10.5px/1.7 "Microsoft JhengHei", sans-serif; }
+.hkd-item { padding: 13px 0 4px; border-top: 1px solid #dcdcdc; }
+.hkd-item:first-child { border-top: 2px solid #1b1b1b; }
+.hkd-meta { display: flex; align-items: center; gap: 8px; }
+.hkd-date { color: #8a8a8a; font: 10.5px/1.7 "Microsoft JhengHei", sans-serif; }
+.hkd-tag { color: var(--h-red); font: 10.5px/1.7 "Microsoft JhengHei", sans-serif; letter-spacing: .06em; }
+.hkd-title {
+  margin: 2px 0 6px;
+  font: 600 16.5px/1.5 "Songti SC", "SimSun", "宋体", Georgia, serif;
+}
+.hkd-p {
+  margin: 0 0 8px;
+  color: #232323;
+  font-size: 12.5px;
+  line-height: 2;
+  text-align: justify;
+  text-indent: 2em;
+}
+.hkd-fine {
+  margin: 18px 0 0;
+  padding-top: 8px;
+  border-top: 1px solid #dcdcdc;
+  color: #8a8a8a;
+  font: 10px/1.7 "Microsoft JhengHei", sans-serif;
+}
+
+@media (max-width: 720px) {
+  /* 窄屏时地址从校名那一行掉到下面一行，靠左，不去挤校名 */
+  .vhu-o-addr { flex: 1 1 100%; margin-left: 0; }
+  .vhu-o-foot-cols { grid-template-columns: 1fr; }
+  .vhu-o-hero { height: 232px; }
+  .vhu-o-cap { left: 14px; right: 14px; bottom: 16px; }
+  .vhu-o-hero h1 { font-size: 17px; }
+  .vhu-o-main { grid-template-columns: 1fr; }
+  .vhu-o-side { border-left: 0; border-top: 1px solid var(--o-line); }
+  /* 内页：学院那两列并成一列，通栏图压矮一点，别在窄屏吃掉半屏 */
+  .vhu-o-page { padding: 0 14px; }
+  .vhu-o-cols { grid-template-columns: 1fr; gap: 10px; }
+  .vhu-o-figure img { height: 172px; }
+  .vhu-o-facts { grid-template-columns: 78px minmax(0, 1fr); }
+  .hkd-brand strong { font-size: 20px; }
+  .hkd-h1 { font-size: 18px; }
+  .hkd-title { font-size: 15px; }
+}
+
+/* ---------- 登入页：密码对了之后那一格（身份确认） ---------- */
+
+.vhu-chal-id {
+  margin: 0 0 10px;
+  padding: 5px 8px;
+  border-left: 2px solid #7fa8a4;
+  background: #eef4f1;
+  color: #3d5a52;
+  font: 11px/1.7 "Microsoft JhengHei", sans-serif;
+}
+/* 问题单独一行、字号提一档：这一格只有它在等人回答 */
+.vhu-chal-q {
+  margin: 0 0 4px;
+  color: #1d3a3d;
+  font: 14px/1.8 "Microsoft JhengHei", serif;
+  letter-spacing: .02em;
+}
+.vhu-chal-form .vhu-input { letter-spacing: .04em; }
+
+
+/* ---------- 官网新闻页最底：历年新闻稿（按年份分夹） ---------- */
+
+/* 这一块是「翻到底才看见」的东西，所以做得比上面两条列表更素：
+   年份一行小字，稿子一行一条，没有缩图。2010 年改版前的存档页就长这样。 */
+.vhu-o-arch-note {
+  margin: 0 0 8px;
+  color: #8b948f;
+  font-size: 10.5px;
+  letter-spacing: .04em;
+}
+.vhu-o-archy { margin-bottom: 10px; }
+.vhu-o-archy:last-child { margin-bottom: 0; }
+.vhu-o-arch-y {
+  margin: 0 0 3px;
+  color: var(--o-teal-2);
+  font-size: 11px;
+  letter-spacing: .1em;
+}
+.vhu-o-arch-list { margin: 0; padding: 0; list-style: none; }
+.vhu-o-arch-hit {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 5px 0;
+  border-bottom: 1px dotted #e2dccd;
+  cursor: pointer;
+}
+.vhu-o-arch-list li:last-child .vhu-o-arch-hit { border-bottom: 0; }
+.vhu-o-arch-d { flex: 0 0 auto; color: #8b948f; font-size: 10px; }
+.vhu-o-arch-t { min-width: 0; color: #22312f; font-size: 12px; line-height: 1.6; }
+.vhu-o-arch-hit:hover .vhu-o-arch-t { color: #15507a; text-decoration: underline; }
+
+/* ---------- 官网「学院与学系」：cols 之后的补充小节 ---------- */
+
+.vhu-o-after { margin-top: 14px; }
+
+/* ---------- 官网「校友」：名录 ---------- */
+
+/* 三列、细线、无底纹。官方名录越朴素越可信，加边框加阴影就成校友会宣传页了。 */
+.vhu-o-roll {
+  width: 100%;
+  margin-top: 12px;
+  border-collapse: collapse;
+  font-size: 11.5px;
+}
+.vhu-o-roll th {
+  padding: 5px 6px;
+  border-bottom: 1px solid var(--o-line);
+  color: var(--o-teal-2);
+  font-weight: 600;
+  font-size: 10.5px;
+  letter-spacing: .06em;
+  text-align: left;
+}
+.vhu-o-roll td {
+  padding: 5px 6px;
+  border-bottom: 1px dotted #e2dccd;
+  color: #22312f;
+}
+.vhu-o-roll tbody tr:last-child td { border-bottom: 0; }
+.vhu-o-roll-y { text-align: right; }
+.vhu-o-roll td.vhu-o-roll-y { color: #6d7a75; font-family: Georgia, serif; }
+
+/* ---------- 成绩表那格「缺考」 ---------- */
+
+/* 整张表都是黑的成绩，只有这一格灰——不标红、不加粗。
+   标红就成了「提醒你注意」，而这一处要的是她自己在两页之间对上时间。 */
+.vhu-miss { color: #8b6b52; letter-spacing: .04em; }
+.vhu-year-note {
+  margin: 5px 0 0;
+  color: #8b948f;
+  font-size: 10.5px;
+  line-height: 1.7;
+}
+
+/* ---------- 维基分类页 ---------- */
+
+.wk-catsum {
+  margin: 6px 0 8px;
+  color: #3b4c52;
+  font-size: 12px;
+}
+.wk-catlist { margin: 0 0 12px; padding-left: 22px; font-size: 12.5px; }
+.wk-catlist li { margin: 3px 0; }
+.wk-catn { margin-left: 3px; color: var(--wk-mute); font-size: 11px; }
