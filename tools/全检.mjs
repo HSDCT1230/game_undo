@@ -373,6 +373,72 @@ info.push(`禁写／坏字：扫描 ${files.length} 个文本文件`);
   }
 }
 
+/* ---------- 10. 测试入口（测试入口/*.url） ----------
+   这一类坏了最难发现：双击进去照样有画面，只是落在开场／存档，
+   看着像「单关打不开」。所以三样都要核：网址指向的文件在不在、
+   ?level=N 的 N 对不对得上关卡表、?test 有没有真的走测试目录。 */
+{
+  const dir = path.join(root, "测试入口");
+  if (!fs.existsSync(dir)) {
+    err("缺 测试入口/ 目录（跑 node tools/做入口.mjs）");
+  } else {
+    const levelTitles = [
+      ...fs
+        .readFileSync(path.join(assets, "levels.js"), "utf8")
+        .matchAll(/^ {2}\{\s*\n\s*part: \d, title: "([^"]+)"/gm),
+    ].map((m) => m[1]);
+    const urls = fs.readdirSync(dir).filter((f) => f.endsWith(".url"));
+    if (!urls.length) err("测试入口/ 里一个 .url 都没有（跑 node tools/做入口.mjs）");
+    const bad0 = errors.length;
+    let checked = 0;
+    for (const f of urls) {
+      const raw = fs.readFileSync(path.join(dir, f), "utf8");
+      const line = (raw.match(/^URL=(.+)$/m) || [])[1];
+      if (!line) {
+        err(`测试入口/${f} 没有 URL= 一行`);
+        continue;
+      }
+      checked++;
+      let u;
+      try {
+        u = new URL(line.trim());
+      } catch {
+        err(`测试入口/${f} 的网址不合法：${line.trim().slice(0, 80)}`);
+        continue;
+      }
+      // 1) 指向的文件必须真的在，而且必须是游戏本体、不是根目录那块跳板。
+      //    跳板有两条跳转路，meta refresh 那条不带查询串，抢到就把 ?level 丢了。
+      const target = fileURLToPath(u.href.replace(u.search, "").replace(u.hash, ""));
+      if (!fs.existsSync(target)) {
+        err(`测试入口/${f} 指向的文件不存在：${target}`);
+      } else if (path.resolve(target) !== path.resolve(game, "index.html")) {
+        err(`测试入口/${f} 没直指 游戏/index.html（现在是 ${path.relative(root, target)}）：中间多一跳就可能丢掉 ?level，重跑 node tools/做入口.mjs`);
+      }
+      // 2) 关号对不对
+      const n = u.searchParams.get("level");
+      if (n === null) continue;
+      const idx = Number(n);
+      if (!Number.isInteger(idx) || idx < 1 || idx > levelTitles.length) {
+        err(`测试入口/${f} 的关号 ${n} 超出 1..${levelTitles.length}`);
+        continue;
+      }
+      // 文件名前缀就是关号：03-唐楼后座.url 必须开第 3 关
+      const head = f.match(/^(\d\d)-/);
+      if (head && Number(head[1]) !== idx) err(`测试入口/${f} 名字说第 ${head[1]} 关，网址却是 level=${idx}`);
+      // 标题也要对得上（关卡改名后忘了重跑，名字就会留旧的一套）
+      const title = levelTitles[idx - 1];
+      if (title && !f.includes(title)) warns.push(`测试入口/${f} 名字里没有「${title}」（第 ${idx} 关改名了？跑 node tools/做入口.mjs）`);
+    }
+    const hasTest = urls.some((f) => /URL=.*\?test\b/.test(fs.readFileSync(path.join(dir, f), "utf8")));
+    if (!hasTest) err("测试入口/ 里没有 ?test 那一格（分段目录）");
+    info.push(
+      errors.length > bad0
+        ? `测试入口：${checked} 个 .url，有问题（见下）`
+        : `测试入口：${checked} 个 .url，指向的文件都在，关号对得上关卡表（${levelTitles.length} 关）`,
+    );
+  }
+}
+
 /* ---------- 输出 ---------- */
 console.log("== 全检 ==");
 info.forEach((m) => console.log("  " + m));

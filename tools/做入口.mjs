@@ -14,7 +14,11 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const OUT = path.join(ROOT, "测试入口");
-const GAME = pathToFileURL(path.join(ROOT, "index.html")).href;
+// 直接指游戏本体，不指根目录那块跳板。跳板认 ?level=，靠的是
+// <meta http-equiv="refresh"> 和 location.replace 两条路同时跳；meta 那条不带查询串，
+// 抢到了就落地成「游戏/index.html」——关号丢了，双击哪一关都回到开场／继续，
+// 看着就像「单关打不开」。少一跳就没有这个不确定性。
+const GAME = pathToFileURL(path.join(ROOT, "游戏/index.html")).href;
 
 const src = fs.readFileSync(path.join(ROOT, "游戏/assets/levels.js"), "utf8");
 const RE =

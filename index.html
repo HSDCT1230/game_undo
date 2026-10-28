@@ -4,10 +4,20 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>undo</title>
-  <meta http-equiv="refresh" content="0; url=%E6%B8%B8%E6%88%8F/index.html" />
-  <script>location.replace("%E6%B8%B8%E6%88%8F/index.html" + location.search);</script>
+  <!-- 这里只留一条跳转路。
+       从前还有一条 <meta http-equiv="refresh">，它写死的地址不带查询串：
+       两条路谁先跑谁说了算，meta 抢到就把 ?level=3 丢掉，双击测试入口会落回开场／继续。
+       现在测试入口也不再经过这块跳板（直接开 游戏/index.html）。 -->
+  <script>
+    (function () {
+      location.replace("%E6%B8%B8%E6%88%8F/index.html" + location.search + location.hash);
+    })();
+  </script>
 </head>
 <body style="background:#12151c;color:#c9c2b4;font-family:sans-serif">
+  <noscript>
+    <p>这一页要靠脚本跳进去。不许脚本就点下面这个链接——那样进游戏会从开场／存档起，带不了关号。</p>
+  </noscript>
   <p><a href="%E6%B8%B8%E6%88%8F/index.html" style="color:#e8d7b8">undo</a></p>
 </body>
 </html>
