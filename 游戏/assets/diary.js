@@ -1017,9 +1017,9 @@ function whoAsk(st, rows, redraw) {
       class: "who-see",
       onclick: () => showClueModal(item(st.paper)),
     }, ["看〈" + item(st.paper).title + "〉 ›"]);
-    // 第一页头上已经写着「写下来了」，这里再说一遍就是同一句话说两次；
-    // 第二问没有状态行（它只有一句 leader），得自己说一句（10-29）。
-    return [el("p", { class: "who-done" }, st.leader ? ["写下来了。", see] : [see])];
+    // 只留链接。页头已经写着「写下来了」；第二问写完时再挂一句，同一页就有两个
+    // 相距五十像素的「写下来了」，说的是两页纸，读的人分不出来（10-29）。
+    return [el("p", { class: "who-done" }, [see])];
   }
   // 不够写的时候不再补一句灰字。头上那句「还差 N 处」就是全部信息；原来底下那句
   // 「对得上的还不够。再有两处，我才写得出来」既重复又把数字写死——罗启明 min 3、
