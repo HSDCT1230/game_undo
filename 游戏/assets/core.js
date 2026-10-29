@@ -8,7 +8,7 @@ const notesLeaf = $("#notes-leaf");
 const notesActions = $("#notes-actions");
 
 /* 壳上的中文只写在 JS，不写进 index.html，避免编辑工具把 UTF-8 弄成 ?? */
-/* 顶栏也跟语言模式走：粤语／粤＋普转港繁，普通话原样。以前这里无条件转繁，
+/* 顶栏也跟语言模式走：只有「粤语」档转港繁，普＋粤与普通话都是简体。以前这里无条件转繁，
    切到普通话模式，顶栏还是「瀏覽器　日記簿　地圖」，跟网页里已经简体的字对不上。
    注意：这个函数在 langMode 初始化之前不能调用（H() 会读 langMode，触发 TDZ），
    所以 fillShellChrome() 的调用点挪到了语言初始化之后。 */
@@ -52,8 +52,9 @@ function fillShellChrome() {
 
 /* 对白语言、字号：跟环境音开关一样存在本地，不进存档 */
 const LANG_KEY = "undo-lang-v3";
-const LANG_MODES = ["yue", "zh", "both"];
-const LANG_LABEL = { both: "粤＋普", yue: "粤语", zh: "普通话" };
+/* 顺序按「辅助递减」排：点一下从全粤语到有对照，再点一下到纯普。 */
+const LANG_MODES = ["yue", "both", "zh"];
+const LANG_LABEL = { both: "普＋粤", yue: "粤语", zh: "普通话" };
 const SIZE_KEY = "undo-size";
 const SIZE_STEPS = [1, 1.15, 1.3];
 const SIZE_LABEL = ["字　中", "字　大", "字　特大"];
@@ -79,13 +80,14 @@ try {
 // 读完存档里的语言模式才画壳上的字：顶栏也分粤／普两套字形（见 shellText）。
 fillShellChrome();
 
-/** 粤／普：对白与网站共用。粤语侧转香港繁体。both＝粤语为主，对白另加一行普通话小字对照。 */
+/** 粤／普：对白与网站共用。粤语档转香港繁体；普＋粤与普通话都取普通话侧。
+    普＋粤与普通话的差别不在正文，在对白是否另加一行（见 talk.js talkBody）。 */
 function T(yue, zh) {
   const raw = yue == null ? "" : String(yue);
   const y = typeof toHkTrad === "function" ? toHkTrad(raw) : raw;
   const z = zh == null || zh === "" ? raw : String(zh);
   const mode = typeof langMode === "string" ? langMode : "yue";
-  if (mode === "zh") return z;
+  if (mode !== "yue") return z;
   return y;
 }
 
@@ -94,14 +96,14 @@ function Ts(yue, zh) {
   return T(yue, zh);
 }
 
-/** 只有一种写法的文本（界面标签、关卡清单、日记、网页裸串）：粤语／粤＋普转港繁，普通话原样。
-    与 T() 的区别：T() 有双语来源，H() 只是把单语文本按模式繁化，幂等。
-    普通话模式先查 yue-zh.js 的对照表——单语文本里若写了粤语（「佢」「唔」「细路」），
+/** 只有一种写法的文本（界面标签、关卡清单、日记、网页裸串）：粤语档转港繁，其余原样/查表。
+    与 T() 的区别：T() 有双语来源，H() 只是把单语文本按模式处理，幂等。
+    非粤语档先查 yue-zh.js 的对照表——单语文本里若写了粤语（「佢」「唔」「细路」），
     这里是最后一个能拦住它的地方，不查就会原样漏给玩家。查不到才原样返回。 */
 function H(s) {
   if (s == null) return "";
   const mode = typeof langMode === "string" ? langMode : "yue";
-  if (mode === "zh") return typeof zhOf === "function" ? zhOf(String(s)) : String(s);
+  if (mode !== "yue") return typeof zhOf === "function" ? zhOf(String(s)) : String(s);
   return typeof toHkTrad === "function" ? toHkTrad(String(s)) : String(s);
 }
 
@@ -117,14 +119,14 @@ function Ty(obj, key) {
   return T(obj.yue || obj.text, obj.zh);
 }
 
-/** 长文：按语言模式只显示其一，不混排。 */
+/** 长文：按语言模式取其一；粤语档是港繁粤语，其余是普通话。 */
 function Tblock(yue, zh, className) {
   const raw = yue == null ? "" : String(yue);
   const y = typeof toHkTrad === "function" ? toHkTrad(raw) : raw;
   const z = zh == null || zh === "" ? "" : String(zh);
   const mode = typeof langMode === "string" ? langMode : "yue";
   const box = el("div", { class: "web-bi" + (className ? " " + className : "") });
-  box.append(el("div", { class: "web-bi-main" }, [mode === "zh" ? (z || raw) : y]));
+  box.append(el("div", { class: "web-bi-main" }, [mode !== "yue" ? (z || raw) : y]));
   return box;
 }
 
@@ -176,8 +178,8 @@ function cycleLang() {
   if (langMode === "both" && typeof showPrompt === "function") {
     const hk = (s) => H(s);
     showPrompt(
-      hk("粤＋普"),
-      hk("网页与长文只出粤语。人物对白下面，会加一行普通话小字。想整页转普通话，再点一次语言按钮。")
+      hk("普＋粤"),
+      hk("网页、日记簿、旁白用普通话。人物对白仍是粤语原句，下面一行普通话小字。想连对白一起转普通话，再点一次语言按钮。")
     );
   }
 }

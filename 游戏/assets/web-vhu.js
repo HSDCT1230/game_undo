@@ -1015,7 +1015,7 @@ function seQueryText() {
 function seResultsFor(q) {
   const s = String(q || "").toLowerCase();
   const has = (w) => s.indexOf(w) >= 0;
-  // 两种字形都认：普通话模式用简体，粤语／粤＋普模式界面是港繁，有人会照屏幕上的字打「維港」。
+  // 两种字形都认：只有粤语模式界面是港繁，有人会照屏幕上的字打「維港」；其余模式是简体。
   if (["维港", "維港", "vhu"].some(has)) return SE_RESULTS;
   if (["深水埗", "重建", "市建局", "旧楼", "舊樓"].some(has)) return SE_REBUILD;
   return [];

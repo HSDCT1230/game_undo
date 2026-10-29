@@ -116,14 +116,25 @@ function yueFace(s) {
   return typeof H === "function" ? H(s == null ? "" : String(s)) : (s == null ? "" : String(s));
 }
 
-/** 对白／旁白共用：与 T() 同逻辑——zh 用普通话原文；粤语／粤＋普用粤语侧并转香港繁体。并排由 talkBody() 负责。 */
-function faceLine(text, zh) {
+/** 只做港繁，不读语言模式。对白主行专用——「普＋粤」下正文已经转普通话，
+    对白若也走 H()，双轨会变成两行一模一样的普通话。 */
+function faceYue(s) {
+  const t = String(s == null ? "" : s);
+  return typeof toHkTrad === "function" ? toHkTrad(t) : t;
+}
+
+/** 对白／旁白共用。第三参说明这一句是「听到的」还是「看到／想到的」：
+ *  - 不传＝她听到的原话（角色对白、电话、语音留言）→ 粤语档与普＋粤都出港繁粤语；
+ *  - true 或 "narr"＝旁白／选项提示（她想到的）→ 普＋粤与普通话出普通话单行；
+ *  - "read"＝她低头读的字（短讯）→ 同上。
+ *  并排小字由 talkBody() 负责，只有对白才有。 */
+function faceLine(text, zh, as) {
   const mode = typeof langMode === "string" ? langMode : "both";
-  if (mode === "zh") {
-    const z = zh != null && zh !== "" ? String(zh) : String(text || "");
-    return z.trim().replace(/^[（(](.*)[）)]$/, "$1");
-  }
-  return yueFace(text || "");
+  const t = String(text == null ? "" : text);
+  const z = zh != null && zh !== "" ? String(zh).trim() : "";
+  if (mode === "zh") return (z || t).trim().replace(/^[（(](.*)[）)]$/, "$1");
+  if (mode === "both" && as) return z || (typeof zhOf === "function" ? zhOf(t) : t);
+  return faceYue(t);
 }
 
 /** 选项前注「【动作／口气】正文」拆成两段：前注小一号、淡一点，像游戏 UI 的提示，不跟正文连读。 */
@@ -300,7 +311,7 @@ function speakerOf(b) {
   return b.who || "现场";
 }
 
-/** 对白正文：粤语／普通话各取一侧；「粤＋普」在粤语行下面加一行小字普通话对照。
+/** 对白正文：粤语／普通话各取一侧；「普＋粤」在粤语行下面加一行小字普通话对照。
     没有普通话侧（旁白、录音原话）时只显示粤语，不硬凑。 */
 function talkBody(text, zh, className) {
   const box = el("div", { class: "talk-body" });
@@ -556,7 +567,7 @@ function drawFace(b) {
     // 旁白／选项提示／角色话：同一套三模式、同一套打字。
     // 以前旁白是整句淡入，夹在两句角色话中间就像「这一句没动画」——现在一律逐字出。
     if (stageDir || choosing) {
-      const dir = el("div", { class: "talk-text " + cls }, [faceLine(prompt, b.zh || b.promptZh)]);
+      const dir = el("div", { class: "talk-text " + cls }, [faceLine(prompt, b.zh || b.promptZh, "narr")]);
       typeLater(dir, 18);
       body.append(dir);
     } else {
@@ -603,7 +614,7 @@ function drawPhone(b) {
   const narr = b.choices ? cue : !b.who;
   const tone = whoClass(b.choices ? "章慧琪" : (b.who || speaker));
   const phoneLine = narr
-    ? el("div", { class: "talk-text stage-dir" }, [faceLine(b.choices ? b.prompt : (b.text || ""), b.zh || b.promptZh)])
+    ? el("div", { class: "talk-text stage-dir" }, [faceLine(b.choices ? b.prompt : (b.text || ""), b.zh || b.promptZh, "narr")])
     : b.choices
       ? el("div", { class: "talk-text " + tone }, ["……"])
       : typeBody(talkBody(b.text || "", b.zh, tone));
@@ -644,7 +655,7 @@ function drawSms(b) {
     const tone = whoClass(mine ? "章慧琪" : (x.who || t.contact || ""));
     const pop = grew && n === log.length - 1 ? turnIn(mine ? "me" : "them") : "";
     const bubble = el("div", { class: "sms-bubble " + tone });
-    bubble.append(el("div", { class: "talk-text" }, [faceLine(x.text, x.zh)]));
+    bubble.append(el("div", { class: "talk-text" }, [faceLine(x.text, x.zh, "read")]));
     thread.append(el("div", { class: "sms-row " + (mine ? "me" : "them") + pop }, [
       bubble,
       el("div", { class: "sms-time" }, [clockHm()]),
@@ -664,7 +675,7 @@ function drawSms(b) {
     thread,
     b.choices
       ? el("div", { class: "sms-compose" + (phoneOnly(b) ? " is-phone-op" : "") }, [
-        phoneOnly(b) && b.prompt ? el("div", { class: "sms-hint" }, [faceLine(b.prompt, b.promptZh || b.zh)]) : "",
+        phoneOnly(b) && b.prompt ? el("div", { class: "sms-hint" }, [faceLine(b.prompt, b.promptZh || b.zh, "narr")]) : "",
         !phoneOnly(b) && b.compose ? el("div", { class: "sms-hint" }, [yueFace("发短讯（70字内）")]) : "",
         choiceBox(b, "sms-choices"),
       ])
@@ -692,7 +703,8 @@ function drawMsg(b) {
 function msgBody(b, cls) {
   if (b.choices || !b.who) {
     const cue = b.choices ? (b.prompt && b.prompt !== "……" ? b.prompt : "") : (b.text || "");
-    const plain = el("div", { class: "talk-text " + (cue ? "stage-dir" : cls) }, [cue ? faceLine(cue, b.zh || b.promptZh) : "……"]);
+    // 选项上面那句提示是旁白；没写 who 的正文仍按「听到的原话」处理（录音里的话）
+    const plain = el("div", { class: "talk-text " + (cue ? "stage-dir" : cls) }, [cue ? faceLine(cue, b.zh || b.promptZh, b.choices ? "narr" : "") : "……"]);
     if (!b.choices) typeLater(plain);
     return plain;
   }

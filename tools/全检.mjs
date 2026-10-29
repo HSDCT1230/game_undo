@@ -289,6 +289,25 @@ for (const r of rows) {
 }
 info.push(`对白：角色话 ${rows.length} 句（粤语疑似夹普 ${yueHits}，普通话疑似夹粤 ${zhHits}）`);
 
+/* ---------- 6.1 选项文字：普＋粤／普通话下走 H()，夹粤语要在对照表里 ---------- */
+/* 选项 label 是单语文本（没有第二轨），非粤语档靠 yue-zh.js 整串换。
+   早先三条 label 夹粤语（「我今晚返去。你当我又讲大话。」），两档下会显示成
+   「简体字 + 粤语词」——比港繁更怪，像错字。这里只报 WARN：表里能整串命中就不算。 */
+const yueTable = new Set([...(src["yue-zh.js"] || "").matchAll(/^\s{2}"((?:\\.|[^"\\])*)"\s*:/gm)].map((m) => m[1]));
+let labelBad = 0;
+for (const f of Object.keys(src)) {
+  const s = src[f];
+  if (!s) continue;
+  for (const m of s.matchAll(/\blabel\s*:\s*"((?:\\.|[^"\\])*)"/g)) {
+    const t = m[1];
+    if (!ZH_BAD.test(t)) continue;
+    if (yueTable.has(t)) continue;
+    labelBad++;
+    warn(`选项文字夹粤语、对照表里没有：${f}:${s.slice(0, m.index).split("\n").length}「${t}」`);
+  }
+}
+info.push(`选项文字：夹粤语且未进对照表 ${labelBad} 条`);
+
 /* ---------- 7. Flag 设了有没有人读 ---------- */
 const flagSet = new Set([
   ...[...allSrc.matchAll(/\bflag\(\s*"([A-Za-z0-9_]+)"\s*,/g)].map((m) => m[1]),
