@@ -5281,7 +5281,9 @@ body .wall-photo-sheet .img-slot.wall-photo-lg::after { content: none; }
   0%, 40% { background-color: #fff6cc; }
   100% { background-color: #fffdf3; }
 }
-.post.fresh, .wall-mail.fresh, .post-reply.fresh {
+/* 收件箱从「一条条 + 回应」换成左人右话（10-30）。旧的 .wall-mail / .wall-mail-meta
+   是那一版的列表样式，收件箱重写后没人再用，整块删掉——留着会让下一个人以为还有第二条渲染路径。 */
+.post.fresh, .post-reply.fresh, .wall-line.fresh .wall-bubble {
   animation: wall-fresh-fade 6s ease-out forwards;
 }
 .post-new {
@@ -5295,7 +5297,9 @@ body .wall-photo-sheet .img-slot.wall-photo-lg::after { content: none; }
   font-weight: 700;
   vertical-align: 1px;
 }
-.post .wall-shot { display: block; margin: 0 0 8px; }
+/* 帖子配图：首页要像「朋友圈」，照片是这一屏的主角，148 的缩略图撑不起来。
+   相册页挑图仍用 148（一屏要摆好几张），所以只挑 `.post` 里的放大，不动 .wall-shot 本身。 */
+.post .wall-shot { display: block; width: 100%; max-width: 340px; margin: 0 0 8px; }
 .post p.post-reply {
   min-height: 0;
   margin: 0 0 6px;
@@ -5333,18 +5337,135 @@ body .wall-photo-sheet .img-slot.wall-photo-lg::after { content: none; }
   text-decoration-color: rgba(56, 107, 67, 0.35);
   background: transparent;
 }
-.wall-mail {
-  margin: 0 0 12px;
-  padding: 10px 12px;
+/* ---- 首页顶上的系统通知：不是人说的话，所以没有头像、没有回应 ---- */
+.wall-main { min-width: 0; }
+.wall-notice {
+  margin: 0 0 10px;
+  padding: 7px 10px;
+  border: 1px solid #cfd6cc;
+  background: #eef1ec;
+  color: #5c665d;
+  font-size: 11px;
+  line-height: 1.65;
+}
+.wall-notice p { margin: 0; }
+.wall-notice-tag {
+  margin-right: 6px;
+  padding: 0 4px;
+  border: 1px solid #c3cabf;
+  background: #fff;
+  color: #6a756b;
+  font-size: 10px;
+}
+.wall-notice-time { margin-left: 8px; color: #98a197; }
+
+/* ---- 收件箱：左联系人、右对话。刻意不长成首页那样 ---- */
+.wall-mail-note { margin: -6px 0 12px; color: #7c867e; font-size: 11px; }
+.wall-mail-split {
+  display: grid;
+  grid-template-columns: 178px minmax(0, 1fr);
   border: 1px solid #cbd6c8;
   background: #fff;
-  font-size: 13px;
 }
-.wall-mail p { margin: 0 0 6px; }
-.wall-mail-meta { display: flex; align-items: baseline; gap: 8px; }
-.wall-mail-meta a { font-weight: 700; color: #386b43; }
-.wall-mail-meta > span { margin-left: auto; color: #999; font-size: 11px; }
-.wall-mail .post-actions { margin: 0; }
+.wall-msg-list { border-right: 1px solid #cbd6c8; background: #f7f9f5; }
+.wall-msg-who {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  padding: 8px;
+  border: 0;
+  border-bottom: 1px solid #e3e9e1;
+  background: transparent;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+/* 选中态不用 outline：那是浏览器画焦点框的东西，放在这一屏像「控件被选中」，
+   不是「人翻到这一栏」。用贴边实线 + 白底。 */
+.wall-msg-who.on { background: #fff; box-shadow: inset 3px 0 #4f7657; }
+.wall-msg-who:hover { background: #fff; }
+.wall-face {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid #bac7b7;
+  background: #edf2e9;
+  color: #55715a;
+  font: 700 13px "SimSun", serif;
+}
+.wall-face.sm { flex: 0 0 auto; width: 24px; height: 24px; font-size: 11px; }
+.wall-msg-who-main { display: block; min-width: 0; }
+.wall-msg-who-name { display: block; color: #386b43; font-size: 12px; font-weight: 700; }
+.wall-msg-who-last {
+  display: block;
+  overflow: hidden;
+  color: #8d968e;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wall-msg-who-time { align-self: start; color: #a7b0a7; font-size: 10px; white-space: nowrap; }
+.wall-msg-pending {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #c9803a;
+}
+.wall-thread { min-width: 0; padding: 10px 12px 14px; }
+.wall-thread-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding-bottom: 7px;
+  border-bottom: 1px dotted #ccd3ca;
+}
+.wall-thread-head a { color: #386b43; font-size: 13px; font-weight: 700; }
+.wall-thread-sub { color: #8d968e; font-size: 11px; }
+.wall-line { display: flex; gap: 7px; align-items: flex-start; margin: 0 0 10px; }
+.wall-line.mine { flex-direction: row-reverse; }
+.wall-say { min-width: 0; max-width: 78%; }
+.wall-line.mine .wall-say { text-align: right; }
+.wall-bubble {
+  display: inline-block;
+  padding: 6px 9px;
+  border: 1px solid #d3dbd0;
+  background: #f2f5ef;
+  color: #333;
+  font-size: 12px;
+  line-height: 1.6;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+.wall-line.mine .wall-bubble { border-color: #cbdcc9; background: #e7f0e3; }
+.wall-time { margin-top: 3px; color: #a7b0a7; font-size: 10px; }
+.wall-acts { margin: -4px 0 12px; }
+.wall-acts .post-actions { text-align: left; }
+/* 窄屏：联系人从竖列改成横条，点一下换人——一套结构两种排法，不用写第二套 DOM。 */
+@media (max-width: 720px) {
+  .wall-mail-split { grid-template-columns: minmax(0, 1fr); }
+  .wall-msg-list {
+    display: flex;
+    overflow-x: auto;
+    border-right: 0;
+    border-bottom: 1px solid #cbd6c8;
+  }
+  .wall-msg-who {
+    flex: 0 0 auto;
+    width: auto;
+    grid-template-columns: 26px auto;
+    border-right: 1px solid #e3e9e1;
+    border-bottom: 0;
+    /* 触屏判据 32：横向条不该比竖列矮 */
+    min-height: 40px;
+  }
+  .wall-msg-who-last, .wall-msg-who-time, .wall-msg-pending { display: none; }
+  .wall-say { max-width: 86%; }
+}
 .wall-grid .wall-rail { align-content: start; }
 .side-friend {
   display: flex;
@@ -5500,6 +5621,28 @@ body .wall-photo-sheet .img-slot.wall-photo-lg::after { content: none; }
   text-underline-offset: 2px;
 }
 .wall-draft-drop:hover { color: #5a4a3a; }
+
+/* 触屏：墙簿的动作字（回应／收起／回复）实测只有 22×22，指头按不准。
+   撑到 32：这一行本来是右边一段空白，字居中、行高跟着长，比负外边距安全——
+   负外边距会把热区压到上面那一行回帖的名字上，点错就跳去别人的个人页。 */
+@media (pointer: coarse) {
+  .wall-site .post-actions a,
+  .wall-thread-head a,
+  .wall-draft-drop {
+    display: inline-flex;
+    align-items: center;
+    min-height: 32px;
+  }
+  /* 横着多给一点：只有竖着撑高，「回应」还是三十来像素宽。
+     右边是空的，负外边距放得下，字不会真的往里缩。 */
+  .wall-site .post-actions a { justify-content: flex-end; padding: 0 8px; margin-right: -8px; }
+  .wall-thread-head a { padding: 0 6px; margin-left: -6px; }
+  .wall-draft-opt { min-height: 32px; padding: 6px 8px; }
+  .wall-draft-send { min-height: 32px; padding: 6px 14px; }
+  .wall-draft-input { min-height: 32px; }
+  /* 「不发」只有两个字，宽也要给够，不然竖着够高、横着还是按不准 */
+  .wall-draft-drop { padding: 0 6px; }
+}
 
 /* 底栏「浏览器」：墙簿有新东西就慢慢明暗，右上一颗红点（加大并轻脉冲） */
 @keyframes playbar-breathe {

@@ -369,7 +369,9 @@ function laptop(inner, opts) {
   const screen = el("div", { class: "laptop-screen" });
   const title = opts.title
     || (tab === "wall"
-      ? wallCountLabel("墙簿", wallUnread().n)
+      // 标签页这个数字只算首页（公开动态）：邮件那条已经在站内「收件箱」钮上有自己的数，
+      // 两处都算合计等于同一批未读被数两遍，玩家对不上。
+      ? wallCountLabel("墙簿", wallUnread().feed)
       : tab === "house"
         ? wallCountLabel("廿八屋", houseForumUnread().length)
         : webTabTitle(tab));
@@ -2844,6 +2846,20 @@ function wallTimeline(who) {
   ]);
 }
 
+/* 通知不是人说的话，所以挂在首页顶上一横条：没有头像、没有「回应」，
+   也不进收件箱、不算未读。廿八屋那句「已标记为已租」是唯一一条。 */
+function wallNoticeBar() {
+  const list = wallShown(WALL_NOTICE);
+  if (!list.length) return null;
+  return el("div", { class: "wall-notice" }, list.map(({ e, t }) =>
+    el("p", {}, [
+      el("span", { class: "wall-notice-tag" }, [W("wallNotice")]),
+      el("span", {}, [Ty(e, "text")]),
+      el("span", { class: "wall-notice-time" }, [webAgo(t)]),
+    ])
+  ));
+}
+
 function viewWall() {
   const fresh = wallFresh("wall", wallFeedKeys());
   const posts = wallShown(WALL_FEED).map(({ e, t }) => {
@@ -2890,9 +2906,13 @@ function viewWall() {
       el("span", {}, [hkAd(m.via)]),
     ]))),
   ]);
+  const notice = wallNoticeBar();
   const wrap = el("div", { class: "hk-site wall-site" });
   wrap.append(wallHeader());
-  wrap.append(el("div", { class: "wall-grid" }, [feed, side]));
+  wrap.append(el("div", { class: "wall-grid" }, [
+    el("div", { class: "wall-main" }, notice ? [notice, feed] : [feed]),
+    side,
+  ]));
   return wrap;
 }
 
@@ -3068,28 +3088,103 @@ function lokOnline() {
   return webAgo(last ? last.t : webDate("07-31", "22:55"));
 }
 
-function viewWallMail() {
-  const mails = wallShown(WALL_MAIL);
-  const fresh = wallFresh("wall-mail", wallMailKeys());
-  const rows = mails.map(({ e, t }) => el("div", { class: "wall-mail" + (fresh.includes(e.id) ? " fresh" : "") }, [
-    el("p", { class: "wall-mail-meta" }, [
-      webLink(e.name, wallWhoGo(e.who)),
-      fresh.includes(e.id) ? el("em", { class: "post-new" }, ["新"]) : "",
-      el("span", {}, [webAgo(t)]),
+/* 收件箱跟首页刻意不同形：首页问「谁在哪天发了什么」（按时间、帖子流），
+   这里问「谁找过你、你们说过什么」（按人、对话）。两套形状不一样，
+   玩家就不会再问「这句为什么在这边」。 */
+function wallMailThreads() {
+  const by = {};
+  const order = [];
+  wallShown(WALL_MAIL).forEach(({ e, t }) => {
+    if (!by[e.who]) { by[e.who] = []; order.push(e.who); }
+    by[e.who].push({ e, t });
+  });
+  return order.map((who) => {
+    const items = by[who].sort((a, b) => a.t - b.t);
+    const last = items[items.length - 1];
+    return { who, name: last.e.name || WALL_NAMES[who] || who, items, last };
+  }).sort((a, b) => b.last.t - a.last.t);
+}
+
+function wallThreadKeys(th) {
+  const keys = [];
+  th.items.forEach(({ e }) => {
+    keys.push(e.id);
+    wallReplies(e).forEach((x) => keys.push(x.key));
+  });
+  return keys;
+}
+
+// 一句话一个气泡：对方在左、我回的在右。名字只在左边露一个字，跟帖子头像同一个做法。
+function wallMsgRow(mine, name, body, time, isFresh) {
+  return el("div", { class: "wall-line" + (mine ? " mine" : "") + (isFresh ? " fresh" : "") }, [
+    mine ? "" : el("span", { class: "wall-face sm" }, [String(name || "?").slice(0, 1)]),
+    el("div", { class: "wall-say" }, [
+      el("div", { class: "wall-bubble" }, body),
+      el("div", { class: "wall-time" }, [time]),
     ]),
-    el("p", {}, wallNoteParts(Ty(e, "text"), e)),
-    ...wallReplies(e).map((x) => {
-      const kids = [el("b", {}, [x.r.name]), "："];
-      const key = wallNoteKey(e);
-      const replyShow = x.r.zh != null ? T(x.r.text, x.r.zh) : hkAd(x.r.text);
-      if (key && (String(replyShow).includes(key) || (typeof toHkTrad === "function" && String(replyShow).includes(toHkTrad(key))))) {
-        kids.push(...wallNoteParts(replyShow, e));
-      } else kids.push(replyShow);
-      return el("p", { class: "post-reply" + (fresh.includes(x.key) ? " fresh" : "") }, kids);
-    }),
-    wallActions(e, hkAd("回复")) || "",
+  ]);
+}
+
+function viewWallMail() {
+  const fresh = wallFresh("wall-mail", wallMailKeys());
+  const threads = wallMailThreads();
+  if (!threads.length) return wallProfile(W("wallMail"), [hkAd("没有讯息。")]);
+
+  const freshN = (th) => wallThreadKeys(th).filter((k) => fresh.includes(k)).length;
+  const keep = threads.some((th) => th.who === S.wallMailWho);
+  if (!keep) S.wallMailWho = (threads.find((th) => freshN(th)) || threads[0]).who;
+  const now = threads.find((th) => th.who === S.wallMailWho) || threads[0];
+
+  const list = el("div", { class: "wall-msg-list" }, threads.map((th) => {
+    const n = freshN(th);
+    // 有人问了她还没回：列表上挂一个点，不用点进去也知道这栏有事
+    const pending = th.items.some(({ e }) => e.answer && !wallMine(e));
+    return el("button", {
+      type: "button",
+      class: "wall-msg-who" + (th.who === now.who ? " on" : ""),
+      "aria-current": th.who === now.who ? "true" : "false",
+      onclick: () => { S.wallMailWho = th.who; draw(); },
+    }, [
+      el("span", { class: "wall-face" }, [th.name.slice(0, 1)]),
+      el("span", { class: "wall-msg-who-main" }, [
+        el("span", { class: "wall-msg-who-name" }, [th.name, n ? el("em", { class: "post-new" }, ["新"]) : ""]),
+        el("span", { class: "wall-msg-who-last" }, [Ty(th.last.e, "text")]),
+      ]),
+      el("span", { class: "wall-msg-who-time" }, [webAgo(th.last.t)]),
+      pending ? el("i", { class: "wall-msg-pending", title: hkAd("还没回") }) : "",
+    ]);
+  }));
+
+  const rows = [];
+  now.items.forEach(({ e, t }) => {
+    rows.push(wallMsgRow(false, e.name, wallNoteParts(Ty(e, "text"), e), webAgo(t), fresh.includes(e.id)));
+    wallReplies(e).forEach((x) => {
+      const mine = x.r.who === "me";
+      const body = x.r.zh != null ? [T(x.r.text, x.r.zh)] : [hkAd(x.r.text)];
+      rows.push(wallMsgRow(mine, x.r.name, body, webAgo(x.t), fresh.includes(x.key)));
+    });
+    const act = wallActions(e, hkAd("回复"));
+    if (act) rows.push(el("div", { class: "wall-acts" }, [act]));
+  });
+
+  const wrap = el("div", { class: "hk-site wall-site" });
+  wrap.append(wallHeader());
+  wrap.append(el("div", { class: "wall-profile" }, [
+    backLink("墙簿", wallGoHome),
+    el("h2", {}, [W("wallMail")]),
+    el("p", { class: "wall-mail-note" }, [W("wallOnlyUs")]),
+    el("div", { class: "wall-mail-split" }, [
+      list,
+      el("div", { class: "wall-thread" }, [
+        el("div", { class: "wall-thread-head" }, [
+          webLink(now.name, wallWhoGo(now.who)),
+          el("span", { class: "wall-thread-sub" }, [hkAd(wallStatus(now.who).text)]),
+        ]),
+        ...rows,
+      ]),
+    ]),
   ]));
-  return wallProfile(hkAd("墙簿收件箱"), rows.length ? rows : [hkAd("没有讯息。")]);
+  return wrap;
 }
 
 function viewWallSet() {

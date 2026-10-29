@@ -685,11 +685,14 @@ const THREADS = {
   },
 };
 
+/* 墙簿首页＝公开。规矩一句话：墙上谁都看得见，所以只放「对所有人说」的话——
+   家常、饭菜、加班、照片。担心她的话（你今晚住边、我等到一点、电话有水声）
+   一律走私信，见下面的 WALL_MAIL。表姐在墙上从不点名问私事，这是她自己那套体面。 */
 const WALL_FEED = [
   { id: "mei-album", who: "mei", name: "陈美娟", at: ["07-30", "01:12"], old: true, text: "上载了相册「年夜饭」。家豪又醉，成晚讲大学宿舍嗰个。" },
   {
-    id: "mei-0731", who: "mei", name: "陈美娟", at: ["07-31", "22:48"], text: "阿琪你今晚住边。沙发留住。", textZh: "阿琪你今晚住哪。沙发留着。",
-    answer: [{ text: "多谢家姐。", back: "同我客气咩？" }, { text: "唔使留。" }],
+    id: "mei-0731", who: "mei", name: "陈美娟", at: ["07-31", "22:48"], text: "阿琪，几时返嚟食饭？你个位一直留。", textZh: "阿琪，什么时候回来吃饭？你的位子一直留着。",
+    answer: [{ text: "忙完先返。", back: "忙咩？" }, { text: "唔使留位。" }],
   },
   { id: "lok-0731", who: "lok", name: "阿乐", at: ["07-31", "22:55"], old: true, text: "……", mute: "你打了几个字，又删掉。" },
   {
@@ -700,42 +703,38 @@ const WALL_FEED = [
   { id: "lok-sig", who: "lok", name: "阿乐", react: () => flag("calledLok"), text: "更新了签名档：「唔好再打嚟。」", key: "唔好再打嚟", note: ["wall-loksig", "阿乐改了签名档：唔好再打嚟。"], mute: "你打了「对唔住」，又删掉。" },
   {
     id: "howard-ot", who: "howard", name: "陈家豪", at: ["08-15", "13:05"], text: "又加班。",
+    photo: { id: pic(1, "墙簿/家豪-加班桌面"), cap: "未食饭" },
     replies: [{ who: "mei", name: "陈美娟", at: ["08-15", "13:20"], text: "又系阿明？" }],
     key: "又加班",
     note: ["wall-ot", "姐夫又加班。表姐在下面问：又系阿明？"],
     answer: [{ text: "姐夫辛苦。" }],
   },
   {
-    id: "mei-0815", who: "mei", name: "陈美娟", at: ["08-15", "21:50"], text: "沙发仍在，你不过来都好，门锁好。",
-    answer: [{ text: "锁好了。", back: "乖。" }],
+    id: "mei-tang", who: "mei", name: "陈美娟", at: ["08-15", "21:50"], text: "煲咗老火汤。饮唔晒。", textZh: "煲了老火汤。喝不完。",
+    photo: { id: pic(1, "墙簿/表姐-一锅汤"), cap: "今晚" },
+    answer: [{ text: "留一碗。", back: "听日过嚟饮。" }, { text: "唔使。" }],
   },
   {
-    id: "mei-0823", who: "mei", name: "陈美娟", at: ["08-23", "21:30"], text: "食过未？汤我留住。",
-    answer: [{ text: "食咗。", back: "讲大话。听日过嚟。" }, { text: "听日过嚟饮。", back: "好。" }],
+    id: "mei-month", who: "mei", name: "陈美娟", at: ["08-23", "21:30"], text: "阿豪又话出差。今次成个月。", textZh: "阿豪又说要出差。这次一整月。",
+    answer: [{ text: "去边？", back: "唔讲。佢从来唔讲。" }, { text: "哦。" }],
   },
   {
     id: "mei-meal", who: "mei", name: "陈美娟", at: ["08-24", "15:40"], after: () => ev("note-notsaid"), text: "上载了 1 张相片，标注了你。「瘦咗。食。」", photo: { id: pic(9, "示意-午饭"), cap: "星期日" },
     answer: [{ text: "多谢家姐。" }],
   },
-  { id: "lok-0828", who: "lok", name: "阿乐", at: ["08-28", "23:40"], after: () => flag("lokSoup"), text: "汤煲多咗。以后唔煲。", mute: "你打了「对唔住」，又删掉。" },
-  {
-    id: "ping-0829", who: "ping", name: "同事阿诗", at: ["08-29", "20:15"], text: "阿琪，下个礼拜有更开，你嚟唔嚟？",
-    answer: [{ text: "嚟。", back: "好，我同经理讲。" }, { text: "呢排唔得。", back: "保重。" }],
-  },
+  { id: "lok-0828", who: "lok", name: "阿乐", at: ["08-28", "23:40"], after: () => flag("lokSoup"), text: "汤煲多咗。以后唔煲。", photo: { id: pic(1, "墙簿/阿乐-自己煲汤"), cap: "一个人" }, mute: "你打了「对唔住」，又删掉。" },
   {
     id: "howard-0830", who: "howard", name: "陈家豪", at: ["08-30", "18:20"], text: "收工。去饮杯。",
+    photo: { id: pic(1, "墙簿/家豪-大排档"), cap: "落楼下" },
     replies: [
       { who: "mei", name: "陈美娟", at: ["08-30", "18:31"], text: "同阿明？" },
       { who: "howard", name: "陈家豪", at: ["08-30", "19:02"], text: "唔系。" },
     ],
   },
-  { id: "house-0901", who: "house", name: "廿八屋转贴", at: ["09-01", "10:00"], text: "专页：深水埗旧楼近来多人问收购，业主留意来历不明嘅电话。" },
+  { id: "house-0901", who: "house", name: "廿八屋转贴", at: ["09-01", "10:00"], text: "专页：深水埗旧楼近来多人问收购，业主留意来历不明嘅电话。", photo: { id: pic(1, "墙簿/廿八屋-旧楼外墙"), cap: "深水埗" } },
   {
-    id: "mei-0902", who: "mei", name: "陈美娟", at: ["09-02", "22:10"], text: "今个星期六你真的再去？你姐夫话佢最近好攰。",
-    answer: [{ text: "去。", back: "咁你自己小心。" }],
-  },
-  {
-    id: "mei-0906", who: "mei", name: "陈美娟", at: ["09-06", "22:15"], text: "星期六去过未。中秋返嚟食饭。沙发仍在。",
+    id: "mei-fest", who: "mei", name: "陈美娟", at: ["09-06", "22:15"], text: "后日做节。月饼买咗两盒。", textZh: "后天过节。月饼买了两盒。",
+    photo: { id: pic(1, "墙簿/表姐-做节"), cap: "做节" },
     answer: [{ text: "返。", back: "等你。" }, { text: "睇吓。" }],
   },
   { id: "howard-0907", who: "howard", name: "陈家豪", at: ["09-07", "11:05"], text: "在　湾仔。", key: "湾仔", note: ["wall-howard-wc", "九月七日上午，姐夫在湾仔。"] },
@@ -752,14 +751,31 @@ const WALL_FEED = [
   },
 ];
 
+/* 收件箱＝只有你们两个看得见。凡是「当面不好讲、又不想让旁人看见」的，都落在这里：
+   表姐担心她一个人住，阿乐不肯在墙上说，阿诗问要不要排更。 */
 const WALL_MAIL = [
-  { id: "house-rent", who: "house", name: "廿八屋", at: ["08-01", "19:00"], after: () => S.level >= 3, text: "你收藏的「荣汇街 28 号 4 楼后座」已标记为已租。多谢使用廿八屋。" },
+  // 她没回这一条——所以 08-17 才有「我等到一点」。
+  { id: "mei-night", who: "mei", name: "陈美娟", at: ["07-31", "22:52"], text: "你今晚住边？沙发留住。", textZh: "你今晚住哪？沙发留着。" },
   { id: "lok-pm", who: "lok", name: "阿乐", at: ["08-16", "01:40"], after: () => flag("calledLok"), text: "你打嚟做咩？我瞓紧。", key: "你打嚟做咩", note: ["wall-lokpm", "阿乐在墙簿问我打去做咩。我没回。"], mute: "你打了几个字，又删掉。" },
   { id: "mei-wait", who: "mei", name: "陈美娟", at: ["08-17", "01:05"], after: () => flag("meiSofa"), text: "我等到一点。门而家先锁。", mute: "你打了「我冇事」，又删掉。" },
   {
     id: "mei-pm", who: "mei", name: "陈美娟", at: ["08-27", "23:10"], after: () => ev("note-meiwater"), text: "电话入面成日有水声。系咪你屋企？唔好一个人顶。",
     answer: [{ text: "冇事。水喉旧。", back: "有事打俾我。几夜都得。" }, { text: "我惊。", back: "过嚟住。沙发仍在。" }],
   },
+  {
+    id: "ping-pm", who: "ping", name: "同事阿诗", at: ["08-29", "20:15"], text: "阿琪，下个礼拜有更开，你嚟唔嚟？", textZh: "阿琪，下个礼拜有班开，你来不来？",
+    answer: [{ text: "嚟。", back: "好，我同经理讲。" }, { text: "呢排唔得。", back: "保重。" }],
+  },
+  {
+    id: "mei-sat", who: "mei", name: "陈美娟", at: ["09-02", "22:10"], text: "今个星期六你真的再去？你姐夫话佢最近好攰。", textZh: "这个星期六你真的还去？你姐夫说他最近很累。",
+    answer: [{ text: "去。", back: "咁你自己小心。" }],
+  },
+  { id: "mei-visit", who: "mei", name: "陈美娟", at: ["09-06", "22:14"], text: "星期六去过未。", textZh: "星期六去过了没有。" },
+];
+
+/* 通知＝系统发的，不是人说的话。挂在首页顶上一横条，不进收件箱、不算未读。 */
+const WALL_NOTICE = [
+  { id: "house-rent", at: ["08-01", "19:00"], after: () => S.level >= 3, text: "你收藏的「荣汇街 28 号 4 楼后座」已标记为已租。多谢使用廿八屋。", textZh: "你收藏的「荣汇街 28 号 4 楼后座」已标记为已租。多谢使用廿八屋。" },
 ];
 
 const WALL_NAMES = { mei: "陈美娟", lok: "阿乐", howard: "陈家豪", ping: "同事阿诗", house: "廿八屋转贴", me: "章慧琪" };

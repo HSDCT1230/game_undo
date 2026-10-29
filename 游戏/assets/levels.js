@@ -15,6 +15,12 @@ const cnt = (keys, obj) => keys.filter((k) => obj && obj[k]).length;
 // 任务条计数与 done() 共用这一份，别再手抄两遍——抄两遍就会出现「条子写 13、判定看 12」。
 const CAL13 = ["08-01", "08-02", "08-03", "08-04", "08-05", "08-06", "08-07", "08-08", "08-09", "08-10", "08-11", "08-12", "08-13"];
 
+// 日历上十三天都能翻，但**必做只要五页**：那五页各有一个日后要对得上的东西
+// （修水喉／糖水／交租／车放回茶几／十三号的录音）。
+// 以前十三天全算必做，玩家要连点十三下才过关——点得完，但「住过两个礼拜」这件事
+// 不是靠点击次数成立的。其余八天留着可翻，漏了不卡关，也不会在任务条里催。
+const CAL_KEY = ["08-03", "08-07", "08-10", "08-12", "08-13"];
+
 function seedItems(ids) {
   ids.forEach((id) => fileEvidence(item(id)));
 }
@@ -88,9 +94,9 @@ const LEVELS = [
     tasks: [
       { text: "屋里的样子，记下至少四样", need: true, count: () => [baseCount(), 4], done: () => baseCount() >= 4, hint: "屋里的东西，我还没看清，至少四样" },
       { text: "日历上，夜里那卷录音", after: "08-13 的录音「只有水」", need: true, show: () => !!S.calOpen, done: () => ev("rec-water"), hint: "有一夜水管响，我开了录音" },
-      // 十三天是这一关的正事：一天一格，看完才翻到十四号。
-      // 从前这条不是必做，可任务条照样写「0／13」——点两格也能按「往下」，等于没住过这两个礼拜。
-      { text: "日历上十三天，一天一天看过", after: "八月一日到十三日，一天一天看过", need: true, show: () => !!S.calOpen, count: () => [cnt(CAL13, S.calSeen), 13], done: () => cnt(CAL13, S.calSeen) >= 13, hint: "日历上还有日子没点开，一直到十三号" },
+      // 十三天都能翻，但过关只要五页（CAL_KEY）。十三天全算必做那阵，玩家要连点十三下才过得去，
+      // 点得完，可惜「住过两个礼拜」不是靠点够次数成立的——那五页才各自有日后要对得上的东西。
+      { text: "日历上几页要紧的，翻一翻", after: "八月里那几页，翻过了", need: true, show: () => !!S.calOpen, count: () => [cnt(CAL_KEY, S.calSeen), CAL_KEY.length], done: () => cnt(CAL_KEY, S.calSeen) >= CAL_KEY.length, hint: "日历上还有几页我记着的，没翻" },
     ],
     advance: { when: "8月14日　夜", where: "荣汇街后座", fn: () => twoWeekCalm(), modes: ["cal"] },
     next: "8月14日 夜　后座",
@@ -169,7 +175,11 @@ const LEVELS = [
     goal: "把屋里的事，一样一样说给他听。",
     tasks: [
       { text: "记下门口收回，收好红圈信封", need: true, done: () => noted("takeback") && ev("letter-red"), hint: "楼梯口那一幕，信封角。记进日记簿再出门" },
-      { text: "诊室里看三样：执照、抽屉、电脑一角", need: true, show: () => noted("takeback") && ev("letter-red"), count: () => [cnt(["lic", "drawer", "list"], S.clinicLooked), 3], done: () => cnt(["lic", "drawer", "list"], S.clinicLooked) >= 3, hint: "这间房，我还没看清楚" },
+      // 硬门只剩抽屉：节拍器是第 12 关「再看一次」和第 14 关「不见了」的落差所在，少了它那两下不成立。
+      { text: "看一眼抽屉：缝里那点铜色", need: true, show: () => noted("takeback") && ev("letter-red"), done: () => !!(S.clinicLooked && S.clinicLooked.drawer), hint: "抽屉。缝里那点铜色，我还没看" },
+      // 软必做：漏了照样讲得下去，代价是第 8 关候诊那句「阿文先生刚走」里名字对不上（见 clinicArrival）。
+      { text: "瞄一眼他电脑上那列等候名单", need: true, soft: true, show: () => noted("takeback") && ev("letter-red"), done: () => !!(S.clinicLooked && S.clinicLooked.list) },
+      { text: "墙上那张执照", show: () => noted("takeback") && ev("letter-red"), done: () => !!(S.clinicLooked && S.clinicLooked.lic) },
       { text: "把你搜集的东西给他看", need: true, show: () => noted("takeback") && ev("letter-red"), done: () => !!(S.handed && S.handed.ok6), hint: "讲到屋的时候，把最要紧的给他看" },
     ],
     next: "8月16日 21:40　后座",
@@ -549,7 +559,8 @@ function wallTaskFor() {
     need: true,
     count: () => [now.all.length - now.open.length, now.all.length],
     done: () => now.open.length === 0,
-    hint: "墙簿上有新回复，你还没回",
+    // 首页和收件箱分开之后，这句话可能落在收件箱里，别只指「墙簿上」那一片
+    hint: "墙簿上有人等你回一句",
   }];
 }
 
@@ -562,7 +573,8 @@ function tasksOf(L) {
 function levelReady() {
   const L = levelNow();
   if (!L) return true;
-  return tasksOf(L).every((t) => !t.need || t.done());
+  // soft＝软必做：任务条上照样是「○」，但不挡过关。漏了能走，代价是内容变薄。
+  return tasksOf(L).every((t) => !t.need || t.soft || t.done());
 }
 
 // 「看得见的必做都做完了」——给那种「必做要靠按往下才发生」的关用。
@@ -571,7 +583,7 @@ function levelReady() {
 function readyShown() {
   const L = levelNow();
   if (!L) return true;
-  return tasksOf(L).every((t) => !t.need || t.done() || (t.show && !t.show()));
+  return tasksOf(L).every((t) => !t.need || t.soft || t.done() || (t.show && !t.show()));
 }
 
 const hintSay = (x) => (typeof x.hint === "function" ? x.hint() : x.hint);
