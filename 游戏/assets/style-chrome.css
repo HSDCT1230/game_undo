@@ -4046,52 +4046,6 @@ button.mail-row:hover { background: #121a23; }
 .todo-paper:focus-visible .todo-paper-name { color: #b04a12; text-decoration-color: #b04a12; }
 .todo-paper:focus-visible { outline: none; }
 
-/* 「收集的」：本关之前收成「历史收集」一行；展开后同一页内滚动 */
-.diary-fold {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  width: 100%;
-  height: var(--diary-cell, 28px);
-  margin: var(--diary-cell, 28px) 0 0;
-  padding: 0 4px 0 0;
-  border: 0;
-  border-radius: 3px;
-  background: transparent;
-  color: #8a3c10;
-  font: inherit;
-  font-size: 15px;
-  font-weight: 700;
-  line-height: var(--diary-cell, 28px);
-  letter-spacing: 0.06em;
-  text-align: left;
-  cursor: pointer;
-}
-.diary-fold-name { flex: 0 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.diary-fold-go { margin-left: auto; color: rgba(138, 60, 16, 0.7); font-size: 13px; font-weight: 400; }
-.diary-fold:hover,
-.diary-fold:focus-visible { background: rgba(240, 206, 120, 0.32); outline: none; }
-.diary-hist {
-  max-height: min(42vh, 280px);
-  margin: 4px 0 0;
-  padding: 0 6px 4px 0;
-  overflow-x: hidden;
-  overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(138, 60, 16, 0.55) rgba(60, 50, 40, 0.12);
-}
-.diary-hist::-webkit-scrollbar { width: 6px; }
-.diary-hist::-webkit-scrollbar-track {
-  background: rgba(60, 50, 40, 0.1);
-  border-radius: 3px;
-}
-.diary-hist::-webkit-scrollbar-thumb {
-  background: rgba(138, 60, 16, 0.5);
-  border-radius: 3px;
-}
-.diary-hist::-webkit-scrollbar-thumb:hover { background: rgba(138, 60, 16, 0.7); }
-.diary-hist::-webkit-scrollbar-button { display: none; height: 0; width: 0; }
-
 /* 作业卡 */
 .diary-note.hw-quote { color: #6a5d4a; font-size: 14px; }
 .hw-list .hw-text { flex: 1 1 auto; min-width: 0; }

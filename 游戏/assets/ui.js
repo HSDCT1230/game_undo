@@ -103,8 +103,6 @@ function openNotes() {
 /* 日记簿里一层层打开：记住上一层，「返回」一层层退回，退到目录停在原来那一页 */
 let diaryTrail = [];
 let diaryNow = null;
-// 刚点了「历史收集」的展开/收起，重排之后要跟到它所在的页去（不存进档）
-let diaryFocus = false;
 let diaryNested = false;
 
 function diaryShow(fn) {
@@ -173,8 +171,10 @@ function dayOf(t) {
   return m ? { key: Number(m[1]) * 100 + Number(m[2]), label: m[1] + "月" + m[2] + "日" } : { key: 0, label: "更早记下的" };
 }
 
-// 「日记」：证物、笔记、纸、诊所记录按日子排成一条线。
-// 本关之前的收成「历史收集」挂在最新一条后面；展开后同一页内滚动，不翻页。
+// 「日记」：证物、笔记、纸、诊所记录按日子排成一条线，一天不落全铺开。
+// 从前本关之前的收成折成「历史收集」一行，要按一下才展开；那一格省下的地方，
+// 换来的是一条中间断了的时间线——「8月1日」在哪儿要翻到折叠里去找，
+// 而这条线唯一的作用就是让人一眼看见先发生了什么（10-29 撤折）。
 function timelineBlocks() {
   const days = new Map();
   const at = (t) => {
@@ -203,47 +203,11 @@ function timelineBlocks() {
     ));
   }
   const keys = [...days.keys()].sort((a, b) => a - b);
-  const L = typeof levelNow === "function" ? levelNow() : null;
-  const start = L && L.clock ? dayOf(L.clock).key : 0;
-  // 第 4 关整夜都在「跟搬进来那晚比」，整本簿子都是眼下的材料，一条都不折。
-  // 只把八月一日挑出来不折也不行：折起来那一段会写成「7月31日～8月13日」，
-  // 而八月初一明明在下面摊着——一句话里就自相矛盾（10-29）。
-  const old = start && S.level !== 4 ? keys.filter((k) => k < start) : [];
-  const cur = keys.filter((k) => !old.includes(k));
   const out = [];
-  const dayChunk = (k) => {
+  keys.forEach((k) => {
     const d = days.get(k);
-    return [diarySubHead(d.label), ...d.rows];
-  };
-  cur.forEach((k) => out.push(...dayChunk(k)));
-  if (old.length) {
-    const n = old.reduce((s, k) => s + days.get(k).rows.length, 0);
-    const span = days.get(old[0]).label + (old.length > 1 ? "～" + days.get(old[old.length - 1]).label : "");
-    const fold = el("button", {
-      type: "button",
-      class: "diary-fold" + (S.diaryOld ? " unfolded" : ""),
-      "aria-expanded": S.diaryOld ? "true" : "false",
-      onclick: () => {
-        S.diaryOld = !S.diaryOld;
-        // 展开后这一块常常放不进本页，会被分到下一页——只重排不跟过去，
-        // 玩家按了「展开」看着本页没动静，会以为按坏了。让分页把他带过去。
-        diaryFocus = S.diaryOld;
-        sfx("paper");
-        renderDiaryIndex();
-      },
-    }, [
-      el("span", { class: "diary-fold-name" }, ["历史收集（" + span + "）"]),
-      el("span", { class: "diary-count" }, [String(n)]),
-      el("span", { class: "diary-fold-go", "aria-hidden": "true" }, [S.diaryOld ? "收起 ▴" : "展开 ▾"]),
-    ]);
-    if (S.diaryOld) {
-      const hist = el("div", { class: "diary-hist", role: "region", "aria-label": "历史收集" });
-      old.forEach((k) => hist.append(...dayChunk(k)));
-      // 开关和它开出来的那一块是一个整体：分页时不许拆。拆了就是「按钮在这页、
-      // 内容在下页」，而「收起」还留在玩家看不到的那一页上。
-      out.push(el("div", { class: "diary-old" }, [fold, hist]));
-    } else out.push(fold);
-  }
+    out.push(diarySubHead(d.label), ...d.rows);
+  });
   return out;
 }
 
@@ -319,15 +283,13 @@ function renderDiaryIndex() {
   s.blocks.forEach((b) => {
     page.append(b);
     const isSub = b.classList.contains("diary-sub");
-    // 「历史收集」那两条（折叠按钮、展开后的整块）不是哪一天的事，
-    // 续页不该把上一天的日期头带过去——带了，下一页顶上一行「9月7日」，
-    // 看起来就像古老的东西都是九月七日收的。
-    const noCarry = b.classList.contains("diary-old") || b.classList.contains("diary-fold") || b.classList.contains("diary-hist");
     if (page.scrollHeight > page.clientHeight + 1 && page.children.length > 2) {
+      // 一页放不下就把这一条挪到下一页，并把它的日期头带过去（否则下一页顶上
+      // 凭空冒出几行，看不出是哪一天的）。
       const carry = [b];
       const prev = b.previousElementSibling;
-      if (!isSub && !noCarry && prev && prev.classList.contains("diary-sub") && page.children.length > 3) carry.unshift(prev);
-      else if (!isSub && !noCarry && sub) carry.unshift(sub.cloneNode(true));
+      if (!isSub && prev && prev.classList.contains("diary-sub") && page.children.length > 3) carry.unshift(prev);
+      else if (!isSub && sub) carry.unshift(sub.cloneNode(true));
       page = newPage(true);
       page.append(...carry);
     }
@@ -335,28 +297,7 @@ function renderDiaryIndex() {
   });
   const n = pages.length;
   S.diaryPage = Math.max(0, Math.min(S.diaryPage || 0, n - 1));
-  // 刚点开「历史收集」：跟到那一块所在的页去（它多半被挤到了下一页）。
-  if (diaryFocus) {
-    const i = pages.findIndex((p) => p.querySelector(".diary-old"));
-    if (i >= 0) S.diaryPage = i;
-    diaryFocus = false;
-  }
   pages.forEach((p, i) => { p.hidden = i !== S.diaryPage; });
-  // 「历史收集」那一块按本页还剩多少地方给高度。写死一个 px 值，窗口一大就空着半页、
-  // 窗口一小就把「8月3日」以下全切掉——两者都会让人以为日记簿坏了。
-  // 高度还要取整到格子（--diary-cell）：切在半行字上，看着就像页面坏了。
-  pages.forEach((p) => {
-    const h = p.querySelector(".diary-hist");
-    if (!h) return;
-    const cell = parseFloat(getComputedStyle(p).getPropertyValue("--diary-cell")) || 28;
-    const was = p.hidden;
-    p.hidden = false;
-    const box = p.getBoundingClientRect();
-    const room = Math.max(0, p.clientHeight - (h.getBoundingClientRect().top - box.top) - 4);
-    p.hidden = was;
-    const fit = Math.floor(room / cell) * cell;
-    if (fit > 0) h.style.maxHeight = fit + "px";
-  });
   renderDiaryTabs(secs, cur);
   renderDiaryNav(n, cur > 0, cur < secs.length - 1);
 }
