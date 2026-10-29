@@ -633,13 +633,17 @@ function clinicLogs() {
 
 /* ---------- 对照纸 ---------- */
 
+/* topic 是行头，写这一行说的是哪件东西。
+   以前只有两栏标题、六行全是空格子，卡片该落在哪一行没有依据，
+   唯一的路是「选中之后哪个格子亮」——那等于把答案指给她看（10-30 用户提的）。
+   现在行头告诉她放到哪一行，选中不再高亮，放错才说一句。 */
 const COMPARE_ROWS = [
-  { id: "car", left: ["base:car"], right: ["tonight:car", "paper-16"], lt: "车头朝窗，放角落第二日仍在", rt: "车自己转，掉在地上朝储物室" },
-  { id: "tap", left: ["base:tap"], right: ["tonight:tap", "note-meiwater"], lt: "关了水喉滴一滴", rt: "拧紧三秒再滴" },
-  { id: "rec", left: ["rec-water", "base:storage"], right: ["rec-axuan", "tonight:storage"], lt: "十三号录音只有水，门后很静", rt: "门底有声，录音有女人叫阿轩" },
-  { id: "sill", left: ["base:sill"], right: ["photo-sill", "tonight:sill"], lt: "窗台水印是干的", rt: "湿童码，比我细两号" },
-  { id: "shoe", fixedLeft: "周没有问过我的鞋", right: ["note-dry"], rt: "周问我脚湿不湿，鞋是干的" },
-  { id: "time", fixedLeft: "—", right: ["paper-20", "paper-norec", "photo-print", "tonight:print"], rt: "离开两分钟先动；没录音那晚车仍然走" },
+  { id: "car", topic: "车", left: ["base:car"], right: ["tonight:car", "paper-16"], lt: "车头朝窗，放角落第二日仍在", rt: "车自己转，掉在地上朝储物室" },
+  { id: "tap", topic: "水龙头", left: ["base:tap"], right: ["tonight:tap", "note-meiwater"], lt: "关了水喉滴一滴", rt: "拧紧三秒再滴" },
+  { id: "rec", topic: "储物室门", left: ["rec-water", "base:storage"], right: ["rec-axuan", "tonight:storage"], lt: "十三号录音只有水，门后很静", rt: "门底有声，录音有女人叫阿轩" },
+  { id: "sill", topic: "窗台", left: ["base:sill"], right: ["photo-sill", "tonight:sill"], lt: "窗台水印是干的", rt: "湿童码，比我细两号" },
+  { id: "shoe", topic: "鞋", fixedLeft: "周没有问过我的鞋", right: ["note-dry"], rt: "周问我脚湿不湿，鞋是干的" },
+  { id: "time", topic: "时间", fixedLeft: "—", right: ["paper-20", "paper-norec", "photo-print", "tonight:print"], rt: "离开两分钟先动；没录音那晚车仍然走" },
 ];
 
 function compareAllowed() {
@@ -823,7 +827,10 @@ function openCompare(onDone) {
       hostEl = host;
       const n = compareDone().length;
       const guide = el("div", { class: "tool-guide" });
-      guide.append(el("p", { class: "tool-lead" }, [pick ? "放到亮起来的空格。" : "点卡片，放进下面的格。"]));
+      // 选中之后不再高亮能放的格子——那是把答案指给她看。
+      // 该说的两条：左边一栏是什么、右边一栏是什么；放错了才回一句。
+      guide.append(el("p", { class: "tool-lead" }, [pick ? "点一格，放进去。" : "点一张卡片，再点格子。"]));
+      guide.append(el("p", { class: "tool-lead" }, ["左栏头两个礼拜，右栏十五号之后。"]));
       // 「四行」只是数量，真正卡人的是鞋印那一行。写在这里，不让人凑满四行再来回试。
       if (!compareReady()) guide.append(el("p", { class: "tool-lead" }, ["其中一行要是鞋印。"]));
       guide.append(el("span", { class: "tool-progress" + (compareReady() ? " done" : "") }, [
@@ -852,19 +859,29 @@ function openCompare(onDone) {
       }
       host.append(cards);
       host.append(el("p", { class: "tool-label" }, ["对照纸"]));
-      const grid = el("div", { class: "compare-grid" + (pick ? " picking" : "") });
-      grid.append(el("b", {}, ["头两个礼拜"]), el("b", {}, ["十五号之后"]));
+      // 放错的回话贴在格子上面，不放页面顶部：格子在这一屏最底下，
+      // 提示若跑到顶上（toolSay 是 prepend），她正看着格子，看不见那句。
+      const sayBox = el("p", { class: "tool-say", hidden: true });
+      host.append(sayBox);
+      const warn = (node, msg) => {
+        // textContent 不过 H()，港繁要在自己这里转一次
+        sayBox.textContent = H(msg);
+        sayBox.hidden = false;
+        node.classList.add("bad");
+        setTimeout(() => node.classList.remove("bad"), 700);
+      };
+      const grid = el("div", { class: "compare-grid" });
+      grid.append(el("b", { class: "compare-corner" }, [""]), el("b", {}, ["头两个礼拜"]), el("b", {}, ["十五号之后"]));
       COMPARE_ROWS.forEach((r) => {
         const slot = (side) => {
           const key = r.id + ":" + side;
           const filled = S.compare[key];
           const fixed = side === "L" && r.fixedLeft;
           const ok = (side === "L" ? r.left : r.right) || [];
-          const open = !!(pick && !filled && !fixed && ok.includes(pick));
           if (fixed) return el("div", { class: "compare-slot fixed" }, [r.fixedLeft]);
-          return el("button", {
+          const btn = el("button", {
             type: "button",
-            class: "compare-slot" + (filled ? " filled" : "") + (open ? " open" : ""),
+            class: "compare-slot" + (filled ? " filled" : ""),
             onclick: () => {
               if (filled) {
                 delete S.compare[key];
@@ -872,12 +889,12 @@ function openCompare(onDone) {
                 return;
               }
               if (!pick) {
-                toolSay(host, "先点上面一张卡片。");
+                warn(btn, "先点上面一张卡片。");
                 return;
               }
               if (!ok.includes(pick)) {
                 const other = side === "L" ? r.right : r.left;
-                toolSay(host, other && other.includes(pick) ? "这样是另一边的。" : "这样不是这一行的。");
+                warn(btn, other && other.includes(pick) ? "放反了。这一张该放另一边。" : "不对。这一张不是这一行的。");
                 return;
               }
               S.compare[key] = pick;
@@ -885,8 +902,9 @@ function openCompare(onDone) {
               redraw();
             },
           }, [filled ? (side === "L" ? r.lt : r.rt) : "放在这里"]);
+          return btn;
         };
-        grid.append(slot("L"), slot("R"));
+        grid.append(el("span", { class: "compare-topic" }, [r.topic]), slot("L"), slot("R"));
       });
       host.append(grid);
     },

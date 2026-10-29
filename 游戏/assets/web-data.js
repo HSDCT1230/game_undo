@@ -719,7 +719,11 @@ const WALL_FEED = [
     answer: [{ text: "去边？", back: "唔讲。佢从来唔讲。" }, { text: "哦。" }],
   },
   {
-    id: "mei-meal", who: "mei", name: "陈美娟", at: ["08-24", "15:40"], after: () => ev("note-notsaid"), text: "上载了 1 张相片，标注了你。「瘦咗。食。」", photo: { id: pic(9, "示意-午饭"), cap: "星期日" },
+    id: "mei-meal", who: "mei", name: "陈美娟", at: ["08-24", "15:40"],
+    // ev() 是 levels.js 的；web-data.js 在它之前加载，开机那一轮若先渲染墙簿，
+    // 直接调会抛 ReferenceError（控制台每次开页一条）。先判在不在。
+    after: () => typeof ev === "function" && ev("note-notsaid"),
+    text: "上载了 1 张相片，标注了你。「瘦咗。食。」", photo: { id: pic(9, "示意-午饭"), cap: "星期日" },
     answer: [{ text: "多谢家姐。" }],
   },
   { id: "lok-0828", who: "lok", name: "阿乐", at: ["08-28", "23:40"], after: () => flag("lokSoup"), text: "汤煲多咗。以后唔煲。", photo: { id: pic(1, "墙簿/阿乐-自己煲汤"), cap: "一个人" }, mute: "你打了「对唔住」，又删掉。" },

@@ -6069,9 +6069,17 @@ body .wall-photo-sheet .img-slot.wall-photo-lg::after { content: none; }
   cursor: grab;
   transition: transform 0.12s ease, box-shadow 0.12s ease;
 }
-.tool-card:hover:not(:disabled) { border-color: #8a3c10; transform: translateY(-1px); box-shadow: 2px 4px 0 rgba(60, 40, 20, 0.2); }
-/* 待选／可放：琥珀橙（与放错红字、放好绿框分开） */
-.tool-card.sel { border-color: #c47a28; outline: 2px solid #c47a28; outline-offset: 1px; background: #ffe8b8; transform: translateY(-2px); }
+.tool-card:hover:not(:disabled):not(.sel) { border-color: #8a3c10; transform: translateY(-1px); box-shadow: 2px 4px 0 rgba(60, 40, 20, 0.2); }
+/* 选中：纸片被拎起来一层。
+   原来这里是一道 border ＋ 隔 1px 再一道 outline，读起来是两道圈着同一张纸的线，
+   外圈还是直角的——那是浏览器画焦点框的样子，不像她做的记号（10-30 用户说丑）。
+   改成贴边一道橙（跟 3px 的暖光连着读成一条厚边）、外面一圈很淡的暖光、底下一道硬影。 */
+.tool-card.sel {
+  border-color: #a8551a;
+  background: #ffefc2;
+  box-shadow: 0 0 0 2px #c47a28, 0 0 0 5px rgba(196, 122, 40, 0.14), 1px 3px 0 rgba(60, 40, 20, 0.16);
+  transform: translateY(-2px);
+}
 .tool-card.dragging { opacity: 0.45; }
 .tool-card.done { opacity: 0.5; cursor: default; }
 .tool-card.mute { opacity: 0.55; }
@@ -6280,13 +6288,35 @@ body .wall-photo-sheet .img-slot.wall-photo-lg::after { content: none; }
 .four-list small { display: block; color: #6f675c; font-size: var(--type-meta); line-height: 1.4; }
 .four-list .tonight { color: #2b5a7e; }
 .four-k { font-weight: 500; }
+/* 三栏：行头写这一行说的是哪件东西，后面才是「头两个礼拜／十五号之后」两格。
+   行头是给她看「放哪里」的，不是答案——答案在卡片该落哪一边。 */
 .compare-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 4.6em minmax(0, 1fr) minmax(0, 1fr);
   gap: 6px;
   margin: 0 0 4px;
 }
 .compare-grid > b { color: #8a3c10; font-size: 15px; }
+.compare-topic {
+  align-self: center;
+  padding-right: 4px;
+  color: #5f574c;
+  font-size: 12.5px;
+  line-height: 1.25;
+  text-align: right;
+}
+/* 窄屏放不下「行头＋两栏」：行头改成整行的题头（占满一格宽），两格落回一行两个。
+   390 下按三栏算只剩 120 一格，「儲物室門」还会折成两行。 */
+@media (max-width: 520px) {
+  .compare-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .compare-corner { display: none; }
+  .compare-topic {
+    grid-column: 1 / -1;
+    align-self: start;
+    padding: 8px 0 0;
+    text-align: left;
+  }
+}
 .compare-cards {
   max-height: 168px;
   overflow-y: auto;
@@ -6310,18 +6340,15 @@ body .wall-photo-sheet .img-slot.wall-photo-lg::after { content: none; }
 }
 .compare-slot.filled { border-style: solid; border-color: #6d9a63; background: rgba(143, 174, 134, 0.16); color: var(--diary-ink, #1c1712); }
 .compare-slot.fixed { border: 1.5px solid #d7ccb8; color: #6f675c; cursor: default; }
-/* 只高亮「这张卡能放」的空格，避免整表变红像点错 */
-.picking .compare-slot.open,
-.dragging-on .compare-slot.open,
-.compare-slot.over {
-  border-color: #c47a28;
-  background: rgba(255, 214, 140, 0.5);
-  color: #8a4f12;
-  font-weight: 700;
+/* 放错：那一格自己红一下，跟格子上方那句提示对上，不用去找页面顶上的字 */
+.compare-slot.bad {
+  border-style: solid;
+  border-color: #b5452f;
+  background: rgba(181, 69, 47, 0.1);
+  color: #8a2a18;
 }
-.picking .compare-slot:not(.filled):not(.fixed):not(.open) {
-  opacity: 0.55;
-}
+/* 以前选中一张卡时，能放的那一格会亮起来、其余整排变淡——那是直接给答案。
+   现在一律等高：放错才回一句，格子本身不预告。 */
 
 /* 关内场景 */
 .hub-hint {
