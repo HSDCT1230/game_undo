@@ -742,11 +742,74 @@ function compareBody() {
   const rows = compareDone();
   // 对照纸是日记里的一页，两栏用斜线分——不用「　｜　」那种拿全角空格撑出来的竖线
   const lines = rows.map((r) => (r.fixedLeft || r.lt) + "／" + r.rt);
-  return "头两个礼拜／十五号之后\n" + (lines.length ? lines.join("\n") : "（还没写）");
+  const head = "头两个礼拜／十五号之后\n" + (lines.length ? lines.join("\n") : "（还没写）");
+  // 纸尾那一行是她自己写的结论。放在正文里，不在簿子里另开一条——
+  // 同一句话走两条进簿子的路会重影（NOTE_IN_ITEM 就是为这个存在的）。
+  // 这一行单独过 H()：正文是整串拼出来的，整串查不到表，不单独转就会在普通话模式里漏粤语。
+  const tail = compareGuessText();
+  return tail ? head + "\n\n" + H(tail) : head;
 }
 
 function compareAlmost() {
   return compareDone().length >= 4;
+}
+
+/* ---------- 对照纸的纸尾一行 ----------
+ *
+ * 为什么要有这一步：上面四行是她一张一张摆进去的，摆完之后一直是阿明把结论读出来
+ * ——推理落在 NPC 那边，玩家只是搬纸。这一行要求她先写：四行合起来，她自己看见什么。
+ *
+ * 只给一道题，三条选一句，选错不罚。选错的那句淘汰话用屋子里的东西说（凳子不会自己走），
+ * 不用术语、不由他替她讲道理——她挑起来的东西自己会顶回来。
+ * 写完 index 存 S.compareGuess（-1＝未写），纸尾正文跟着变，诊室里他读的也是这一句。 */
+const COMPARE_GUESS = [
+  { ok: true, yue: "有人知道门底有水。我从来冇同佢讲过。", zh: "有人知道门底有水。我从来没有跟他说过。" },
+  {
+    yue: "呢间屋自己识郁。车、水喉、脚印，都系佢。", zh: "这间屋子自己会动。车、水管、脚印，都是它。",
+    no: "会郁嘅嘢，都要有人先郁过佢。张凳唔会自己行出门口。",
+    noZh: "会动的东西，都得有人先动过它。凳子不会自己走出门口。",
+  },
+  {
+    yue: "我一直冇留意。可能搬入嚟佢就系咁。", zh: "我一直没留意。也许搬进来它就是这么回事。",
+    no: "纸左边嗰四行系你自己写嘅：头两个礼拜乜都冇。",
+    noZh: "纸左边那四行是你自己写的：头两个星期什么都没有。",
+  },
+];
+
+const compareGuessIdx = () => (typeof S.compareGuess === "number" ? S.compareGuess : -1);
+const compareOkIdx = () => COMPARE_GUESS.findIndex((g) => g.ok);
+
+function compareGuessText() {
+  const i = compareGuessIdx();
+  return i >= 0 && COMPARE_GUESS[i] ? COMPARE_GUESS[i].yue : "";
+}
+
+/* 纸尾那一行。写完才给纸入簿（keepMust 在她这一句之后），所以有这个证物＝有这一句。 */
+function openCompareGuess(onWrite) {
+  let tried = -1;
+  showDiaryTool({
+    kind: "对照纸",
+    build: (host, redraw) => {
+      host.append(el("p", { class: "tool-lead" }, ["四行写好了。张纸最底下，我再写一行。"]));
+      if (tried >= 0) host.append(el("p", { class: "tool-say" }, [COMPARE_GUESS[tried].no]));
+      const cards = el("div", { class: "tool-cards" });
+      COMPARE_GUESS.forEach((g, i) => {
+        cards.append(el("button", {
+          type: "button",
+          class: "tool-card",
+          onclick: () => {
+            if (!g.ok) { tried = i; redraw(); return; }
+            S.compareGuess = i;
+            if (typeof sfx === "function") sfx("paper");
+            closeDiaryTool();
+            onWrite();
+          },
+        }, [g.yue]));
+      });
+      host.append(cards);
+    },
+    actions: () => [{ label: "先合上", fn: () => { closeDiaryTool(); afterModalClose(); } }],
+  });
 }
 
 function openCompare(onDone) {
@@ -943,22 +1006,25 @@ function whoWrite(st, redraw) {
   redraw();
 }
 
-/* 一问的整块：写过了就只留一行「看那页」，不够就说还不够，够了才出三句。
-   两问共用这一段，第二问只是换一组 need 与候选。 */
+/* 一问的整块：写过了只留去那一页的链接，不够写什么都不留（状态在头上），
+   够了才出三句。两问共用这一段，第二问只是换一组 need 与候选。 */
 function whoAsk(st, rows, redraw) {
   if (flag(st.flag)) {
-    return [el("p", { class: "who-done" }, [
-      "写下来了。",
-      el("button", {
-        type: "button",
-        class: "who-see",
-        onclick: () => showClueModal(item(st.paper)),
-      }, ["看那页"]),
-    ])];
+    // 链接用那页纸自己的题目，不用「看写下来的那页」：罗启明一页里有两问，
+    // 两个一模一样的链接并排在纸上，谁也分不清点哪个（10-29）。
+    const see = el("button", {
+      type: "button",
+      class: "who-see",
+      onclick: () => showClueModal(item(st.paper)),
+    }, ["看〈" + item(st.paper).title + "〉 ›"]);
+    // 第一页头上已经写着「写下来了」，这里再说一遍就是同一句话说两次；
+    // 第二问没有状态行（它只有一句 leader），得自己说一句（10-29）。
+    return [el("p", { class: "who-done" }, st.leader ? ["写下来了。", see] : [see])];
   }
-  if (!whoReady(st, rows)) {
-    return [el("p", { class: "who-miss" }, [st.leader ? "这几样我还没凑齐。" : "对得上的还不够。再有两处，我才写得出来。"])];
-  }
+  // 不够写的时候不再补一句灰字。头上那句「还差 N 处」就是全部信息；原来底下那句
+  // 「对得上的还不够。再有两处，我才写得出来」既重复又把数字写死——罗启明 min 3、
+  // 手上 0 时，头上说「还差 3 处」、底下说「再有两处」，同一页两个数（10-29）。
+  if (!whoReady(st, rows)) return [];
   const out = [el("p", { class: "who-q" }, [st.q])];
   const tried = S.whoTry[st.key];
   if (tried != null && st.options[tried] && st.options[tried].no) {
@@ -994,8 +1060,9 @@ function whoStateText(p, rows) {
 function whoCard(p, redraw) {
   const rows = whoRows(p);
   const card = el("div", { class: "who-card" });
+  // 名字只在页标题出现一次。这里只留两样：这一栏是什么（这间屋／二〇〇四年十一月）、
+  // 够不够写。三个字并排的时候谁也不比谁重，读完什么都没记住（10-29）。
   card.append(el("div", { class: "who-head" }, [
-    el("b", { class: "who-name" }, [p.name]),
     el("span", { class: "who-sub" }, [p.sub]),
     el("span", { class: "who-state" + (whoReady(p, rows) || flag(p.flag) ? " ready" : "") }, [whoStateText(p, rows)]),
   ]));
@@ -1018,29 +1085,32 @@ function whoCard(p, redraw) {
   // 第二问只在第一页写完、且三样真的凑齐时才露。凑不齐就当它不存在——
   // 这一问是深度内容，不该在栏里挂一行「你还差三样」把人赶去找（10-29）。
   if (p.next && flag(p.flag) && (flag(p.next.flag) || whoReady(p.next, rows))) {
+    // 写完就不再挂「还有一样，我一直没写」——那句话在写之前是真的，写完之后正好相反。
     card.append(el("div", { class: "who-stage" }, [
-      el("p", { class: "who-stage-lead" }, [p.next.leader]),
+      ...(flag(p.next.flag) ? [] : [el("p", { class: "who-stage-lead" }, [p.next.leader])]),
       ...whoAsk(p.next, rows, redraw),
     ]));
   }
   return card;
 }
 
+/* 进去就是那个人的一页。名字写在页标题上，这里不再重复。
+   从前这上面还有一句引导（「归在「这间屋」的东西，都在这一页」），
+   说完紧接着卡头又写「这间屋」——同一句话说两遍，还占掉一整行（10-29）。 */
 function openWho(key) {
   S.whoTry = S.whoTry || {};
   const p = PEOPLE.find((x) => x.key === key) || PEOPLE[0];
   showDiaryTool({
     kind: p.name,
-    build: (host, redraw) => {
-      host.append(el("p", { class: "tool-lead" }, ["归在「" + p.sub + "」的东西，都在这一页。"]));
-      host.append(whoCard(p, redraw));
-    },
+    build: (host, redraw) => { host.append(whoCard(p, redraw)); },
   });
 }
 
 /* 「我认识的人」那一页的目录：一行一个人。
    这一页只回答「有谁、够不够写」，点进去才是他那一页。
-   没有东西的人不出现——第 3 关刚拿到钥匙牌时，两张空卡挂在这里，点开两个「—— 还没有」（10-29）。 */
+   没有东西的人不出现——第 3 关刚拿到钥匙牌时，两张空卡挂在这里，点开两个「—— 还没有」（10-29）。
+   不写引导语：「他们各自的东西，我分开记」已经在页签和每一行的名字里说完，
+   再写一遍只是占掉第一行（10-29）。 */
 function peopleBlocks() {
   const out = [];
   PEOPLE.forEach((p) => {
@@ -1062,7 +1132,7 @@ function peopleBlocks() {
     ]));
   });
   if (!out.length) return [];
-  return [el("p", { class: "diary-note people-lead" }, ["他们各自的东西，我分开记。"]), ...out];
+  return out;
 }
 
 /* ---------- 补充纸：九月头一个礼拜 ---------- */

@@ -8010,7 +8010,6 @@ html.screen-on body::after {
   cursor: pointer;
 }
 .people-row:last-child { border-bottom: 0; }
-.people-lead { margin-bottom: var(--diary-cell, 28px); color: #8b8274; font-size: 15px; }
 .people-name { font-size: 17px; letter-spacing: 0.08em; }
 .people-sub { color: #8a7c6a; font-size: 13px; letter-spacing: 0.04em; }
 .people-state {
@@ -8026,7 +8025,8 @@ html.screen-on body::after {
 .people-row:focus-visible .people-name { color: #8a3c10; }
 .people-row:focus-visible { outline: none; }
 
-/* 一个人的页面：名字、他是谁、够不够写；下面是各自的东西。
+/* 一个人的页面：这一栏是什么、够不够写；下面是各自的东西。
+   名字只在页标题上写一次，卡头不再重复（10-29）。
    条目本身不是新做的证物页——点得开的还是原来那一页，这里只重排归属（10-28）。 */
 .who-card {
   margin: 0 0 16px;
@@ -8040,7 +8040,6 @@ html.screen-on body::after {
   align-items: baseline;
   gap: 4px 10px;
 }
-.who-name { font-size: 17px; letter-spacing: 0.08em; }
 .who-sub { color: #8a7c6a; font-size: 13px; letter-spacing: 0.04em; }
 /* 计数说人话：3／4 既像进度条又像「还差一处」，而且它按 need 算、跟栏里列了几行不是一回事。 */
 .who-state {
@@ -8078,7 +8077,6 @@ html.screen-on body::after {
   .todo-paper { min-height: 36px; }
   .people-row { min-height: 40px; }
 }
-.who-miss { margin: 10px 0 0; color: #a89a86; font-size: 14px; line-height: 1.6; }
 .who-q { margin: 12px 0 8px; color: #8a3c10; font-size: 15px; font-weight: 700; letter-spacing: 0.06em; }
 .who-no {
   margin: 0 0 8px;
@@ -8105,9 +8103,18 @@ html.screen-on body::after {
 }
 .who-opt:hover,
 .who-opt:focus-visible { border-color: #8a3c10; transform: translateY(-1px); outline: none; }
-.who-done { margin: 10px 0 0; color: #4f6b46; font-size: 15px; }
+/* 「写下来了」+ 去那一页的链接。第一页只有链接（状态在头上），
+   第二问两句都有——所以用 flex 排，别靠 margin-left 让位。 */
+.who-done {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  margin: 10px 0 0;
+  color: #4f6b46;
+  font-size: 15px;
+}
 .who-see {
-  margin-left: 8px;
   padding: 0;
   border: 0;
   background: none;
