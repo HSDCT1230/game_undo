@@ -37,6 +37,14 @@
   --who-chat: 10px;
   --lh-say-chat: 1.7;
   --lh-who-chat: 1.2;
+  /* 旁白规格：屏幕上的叙述，不是台词，也不是纸上的字。
+     场景旁白、章末字幕、章节开场、地点注、电话旁白五处一律取这几格——
+     以前五处各写一套（13／15／18／20px，字距 0／.08／.1／.12／.14em），
+     同一句「走廊。四张椅」换个界面就像换了个排版。改这里，五处一起动。 */
+  --narr-face: var(--brand-face);
+  --narr-size: var(--say-face);
+  --narr-track: 0.1em;
+  --narr-lh: 1.95;
   --say-zhang: #f3eadc;
   --say-zhou: #e4c98a;
   --say-ming: #74b8e6;
@@ -513,6 +521,7 @@ html:not(.dev-pics) .img-slot.missing .img-mark { color: transparent; background
 }
 .talk-next { margin-top: 16px; color: #8a8376; font-size: 12px; }
 .choices { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; max-width: 720px; }
+/* 选项前注【动作／口气】：橙光式标签，弱化成小号淡色，跟选项正文分开读 */
 .face-choices > button,
 .beat-card .choices > button,
 .night-side .choices.night-go > button,

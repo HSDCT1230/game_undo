@@ -388,6 +388,8 @@ const initial = () => ({
   handed: {},
   sorted: false,
   compare: {},
+  // 对照纸纸尾她自己写的那一行（diary.js COMPARE_GUESS 的下标，-1＝还没写）
+  compareGuess: -1,
   cal11: {},
   visit: {},
   visitSeen: {},

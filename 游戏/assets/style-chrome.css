@@ -1316,12 +1316,6 @@ a:hover {
   object-fit: cover;
   filter: saturate(.7) contrast(.98) brightness(.86);
 }
-.talk.face.awen-photo .talk-bg {
-  opacity: 1;
-}
-.talk.face.awen-photo .talk-bg img {
-  filter: none;
-}
 .face-loc {
   position: absolute;
   top: 14px;
@@ -1460,40 +1454,9 @@ a:hover {
   .talk.face.narr .talk-text.stage-dir,
   .sms-row.turn-in { animation: none; }
 }
-.talk.face.awen .shade-figure {
-  position: absolute;
-  z-index: 1;
-  right: 9%;
-  top: 11%;
-  width: 108px;
-  height: 52%;
-  pointer-events: none;
-  filter: blur(0.6px);
-}
-.talk.face.awen .shade-figure::before,
-.talk.face.awen .shade-figure::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  background: #050505;
-  box-shadow: 0 0 28px rgba(0, 0, 0, 0.85);
-}
-.talk.face.awen .shade-figure::before {
-  top: 0;
-  width: 52px;
-  height: 64px;
-  margin-left: -26px;
-  border-radius: 46% 46% 40% 40%;
-}
-.talk.face.awen .shade-figure::after {
-  top: 58px;
-  width: 108px;
-  height: calc(100% - 58px);
-  margin-left: -54px;
-  border-radius: 54px 54px 8px 8px;
-}
-.talk.face .talk-text.awen-line,
-.talk.face .talk-text.stage-dir.awen-line {
+/* 只有角色台词会加粗。旁白不加：以前旁白里只要出现「阿文」两个字就变 700，
+   同一段叙述在别的关卡是细的，到这里忽然变粗，读起来像另一个人写的。 */
+.talk.face .talk-text.awen-line {
   font-weight: 700;
 }
 .talk.face .talk-text.stage-dir {
@@ -1501,12 +1464,12 @@ a:hover {
   margin: 0 auto;
   padding: 0;
   color: var(--brand-ink-hi);
-  font-family: var(--brand-face);
-  font-size: var(--say-face);
+  font-family: var(--narr-face);
+  font-size: var(--narr-size);
   font-style: normal;
   font-weight: 300;
-  line-height: 1.95;
-  letter-spacing: 0.1em;
+  line-height: var(--narr-lh);
+  letter-spacing: var(--narr-track);
   text-align: center;
   text-shadow:
     0 1px 2px rgba(0,0,0,.9),
@@ -1910,8 +1873,8 @@ button.phone-act.done {
 }
 .talk.phone .talk-text.stage-dir,
 .talk.msg .talk-text.stage-dir {
-  font-family: var(--brand-face);
-  letter-spacing: 0.08em;
+  font-family: var(--narr-face);
+  letter-spacing: var(--narr-track);
 }
 .phone-choices,
 .phone-pad {
@@ -3772,19 +3735,21 @@ button.mail-row:hover { background: #121a23; }
   position: absolute;
   top: 14px;
   left: 16px;
-  right: 280px;
   z-index: 2;
-  max-width: 720px;
+  /* 贴着自己的字宽，不拉一条空板：一行字占多宽，板就多宽 */
+  width: fit-content;
+  max-width: min(720px, calc(100% - 300px));
   margin: 0;
-  padding: 5px 11px;
+  padding: 6px 14px 7px;
   border: 0;
   border-radius: 2px;
   background: rgba(12, 16, 22, .52);
   color: var(--brand-ink) !important;
-  font-family: var(--brand-face);
-  font-size: 13px;
-  line-height: 1.6;
-  letter-spacing: 0.06em;
+  font-family: var(--narr-face);
+  font-size: var(--narr-size);
+  font-weight: 300;
+  line-height: var(--narr-lh);
+  letter-spacing: var(--narr-track);
 }
 .room.scene-fit > .room-note {
   color: #b6a894;
@@ -4672,8 +4637,7 @@ button.mail-row:hover { background: #121a23; }
     font-size: 14px;
   }
   .talk.face .talk-text.stage-dir {
-    font-size: 16px;
-    letter-spacing: 0.04em;
+    /* 字阶与字距跟桌面同一套（--narr-*）；这里只收边距，不改字 */
     padding: 14px 4px 12px;
   }
   .face-choices > button {
@@ -6890,28 +6854,34 @@ img.map-photo {
 }
 /* 档位跟着「字号」走（--say-face 18 → 20.7 → 23.4），别写死 px，否则字幕不随设置放大 */
 .caption-card {
-  --cap-lead: calc(var(--say-face) * 1.11);
+  --cap-lead: var(--narr-size);
   --cap-body: calc(var(--say-face) * 0.94);
   --cap-small: calc(var(--say-face) * 0.72);
   --cap-gap: 34px;
 }
 /* 旁白版式：跟标题「暗度 undo」同一套字——无衬线、大字距、暖米灰。
-   纸上的东西（日记、便条）仍用楷体，那是实物；屏幕上的旁白一律走品牌字。 */
+   纸上的东西（日记、便条）仍用楷体，那是实物；屏幕上的旁白一律走品牌字。
+   档位与字距见 style-base.css 的 --narr-*，别在这里另写死值。 */
 .caption-text {
   position: relative;
   z-index: 1;
   width: min(740px, 88%);
   text-align: center;
   color: var(--brand-ink-hi);
-  font-family: var(--brand-face);
+  font-family: var(--narr-face);
   font-weight: 300;
-  line-height: 1.95;
-  letter-spacing: 0.12em;
+  line-height: var(--narr-lh);
+  letter-spacing: var(--narr-track);
   text-shadow: 0 1px 14px rgba(0,0,0,.8);
 }
 .caption-line {
   margin: 0;
   font-size: var(--cap-lead);
+  /* 字距必须写在这一层，不能只挂在 .caption-text 上：
+     em 按元素自己的字号换算，容器没设 font-size（继承 body 的 12px），
+     0.1em 在那里算成 1.2px 的绝对值再继承下来，18px 的正文就成了 0.067em——
+     跟场景旁白的 1.8px 差着三分之一，同一句旁白换到章末就紧了一点。 */
+  letter-spacing: var(--narr-track);
   animation: caption-rise 1.6s ease 0.5s both;
 }
 .caption-kept {
@@ -7702,11 +7672,11 @@ img.map-photo {
   width: min(25em, 86%);
   margin-bottom: 6vh;
   color: #a29684;
-  font-family: var(--brand-face);
+  font-family: var(--narr-face);
   font-weight: 300;
-  font-size: var(--cap-lead);
-  line-height: 2;
-  letter-spacing: 0.14em;
+  font-size: var(--narr-size);
+  line-height: var(--narr-lh);
+  letter-spacing: var(--narr-track);
   text-align: left;
 }
 .opening-lines:has(.opening-gate) { width: auto; margin: 0; text-align: center; }
@@ -7717,7 +7687,9 @@ img.map-photo {
   padding-top: 1.2em;
   border-top: 1px solid rgba(197, 184, 173, 0.18);
   color: var(--brand-ink-hi);
-  letter-spacing: 0.16em;
+  /* 曾经写死 0.16em（18px 上合 2.88px），比上面几行心声宽出六成，
+     读起来像另一段话。跟正文同一套。 */
+  letter-spacing: var(--narr-track);
   text-shadow: 0 0 16px rgba(255, 240, 210, 0.14);
 }
 /* 光标跟在正在打的那一行后面；打完停在最后一行一直闪 */
@@ -7797,9 +7769,9 @@ html.screen-on body::after {
     --cap-small: calc(var(--say-face) * 0.67);
     --cap-gap: 26px;
   }
-  /* 窄屏字距收一点，否则一行放不下几个字 */
-  .caption-text { letter-spacing: 0.1em; }
-  .opening-lines { letter-spacing: 0.1em; }
+  /* 字距不再在窄屏单独收：写的是 0.1em，跟桌面同一个数，等于没「收」，
+     只是把 token 抄了一遍——而且抄在容器上还会按容器的字号换算成偏窄的绝对值。
+     一行放不下就折行，旁白本来就该折。 */
 }
 
 /* 去哪、做什么：一张横线便条，用回形针别在画面右边 */
@@ -7967,8 +7939,7 @@ html.screen-on body::after {
   #stage > .scene-actions.fork .clinic-seg { font-size: 14px; }
   .room.scene-fit > .room-note,
   .clinic.scene-fit > .room-note {
-    right: 16px;
-    max-width: none;
+    max-width: calc(100% - 32px);
   }
   .room-dock {
     bottom: calc(var(--fork-h, 0px) + 14px);

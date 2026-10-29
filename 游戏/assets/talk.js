@@ -126,6 +126,10 @@ function faceLine(text, zh) {
   return yueFace(text || "");
 }
 
+/** 选项前注「【动作／口气】正文」拆成两段：前注小一号、淡一点，像游戏 UI 的提示，不跟正文连读。 */
+// 选项前注（橙光式【动作／口气】）已撤：同一组里只要有一格带前注，它就成了「推荐点这个」。
+// 现在 label 一律就是她说的那句原话，渲染层不再拆。真要恢复，必须整组全带，见 策划/文字规范.md 3.6。
+
 function choiceBox(b, className) {
   if (phoneOnly(b)) {
     const ch = el("div", { class: "phone-ops" + (b.choices.some((c) => c.hangup) ? " phone-ops-hang" : "") });
@@ -161,21 +165,15 @@ function turnIn(key) {
   return " turn-in";
 }
 
-/* 已读：第二次走到同一句，不再逐字打。
-   单独一个键，不进存档、重来也不清——重开一局只省掉「这一句你看过」的打字动画，
-   文字仍然整句在，随时能再读。 */
-const READ_KEY = "undo-ch1-read";
+/* 已读：这一局里第二次走到同一句，不再逐字打。
+   只在这一次开着的页面里算——不进存档、不落 localStorage。
+   以前落到本地，于是「重开一局」之后几乎每个字都跳过打字动画，看着像动画坏了；
+   现在刷新／重开就从第一句重新打，往回翻到看过的句子仍然直接给全文。 */
 let readMap = null;
-let readWriteTimer = 0;
 
 function readAll() {
   if (readMap) return readMap;
   readMap = {};
-  try {
-    const raw = localStorage.getItem(READ_KEY);
-    const arr = raw ? JSON.parse(raw) : null;
-    if (Array.isArray(arr)) arr.forEach((k) => { if (k) readMap[k] = 1; });
-  } catch (e) { /* 无 */ }
   return readMap;
 }
 
@@ -202,13 +200,7 @@ function beatRead(b) {
 function beatMarkRead(b) {
   const k = beatKey(b);
   if (!k) return;
-  const m = readAll();
-  if (m[k]) return;
-  m[k] = 1;
-  clearTimeout(readWriteTimer);
-  readWriteTimer = setTimeout(() => {
-    try { localStorage.setItem(READ_KEY, JSON.stringify(Object.keys(readAll()))); } catch (e) { /* 无 */ }
-  }, 900);
+  readAll()[k] = 1;
 }
 
 /* 快速打字机：整句先占位（未打出的字透明），换行不跳；打字中点一下只补全、不翻页 */
@@ -533,24 +525,17 @@ function drawIncoming() {
 // 每句台词都会重画；照片只在这场对话里第一次出现或换图时才落一次
 let clueSeen = { talk: null, clue: "" };
 
-const AWEN_BG = "00-通用/候诊-阿文";
-
-function awenVisible(prompt) {
-  if (!/阿文/.test(prompt || "")) return false;
-  if (!/候诊|澄心/.test((S.talk && S.talk.loc) || "")) return false;
-  if (/刚走|剛剛走|啱啱走/.test(prompt)) return false;
-  return true;
-}
-
 function drawFace(b) {
   const choosing = !!b.choices;
   const prompt = choosing ? (b.prompt && b.prompt !== "……" ? b.prompt : "") : (b.text || "");
   // 选项上面那句提示是旁白，不挂章慧琪的名字和头像
   const stageDir = choosing ? !!prompt : !b.who;
   const speaker = choosing ? "章慧琪" : speakerOf(b);
-  const awen = awenVisible(prompt);
-  const bgId = awen ? AWEN_BG : talkBgId();
-  const box = el("div", { class: "talk face" + (stageDir ? " narr" : "") + (awen ? " awen-photo" : ""), "aria-live": "polite" });
+  // 以前「这一句里出现阿文」会换成另一张候诊照片（00-通用/候诊-阿文）。
+  // 那张是另一个房间：暖米墙、布椅、墙上有牌子，而候诊本身是冷灰墙加茶几。
+  // 于是一段对话里逐句提不提阿文，背景就在两间房之间跳。底色只认地点，不再认人名。
+  const bgId = talkBgId();
+  const box = el("div", { class: "talk face" + (stageDir ? " narr" : ""), "aria-live": "polite" });
   if (bgId) box.append(imgSlot(bgId, "talk-bg", S.talk.loc));
   if (S.talk.clue) {
     const fresh = clueSeen.talk !== S.talk || clueSeen.clue !== S.talk.clue;
@@ -567,10 +552,13 @@ function drawFace(b) {
   if (!stageDir) body.append(el("div", { class: "talk-name " + tone }, [speaker]));
 
   if (prompt) {
-    const cls = (stageDir ? "stage-dir" : tone) + (awen ? " awen-line" : "");
-    // 旁白／选项提示／角色话：同一套三模式；旁白淡入不打字
+    const cls = stageDir ? "stage-dir" : tone;
+    // 旁白／选项提示／角色话：同一套三模式、同一套打字。
+    // 以前旁白是整句淡入，夹在两句角色话中间就像「这一句没动画」——现在一律逐字出。
     if (stageDir || choosing) {
-      body.append(el("div", { class: "talk-text " + cls }, [faceLine(prompt, b.zh || b.promptZh)]));
+      const dir = el("div", { class: "talk-text " + cls }, [faceLine(prompt, b.zh || b.promptZh)]);
+      typeLater(dir, 18);
+      body.append(dir);
     } else {
       body.append(typeBody(talkBody(prompt, b.zh, cls)));
     }

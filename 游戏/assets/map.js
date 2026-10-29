@@ -72,7 +72,9 @@ function syncPlace() {
     return p && p.map ? markPlace(p.map) : undefined;
   }
   if (S.paused && S.mode === "web") return;
-  if (S.mode === "clinic") return markPlace("clinic-room");
+  // 门外那几分钟（走廊／前台）也是 mode "clinic"，但人还没进诊室。
+  // 一律报「诊室」的话，顶栏写着诊室、图上却是走廊，读起来像同一间房换了个样子。
+  if (S.mode === "clinic") return markPlace(S.clinicWait ? "clinic-wait" : "clinic-room");
   if (S.mode === "night" || S.mode === "movein" || S.mode === "cal" || S.mode === "search") return markPlace("rong-hall");
   if (S.mode === "end") return markPlace("rong-roof");
   if (S.mode === "wait") return markPlace(livingIn() ? "rong-hall" : "nowhere");
