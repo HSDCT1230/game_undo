@@ -183,7 +183,9 @@ function renderDetail() {
   box.append(
     el("h3", {}, [spec.name]),
     el("p", { class: "map-line" }, [spec.line || placeLine(S.mapSel)]),
-    mapRoomDone(S.mapSel) ? el("p", { class: "map-line fine map-done" }, ["这里都看过了。"]) : "",
+    // 划掉了的地方由下面那句「去过了。」说，不再叠一句「这里都看过了。」——
+    // 同一件事一行说一遍。
+    mapRoomDone(S.mapSel) && !placeClosed(hubPlaceByMap(S.mapSel)) ? el("p", { class: "map-line fine map-done" }, ["这里都看过了。"]) : "",
     here ? el("p", { class: "map-now" }, ["人在这里"]) : walkButton(S.mapSel),
     spec.img ? mapPhoto(spec.img, spec.name) : ""
   );
@@ -199,6 +201,9 @@ function walkButton(mapId) {
   if (S.mode !== "hub") return "";
   const p = hubPlaceByMap(mapId);
   if (!p) return el("p", { class: "map-line fine" }, ["现在不用去这里。"]);
+  // 了了的地方堵在门口：不然便条上划掉了，地图这里还能点「走过去」，
+  // 等于同一件事堵一半（10-30 美娟家）。
+  if (placeClosed(p)) return el("p", { class: "map-line fine" }, ["去过了。"]);
   return el("button", {
     type: "button",
     class: "btn map-walk",

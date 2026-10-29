@@ -1452,6 +1452,10 @@ HUBS.norec = {
     {
       id: "mei", name: "美娟家", map: "mei", img: pic(9, "场景-美娟家"),
       show: () => ev("paper-norec"),
+      // 那顿饭吃过，这一处就了了：便条上「去 美娟家」划掉，不再走一趟。
+      // 判据用 note-notsaid（周日午饭中途设的那条），不用「进去过」——
+      // 进了屋没坐下吃，等于没去。
+      done: () => ev("note-notsaid"),
       line: () => (ev("note-notsaid") ? "星期日来过。汤推到我面前。" : "8月24日，星期日。表姐煮了饭。姐夫也在。"),
       spots: () => [
         {

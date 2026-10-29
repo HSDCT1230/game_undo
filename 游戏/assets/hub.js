@@ -69,6 +69,14 @@ function hubPlaceDone(p) {
   return hubSpots(p).every(spotLooksSeen);
 }
 
+// 「这一处已经了了，不用再去」——跟上一句不是一回事，别合成一个判据。
+// hubPlaceDone 是「卡都看过」，每一处迟早都会满足；真拿它划掉门口，
+// 人从别处回来时后座也早被划掉，回不去（10-30 美娟家那趟就是这么漏的）。
+// 所以由地点自己说：places[].done。
+function placeClosed(p) {
+  return !!(p && p.done && val(p.done));
+}
+
 function drawHub() {
   baseView("hub");
   const d = hubDef();
@@ -105,7 +113,12 @@ function drawHub() {
 function hubActions(d, p) {
   const box = el("div", { class: "scene-actions fork hub-acts" });
   hubPlaces().filter((x) => x.id !== p.id).forEach((x) => {
-    box.append(forkChoice("去", "scene-act", () => hubGo(x.id), x.name));
+    // 了了的地方划掉，点它只回一句屋里那句话，不再走一趟（10-30 用户提的：
+    // 美娟家吃完了那顿饭，便条上那一行还开着，每次点进去都是同一碗汤）。
+    const closed = placeClosed(x);
+    box.append(forkChoice("去", "scene-act" + (closed ? " done" : ""),
+      closed ? () => showModal(x.name, val(x.line) || "去过了。") : () => hubGo(x.id),
+      x.name));
   });
   (d.actions ? d.actions() : []).filter((a) => !a.show || a.show()).forEach((a) => {
     box.append(forkChoice(a.mark || "·", "scene-act" + (a.done && a.done() ? " done" : a.primary ? " primary" : ""), a.go, val(a.label)));
