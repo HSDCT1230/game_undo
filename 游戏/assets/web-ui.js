@@ -3161,7 +3161,9 @@ function mailFace(who, name) {
 }
 
 /* 一行一句：抬头「谁　几点」，正文缩进一格，行间一条点线。
-   不分成左右两团——一屏里常常来回好几轮，左右翻会看丢上一句是谁说的。
+   她自己发的那几句整行翻到右边（`.mine`，样式在 style-chrome.css）。
+   原先怕「左右翻会看丢上一句是谁说的」，所以一律左齐；可每行抬头都写着名字，
+   这个问题本来就不存在——反倒是全左齐时，她自己的话混在表姐的话里，要读名字才认得出。
    名字带 inbox 前缀：story-late 里那个 mailRow 是校园邮箱的列表行，两个都叫 mailRow 会互相顶掉。 */
 function inboxRow(mine, name, body, time, isFresh) {
   return el("div", { class: "inbox-row" + (mine ? " mine" : "") + (isFresh ? " fresh" : "") }, [

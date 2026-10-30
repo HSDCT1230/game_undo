@@ -5138,7 +5138,9 @@ body .wall-photo-sheet .img-slot.wall-photo-lg::after { content: none; }
 /* 抬头里的时刻与日子压淡一点，跟名字分开：不改字号，只差颜色 */
 .inbox-meta > .ix-time,
 .inbox-meta > .ix-day { color: #9aa79a; font-size: .94em; letter-spacing: .04em; }
-.inbox-row.mine .inbox-meta { color: #6d8a6d; }
+/* 她自己发的那几句靠右：抬头先翻过去，正文那条跟在 `.inbox-text` 后面写，
+   两条挨着读才看得出「翻的是整行」。名字不压淡——这一行除了认人，还挂着时刻。 */
+.inbox-row.mine .inbox-meta { justify-content: flex-end; color: #6d8a6d; }
 .inbox-text {
   padding-left: 12px;
   color: #222;
@@ -5146,6 +5148,9 @@ body .wall-photo-sheet .img-slot.wall-photo-lg::after { content: none; }
   line-height: 1.75;
   overflow-wrap: anywhere;
 }
+/* 正文一起翻：左边那道 12px 缩进换成右边同样一道，两边对称、都不贴边。
+   只翻正文不翻抬头，名字会留在左边、话跑到右边，读成两个人。 */
+.inbox-row.mine .inbox-text { padding-left: 0; padding-right: 12px; text-align: right; }
 /* 新到的那几句淡黄底慢慢褪；「新」字留在联系人栏，不在这行字上 */
 .inbox-row.fresh .inbox-text { animation: wall-fresh-fade 6s ease-out forwards; }
 .inbox-acts {
