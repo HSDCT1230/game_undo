@@ -311,10 +311,10 @@ function drawMoveIn() {
       markMoveIn("door");
       showModal("大门与铁闸", "两道锁都试过。铁闸推开时会响。钥匙齿有些磨损，还能拧顺。你反手锁好，又试了一次。", "", null, () => drawMoveIn());
     }, pic(3, "示意-大门与铁闸"), moveInAct("door")),
-    hot("全家福", S.base.family ? "记下了。" : "客厅墙上。相后靠着纸箱。", () => {
+    hot("全家福", S.base.family ? "记下了。" : "客厅墙上。三个人。", () => {
       markMoveIn("family");
       note("move-family", "周说是家里人。名字他不讲。相挂得很正。");
-      baseSheet("family", "客厅墙上。三个人。男人笑得很用力，女人缺一颗牙、头发齐肩，小男孩看向镜头外面。相框擦得很干净，没有灰。挂得很正，相后靠着两个纸箱。周先生说不要动。", () => drawMoveIn());
+      baseSheet("family", "客厅墙上。三个人。男人笑得很用力，女人缺一颗牙、头发齐肩，小男孩看向镜头外面。相框擦得很干净，没有灰。挂得很正。相框后面两个纸箱，周先生说不要动。", () => drawMoveIn());
     }, pic(3, "示意-全家福"), !!S.base.family),
     hot("玩具车", S.base.car ? "记下了。" : "车头朝窗。敞篷座位里没有灰。", () => {
       markMoveIn("car");
