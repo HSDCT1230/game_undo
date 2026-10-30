@@ -139,7 +139,7 @@
 * [我可以晚一点走。]
   周：唔使你答应。你住你嘅。 # zh:不用你答应。你住你的。
   -> doorTalk_board
-* [不追。先记下这一幕。]
+* [沉默，记下来。]
   -> doorTalk_board
 
 = doorTalk_ask
@@ -150,7 +150,7 @@
 * [我可以晚一点走。]
   周：唔使你答应。你住你嘅。 # zh:不用你答应。你住你的。
   -> doorTalk_board
-* [不追。先记下这一幕。]
+* [沉默，记下来。]
   -> doorTalk_board
 
 === doorTalk_board ===
