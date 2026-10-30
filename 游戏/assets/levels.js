@@ -401,13 +401,18 @@ const LEVELS = [
       // 这一行是「B 档」加的：要她真的在目录里翻到那一册，不是登进去就算。
       // 任务条上把地方写清楚，不让人在站里瞎点；看懂多少仍留给愿意的人。
       { text: "当年到底发生了什么？图书馆目录，搜「精神」", after: "那一册：二〇〇四年十一月借出，应还日期过了十年", need: true, show: () => noted("vhu-law-in") || noted("vhu-chen-in"), done: () => noted("vhu-lib-trace"), hint: "两个帐户里都有图书馆。目录里那一条点得开" },
+      // 两条「看见」之后要有一下「合起来」。缺考那一格是必须看见的——
+      // 簿子那一页要三条才写得出来，只给两条就把这一关锁死（见 diary.js 的 min: 3）。
+      { text: "十一月十五号他有没有去考试", after: "成绩表：精神科实习那一格是「缺考」", need: true, show: () => vhuBothIn(), done: () => noted("vhu-miss04"), hint: "两个帐户里都有教务处。成绩表翻到五年级，只有一格不是「合格」" },
+      { text: "那四个日子，合起来是哪一件事", after: "簿子写了一页《不在考场》", need: true, show: () => noted("vhu-news04") && noted("vhu-lib-trace") && noted("vhu-miss04"), done: () => flag("deduce-luo"), hint: "簿子→「我认识的人」→罗启明。凑够三条就写得出来" },
       { text: "上楼前问他白天", after: "他认：站在楼梯口，没按门铃", show: () => noted("countbreath"), done: () => noted("day-admit") },
       { text: "他上去之后，打给家豪", after: "零点二十分打给家豪，他说马上到", show: () => noted("roofpause"), done: () => flag("calledChen") },
     ],
     // 别改成 levelReady()：这一关有一条必做是「他到门口」，那件事本身要按这颗按钮才发生，
-    // 用 levelReady() 会死锁。这里只挡四样：打过电话、两个帐户都进去过、目录里那一册看过、
-    // 维基那条旧闻读过（围栏为什么加高——上天台之前要知道的那件事）。
-    advance: { when: "9月7日　夜", where: "他来了", fn: () => mingReturn(), modes: ["search"], ready: () => flag("calledMing2") && vhuBothIn() && noted("vhu-lib-trace") && noted("vhu-news04") },
+    // 用 levelReady() 会死锁。这里挡五样：打过电话、两个帐户都进去过、目录里那一册看过、
+    // 维基那条旧闻读过（围栏为什么加高——上天台之前要知道的那件事）、
+    // 簿子上写下了那一页（四个日子合起来是什么——她要先知道那个月，才会上楼拦人）。
+    advance: { when: "9月7日　夜", where: "他来了", fn: () => mingReturn(), modes: ["search"], ready: () => flag("calledMing2") && vhuBothIn() && noted("vhu-lib-trace") && noted("vhu-news04") && flag("deduce-luo") },
     next: "零点四十一分　后楼梯",
     start: () => nightName(),
     gives: () => {
@@ -439,6 +444,21 @@ const LEVELS = [
       flag("calledName", true);
       flag("grabbed", true);
     },
+  },
+  // 天台之后还有一场：她回到后座，把这一章写下来。不长，也不给选项——
+  // 这一关要的不是再选一次，是把她已经知道的写成四行，末了留一个问号给第二章。
+  {
+    part: 5, title: "部分真相", date: "9月8日 凌晨", place: "荣汇街 28 号 后座",
+    clock: "2014年9月8日 周一 04:40",
+    goal: "把这一章写下来。写完才睡。",
+    // 这一关不靠任务条过关：场景是直的，走到最后一句就进结局字幕。
+    // 两条都只当记录——第一条她自己写够了就打勾；第二条只在材料齐时出现，写不写都不挡。
+    tasks: [
+      { text: "把这一章写下来", after: "簿子里多了「这一章」那一页", need: true, done: () => noted("part-truth"), hint: "簿子摊在桌上。先写周，再写阿明" },
+      { text: "还有一样，我一直没写", after: "簿子里添了一页《没抹干净》", show: () => hasEvidence("fish-tag") && noted("news-yu04") && noted("news-kimon"), done: () => flag("deduce-yu"), hint: "簿子→「我认识的人」→罗启明。凑够三条就写得出来" },
+    ],
+    next: "",
+    start: () => partTruth(),
   },
 ];
 
@@ -781,6 +801,8 @@ function cardBgName(n) {
 }
 
 function cardBg(n) {
+  // 第 17 关没有自己的图库（同一天夜里，同一间后座），借第 15 关那一张。
+  if (n === 17) return pic(15, "场景-夜里后座厅");
   const name = cardBgName(n);
   if (!name) return "";
   if (name === "场景-夜里后座厅" && !CARD_NIGHT_OWN.includes(n)) return pic(n, "场景-后座厅");

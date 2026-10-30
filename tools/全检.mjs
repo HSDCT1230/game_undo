@@ -151,7 +151,7 @@ for (const name of loneNames) {
   if (code.some((c) => !c)) warn("字幕卡底图：levels.js 里 cardBg／cardBgName 的写法变了，没法逐关核对");
   else {
     const box = { pic: (n, name) => picLv[n] + "/" + name, out: [] };
-    vm.runInNewContext(code.join("\n") + "\nfor (let n = 1; n <= 16; n++) out.push(cardBg(n));", box);
+    vm.runInNewContext(code.join("\n") + "\nfor (let n = 1; n <= 17; n++) out.push(cardBg(n));", box);
     box.out.forEach((key) => { if (key) { picCount++; if (!havePng.has(key)) missPic(key); } });
   }
 }

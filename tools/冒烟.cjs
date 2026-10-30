@@ -92,7 +92,7 @@ const PROBE = `JSON.stringify((()=>{
   const segList = JSON.parse(
     (await send("Runtime.evaluate", {
       expression:
-        "JSON.stringify((()=>{const out=[];for(let n=1;n<=16;n++){out.push([n,'']);(SEGS[n]||[]).forEach(s=>out.push([n,s.key]));}return out})())",
+        "JSON.stringify((()=>{const out=[];for(let n=1;n<=LEVELS.length-1;n++){out.push([n,'']);(SEGS[n]||[]).forEach(s=>out.push([n,s.key]));}return out})())",
       returnByValue: true,
     })).result.value
   );

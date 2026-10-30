@@ -34,7 +34,7 @@ if (!levels.length) {
   process.exit(1);
 }
 
-const PARTS = ["", "住进来", "夜里", "星期六", "上门"];
+const PARTS = ["", "住进来", "夜里", "星期六", "上门", "尾声"];
 // Windows 文件名里不能出现 \ / : * ? " < > |，全角标点不算，但半角要挡一道。
 const safe = (s) => s.replace(/[\\/:*?"<>|]/g, "·").trim();
 const pad = (n) => String(n).padStart(2, "0");
