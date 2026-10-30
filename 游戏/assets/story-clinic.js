@@ -29,8 +29,8 @@ function clinicSpots(visit) {
     return [
       hot("抽屉", L.drawer4 ? "节拍器还在。" : "缝还开着一点。", () => {
         L.drawer4 = true;
-        note("metro4", "第四次。缝里一角铜色，摆杆停在最左。");
-        showModal("抽屉", "一角铜色，摆杆停在最左一格。", "", null, () => drawClinic());
+        note("metro4", "第四次。缝里一角铜色，摆杆停着。");
+        showModal("抽屉", "一角铜色，摆杆停着。", "", null, () => drawClinic());
       }, pic(12, "示意-抽屉"), L.drawer4),
       // 预约表本来就在前台，不在这间房。看到它的那一眼放在门外（见 CLINIC_WAIT[4]）。
       hot("桌角", "两只纸杯。", () => {
@@ -45,13 +45,13 @@ function clinicSpots(visit) {
     ? "常客一列：阿文。每周六。前台姑娘说他成日拖过时。"
     : "常客一列：阿文。预约每周六。";
   const all = [
-    hot("执照", "罗启明。Kimon Law。照片比真人年轻，笑。", () => {
+    hot("执照", "罗启明。Kimon Law。相片是黑的。", () => {
       L.lic = true;
-      showModal("执照", "注册精神科。英文 Kimon Law。", "", null, () => drawClinic());
+      showModal("执照", "注册精神科。执业证明书，医务委员会签。相片那一格是黑的。", "", null, () => drawClinic());
     }, pic(6, "示意-执照"), L.lic),
     hot("抽屉", drawerText, () => {
       L.drawer = true;
-      note("metro", "抽屉没推严，缝里一个铜色节拍器，摆杆停在最左。");
+      note("metro", "抽屉没推严，缝里一个铜色节拍器，摆杆停着。");
       showModal("抽屉", "抽屉里有个铜色节拍器。抽屉没推严，让你看到了一角。", "", null, () => drawClinic());
     }, pic(6, "示意-抽屉"), L.drawer),
     hot("电脑一角", listText, () => {

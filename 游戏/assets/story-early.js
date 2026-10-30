@@ -75,7 +75,7 @@ HUBS.view = {
           ]),
         },
         {
-          title: "玩具车", sub: "茶几上敞篷红色塑料车。", img: pic(2, "示意-玩具车"),
+          title: "玩具车", sub: "敞篷红色塑料车。", img: pic(2, "示意-玩具车"),
           seen: () => !!S.view.car,
           go: () => viewLook("car", [
             line("章慧琪", "厅度……有架车。", { zh: "客厅里……有辆车。" }),
@@ -298,9 +298,9 @@ function moveInStart() {
 
 function sillMoveInText() {
   if (flag("sawSillTour")) {
-    return "铁条窗。窗台上那一圈水印，是干的，像小孩鞋的印子。看房时周生的手撑在这里，正好盖住它——你认得那个形状。像搬东西时放过一双童鞋，不是这后座住过小孩。";
+    return "铁条窗。窗台上那一圈水印，是干的，像小孩鞋的印子。看房时周生的手撑在这里，正好盖住它——你认得那个形状：像搬东西时放过一双童鞋。";
   }
-  return "铁条窗。外面是天井一侧，旧霓虹和对面的窗户。窗台上一圈水印，是干的——你按了按。形状清楚是小孩鞋印，像搬东西时放过，不是怪事。";
+  return "铁条窗。外面是天井一侧，对面全是窗。窗台上一圈水印，是干的——你按了按，不是新弄的。形状清楚是小孩鞋印：像搬东西时放过一双童鞋。";
 }
 
 function drawMoveIn() {
@@ -309,29 +309,27 @@ function drawMoveIn() {
   const looks = [
     hot("大门与铁闸", "两道锁都试过。钥匙还能拧顺。", () => {
       markMoveIn("door");
-      // 电表并在这里：它本来就在门边走廊墙角，为它单开一格热点不划算（热点盘会多一行，
-      // 盖掉半个房间）。它是「章自己的事／环境读数」，按设定不记进日记簿，所以只写在描述里。
-      showModal("大门与铁闸", "两道锁都试过。铁闸推开时会响。钥匙齿有些磨损，还能拧顺。你反手锁好，又试了一次。门边走廊墙角是电表，数字转得很慢。", "", null, () => drawMoveIn());
+      showModal("大门与铁闸", "两道锁都试过。铁闸推开时会响。钥匙齿有些磨损，还能拧顺。你反手锁好，又试了一次。", "", null, () => drawMoveIn());
     }, pic(3, "示意-大门与铁闸"), moveInAct("door")),
     hot("全家福", S.base.family ? "记下了。" : "客厅墙上。相后靠着纸箱。", () => {
       markMoveIn("family");
       note("move-family", "周说是家里人。名字他不讲。相挂得很正。");
-      baseSheet("family", "客厅墙上，正对茶几。三个人。男人笑得很用力，女人缺一颗牙、头发齐肩，小男孩看向镜头外面。相框擦得很干净，没有灰。挂得很正，相后两个纸箱。周先生说不要动。", () => drawMoveIn());
+      baseSheet("family", "客厅墙上。三个人。男人笑得很用力，女人缺一颗牙、头发齐肩，小男孩看向镜头外面。相框擦得很干净，没有灰。挂得很正，相后靠着两个纸箱。周先生说不要动。", () => drawMoveIn());
     }, pic(3, "示意-全家福"), !!S.base.family),
     hot("玩具车", S.base.car ? "记下了。" : "车头朝窗。敞篷座位里没有灰。", () => {
       markMoveIn("car");
       note("move-car", "车头朝窗。敞篷座位里没有灰。");
-      baseSheet("car", "一辆旧红色塑料敞篷玩具车。车轮完整，没有缺件。车头朝窗。茶几靠着储物室那面墙，上面有一圈晒痕。你低头往座位里看：没有灰。你没有碰。", () => drawMoveIn());
+      baseSheet("car", "一辆旧红色塑料敞篷玩具车。车轮完整，没有缺件。车头朝窗，车下一圈晒痕。你低头往座位里看：没有灰。你没有碰。", () => drawMoveIn());
     }, pic(3, "示意-玩具车"), !!S.base.car),
     hot("厨房水龙头", S.base.tap ? "记下了。" : "关上之后还会滴一滴。", () => {
       markMoveIn("tap");
       note("move-tap", "关上还会滴。周说修过。");
       sfx("drip");
-      baseSheet("tap", "拧开，水流一顿一顿的，带着铁管味。关上，等了几秒，滴答一声——关了还会滴一滴。周先生说修过，还在滴。", () => drawMoveIn());
+      baseSheet("tap", "拧开，水流一顿一顿的。关上，等了几秒，滴答一声——关了还会滴一滴。周先生说修过，还在滴。", () => drawMoveIn());
     }, pic(3, "示意-厨房水龙头"), !!S.base.tap),
     hot("储物室门", S.base.storage ? "记下了。" : "锁着。门底没有光。", () => {
       markMoveIn("storage");
-      baseSheet("storage", "走廊尽头。木门。锁从走廊这一侧锁着。门底有一道缝，里面是黑的，没有光。后楼梯在这扇门后面。你没有钥匙。", () => drawMoveIn());
+      baseSheet("storage", "走廊尽头。木门，锁着。门底有一道缝，里面没有光。后楼梯在这扇门后面。你没有钥匙。", () => drawMoveIn());
     }, pic(3, "示意-储物室门"), !!S.base.storage),
     hot("主房窗台", S.base.sill ? "记下了。" : "干的水印。", () => {
       markMoveIn("sill");
@@ -339,11 +337,11 @@ function drawMoveIn() {
     }, pic(3, "示意-主房窗台"), !!S.base.sill),
     hot("行李与床", "一只箱、一只袋。", () => {
       markMoveIn("bed");
-      showModal("行李与床", "一只纸箱、一只旧旅行袋，都是你的。箱推在墙角。厨房没有剩菜。床上只有你带来的薄被。", "", null, () => drawMoveIn());
+      showModal("行李与床", "一只纸箱、一只旧旅行袋，都是你的。两样都没打开。床上只有你带来的薄被。", "", null, () => drawMoveIn());
     }, pic(3, "示意-行李与床"), moveInAct("bed")),
     hot("天台钥匙", "大门内侧，门旁小钩。", () => {
       markMoveIn("roof");
-      showModal("天台钥匙", "第三把挂在大门内侧的小钩上。钥匙牌上周先生写着：天台晾衫用。你没有上去。", "", null, () => drawMoveIn());
+      showModal("天台钥匙", "第三把。晾衫用的那把。你没有上去。", "", null, () => drawMoveIn());
     }, pic(3, "示意-天台钥匙"), moveInAct("roof")),
   ];
   const box = el("div", { class: "room scene-fit" });
@@ -963,13 +961,13 @@ function drawNight() {
   const looks = [
     hot("全家福", "女人在笑，缺一颗牙，头发齐肩。小男孩看向镜头外。", () => {
       markNight("family");
-      showModal("全家福", "客厅墙上。女人在笑，缺一颗牙，头发齐肩。小男孩看向镜头外。你看了一眼，没有伸手去动它。" + (n.recording ? "录音开着——门外门底若有声，不会从相框上来。" : ""), "", null, () => drawNight());
+      showModal("全家福", "客厅墙上。女人在笑，缺一颗牙，头发齐肩。小男孩看向镜头外。你看了一眼，没有伸手去动它。", "", null, () => drawNight());
     }, pic(4, "示意-全家福"), nightAct("family")),
       hot("玩具车", carText, () => {
         if (n.car === "窗") n.car = "门";
       markNight("car");
       markTonight("car");
-      showModal("玩具车", n.car === "地" ? "掉在地上，车头朝储物室。敞篷座位里仍然没有灰。" : "车头朝向和刚才不同了。搬进来时车头朝窗。茶几仍靠着储物室那面墙。", "", null, () => drawNight());
+      showModal("玩具车", n.car === "地" ? "掉在地上，车头朝储物室。敞篷座位里仍然没有灰。" : "车头朝向和刚才不同了。搬进来时车头朝窗。你没有碰过它。", "", null, () => drawNight());
     }, carImg, nightAct("car")),
     hot("窗台水印", sillDone ? sillLine(sillDone) : "童码。湿了。今晚没下雨。", () => sillMenu(), pic(4, "示意-窗台水印"), !!sillDone),
     hot("水龙头", "拧紧后，三秒后又滴水。", () => {
