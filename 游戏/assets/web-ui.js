@@ -3206,8 +3206,13 @@ function mailThreadNodes(th, fresh) {
       items.push({ t: x.t, node: inboxRow(mine, x.r.name, body, webAgo(x.t), fresh.includes(x.key)) });
       end = Math.max(end, x.t.getTime());
     });
+    /* 底下那一格挂在这一条后面还是挂在整段后面，看它是哪种：
+       「回一句」是给这条留言的答复入口，要跟在她那一轮话之后（end+1）；
+       「已回复」是给这条留言盖的章，得留在它自己下面——用 end+1 的话，
+       她会把三个月后才回的那句排到栏底，那枚章就跟着沉下去，孤零零挂在
+       别人的话下面，读成「刚才那一轮已回复」。 */
     const act = mailReply(e);
-    if (act) items.push({ t: new Date(end + 1), node: act });
+    if (act) items.push({ t: new Date(wallMine(e) ? t.getTime() + 1 : end + 1), node: act });
   });
   mailPacks().forEach(({ pack, lines }) => {
     if (pack.who !== th.who) return;
