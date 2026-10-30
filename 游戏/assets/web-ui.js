@@ -50,7 +50,9 @@ function webAgo(t) {
   const day = (x) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
   const diff = Math.round((day(now) - day(t)) / 86400000);
   const hm = pad2(t.getHours()) + ":" + pad2(t.getMinutes());
-  if (diff === 0) return "今天 " + hm;
+  // 「今天」也算还没到的钟点：倾偈那几段是一口气排下来的，钟点会走到当前时刻之后，
+  // 那时给它们写「08-15 10:15」会在同一段里一半「今天」一半日子。
+  if (diff <= 0) return "今天 " + hm;
   if (diff === 1) return "昨天 " + hm;
   return webStamp(t);
 }
@@ -3218,9 +3220,12 @@ function mailThreadNodes(th, fresh) {
     if (pack.who !== th.who) return;
     lines.forEach(([k, t], i) => {
       const mine = k === "me";
+      // 抬头要带日子。这两段实时记录和八号那段、和几条静态私信排在同一栏里，
+      // 只写「21:06」看不出它比下面早了一个礼拜（早一版就是 chatClock(i) 只给钟点）。
+      const at = mailPackTime(pack, i);
       items.push({
-        t: mailPackTime(pack, i),
-        node: inboxRow(mine, mine ? "章慧琪" : th.name, [t], chatClock(i, pack.id), false),
+        t: at,
+        node: inboxRow(mine, mine ? "章慧琪" : th.name, [t], webAgo(at), false),
       });
     });
   });
@@ -3400,6 +3405,10 @@ function viewWallUser() {
       wallShown(WALL_FEED).some((x) => x.e.id === "mei-meal")
         ? wallAlbum("相册「星期日」（1 张）", [{ id: pic(9, "示意-午饭"), cap: "星期日" }])
         : "",
+      // 发在墙上的月饼照，同样收在她自己的相簿里。
+      wallShown(WALL_FEED).some((x) => x.e.id === "mei-fest")
+        ? wallAlbum("相册「做节」（1 张）", [{ id: pic(1, "墙簿/表姐-做节"), cap: "做节" }])
+        : "",
       wallTimeline("mei"),
     ]);
   }
@@ -3409,16 +3418,20 @@ function viewWallUser() {
       "上次上线：" + lokOnline(),
       "签名档：" + (sig ? "唔好再打嚟。" : ""),
       "关系：无",
-      // 客厅、饭桌、厨房三张原来都挂在表姐名下，画的是一个不收拾的旧家（椅子上搭着外套、
-      // 地上一双拖鞋、桌角一个塑料袋、发黄油污的墙砖）。表姐家不是那样，换了；这三张没删，
-      // 挪到阿乐这里——一个独居男人住的旧两居，本来就是这样。
-      wallAlbum("相册「旧相」（5 张）", [
+      // 相册只放拍得到他本人的两张，加一张旧屋厨房。
+      // 别再把 `场景-美娟家`／`示意-午饭` 的裁切版挂到这里：那是第 9 关「美娟家」的地点底图
+      // 与她家「午饭」的热点图，玩家在那里走过、跟她说过话——同一间屋出现在两个人主页，
+      // 是空间记忆撞车，比「脏不脏」严重。脏乱与否不是这条判据。
+      wallAlbum("相册「旧相」（3 张）", [
         { id: pic(1, "墙簿/阿乐-夜里"), cap: "夜里" },
         { id: pic(1, "墙簿/阿乐-落街"), cap: "落街" },
-        { id: pic(1, "墙簿/阿乐-客厅"), cap: "客厅" },
-        { id: pic(1, "墙簿/阿乐-饭桌"), cap: "饭桌" },
         { id: pic(1, "墙簿/阿乐-厨房"), cap: "厨房" },
       ]),
+      // 他发在墙上的那张，也在他自己的相簿里——墙簿上发过的相会自动进个人主页，
+      // 读的人会拿这两处对照。所以这张跟着 `lok-0828` 出现（汤是他一个人的事，不能提前看）。
+      wallShown(WALL_FEED).some((x) => x.e.id === "lok-0828")
+        ? wallAlbum("相册「一个人」（1 张）", [{ id: pic(1, "墙簿/阿乐-自己煲汤"), cap: "一个人" }])
+        : "",
       wallTimeline("lok"),
     ]);
   }
@@ -3448,6 +3461,16 @@ function viewWallUser() {
       wallAlbum("相册「生日」（1 张）", [
         { id: pic(1, "墙簿/陈家豪-生日"), cap: "生日" },
       ]),
+      // 他在墙簿上发过的两张，也挂在自己的相簿里。两条动态各有各的出现时机
+      // （出差、收工），所以张数按实际收到几张算，不写死。
+      (() => {
+        const shots = [];
+        if (wallShown(WALL_FEED).some((x) => x.e.id === "howard-ot"))
+          shots.push({ id: pic(1, "墙簿/家豪-加班桌面"), cap: "未食饭" });
+        if (wallShown(WALL_FEED).some((x) => x.e.id === "howard-0830"))
+          shots.push({ id: pic(1, "墙簿/家豪-大排档"), cap: "落楼下" });
+        return shots.length ? wallAlbum("相册「近照」（" + shots.length + " 张）", shots) : "";
+      })(),
       wallTimeline("howard"),
     ]);
   }
