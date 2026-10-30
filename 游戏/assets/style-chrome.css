@@ -8084,3 +8084,11 @@ html.screen-on body::after {
   border-top: 1px dashed #d8c9ad;
 }
 .who-stage-lead { margin: 0 0 8px; color: #a89a86; font-size: 14px; line-height: 1.6; }
+
+/* 笔记本的分页栏：390／360 宽下三格（廿八屋、墙簿、新分页）要一眼看全。
+   一格 198 时三格 594，手机竖屏只看得到一格半，最右那格「新分页」永远在屏外——
+   滚动条又按 2014 年的样子藏起来了，玩家不会想到这一排能横着滑。
+   收到 112：三格 358 正好，第四格起仍旧横推（revealTab 会把当前那格滚进来）。 */
+@media (max-width: 480px) {
+  .browser-tabs { --tab-w: 112px; }
+}

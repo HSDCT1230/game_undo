@@ -188,7 +188,7 @@ const LEVELS = [
       S.handed = { ok6: true };
       S.homework = { n: 6, body: HOMEWORK[6] };
       seedNotes([
-        ["linWait", "上一个病人。瘦，细框眼镜。笑很客气。五官记不住。"],
+        ["linWait", "上一个病人。没戴铭牌。高个，干瘦，脸色白。杂志倒着拿。没看清脸。"],
         ["takeback", "出门赴诊前，周说要收回。手抖，信封朝里。他说重建，又说未定。"],
       ]);
       seedItems(["letter-red"]);
@@ -281,6 +281,10 @@ const LEVELS = [
     tasks: [
       { text: "8月31日夜车又转，打给他", need: true, done: () => noted("offhours"), hint: "车又转了，我想打给他" },
       { text: "去楼梯口看看，翻翻他门边的月历", after: "周说星期六有人来；月历上涂掉的那一格", need: true, show: () => noted("offhours"), done: () => ev("note-zhoutue") && !!flag("zhoucal"), hint: "楼梯口还没去。他门边那本月历也没关严" },
+      // 全剧唯一一次她正面撞周。月历看懂了才有话可问，所以挂在 zhoucal 后面。
+      // 三条路都过得了关（念 / 反问 / 不问），差的是他答得多快、她抄下多少；
+      // 第 14 关他自己把这句递回来（missHome）。
+      { text: "楼梯口，那一格念不念给他听", after: "他写的「医生」，我问了／没问", need: true, show: () => !!flag("zhoucal"), done: () => !!flag("stairAsk"), hint: "周还在楼梯口。月历那一格，念不念给他听" },
       { text: "日历点开三天，收成补充纸", need: true, show: () => noted("offhours"), count: () => [cnt(["09-01", "09-02", "09-04"], S.cal11), 3], done: () => ev("paper-06"), hint: "九月头，点开三天就够" },
       { text: "发第三帖", need: true, done: () => flag("serial3"), hint: "厅里那台电脑，这一帖还没发出去" },
       { text: "表姐来电", show: () => noted("offhours"), done: () => flag("meiTue") },
@@ -300,7 +304,7 @@ const LEVELS = [
     goal: "他得亲自来看，不然说不清。",
     tasks: [
       { text: "再看一次抽屉", after: "抽屉：节拍器还在", need: true, done: () => !!(S.clinicLooked && S.clinicLooked.drawer4), hint: "抽屉。节拍器还在不在" },
-      { text: "问他", need: true, done: () => flag("clinicAvoid"), hint: "姐夫那句，今日要问" },
+      { text: "问姐夫那句话", need: true, done: () => flag("clinicAvoid"), hint: "姐夫那句，今日要问" },
       { text: "把你搜集的东西给他看", need: true, done: () => !!(S.handed && S.handed.ok12), hint: "补充纸交给他" },
       { text: "偷看预约表", done: () => !!(S.clinicLooked && S.clinicLooked.sched) },
     ],
@@ -461,7 +465,7 @@ const SEGS = {
   6: [
     { key: "b", name: "出门撞见周（收回）", go: () => startTakeback() },
     { key: "c", name: "并板收红圈", go: () => { seedNotes([["takeback", "出门赴诊前，周说要收回。手抖，信封朝里。他说重建，又说未定。"]]); afterTakeback(); } },
-    { key: "d", name: "诊室（候诊已过）", go: () => { S.visitSeen = { 1: true }; S.clinicLooked = {}; seedNotes([["linWait", "上一个病人。瘦，细框眼镜。笑很客气。五官记不住。"], ["takeback", "出门赴诊前，周说要收回。手抖，信封朝里。他说重建，又说未定。"]]); seedItems(["letter-red"]); enterClinic(1); } },
+    { key: "d", name: "诊室（候诊已过）", go: () => { S.visitSeen = { 1: true }; S.clinicLooked = {}; seedNotes([["linWait", "上一个病人。没戴铭牌。高个，干瘦，脸色白。杂志倒着拿。没看清脸。"], ["takeback", "出门赴诊前，周说要收回。手抖，信封朝里。他说重建，又说未定。"]]); seedItems(["letter-red"]); enterClinic(1); } },
     { key: "e", name: "坐下谈，把搜集的给他看", go: () => { S.visitSeen = { 1: true }; seedNotes([["takeback", "出门赴诊前，周说要收回。手抖，信封朝里。他说重建，又说未定。"]]); seedItems(["letter-red"]); S.clinic = { visit: 1, seg: 3 }; clinicTalk(); } },
   ],
   7: [

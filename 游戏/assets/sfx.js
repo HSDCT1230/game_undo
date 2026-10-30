@@ -165,18 +165,10 @@ function sfxClickSynth(role) {
   return sfxWavUrl(out, sr);
 }
 
-const SFX_CLICK_CAND = [
-  { id: "7", title: "旧键帽（暂用）", sub: "略钝的机械感" },
-];
-const SFX_CLICK_USE = "7";
-
+// 点击音是由样本合成的一次性 WAV（见 sfxClickSynth）；当年挑音时那套「候选 id + 试听」
+// 只剩一个候选、也没人再调，一并清掉（10-30）。
 function sfxClickByCand(role) {
   return sfxClickSynth(role || "next");
-}
-
-function sfxPlayClickCand(_candId, role) {
-  const a = new Audio(sfxClickByCand(role || "next"));
-  a.play().catch(() => { /* 无 */ });
 }
 
 const SFX_WAV = {
@@ -284,8 +276,14 @@ function sfxFileGet(name) {
 }
 Object.keys(SFX_FILES).forEach(sfxFileGet);
 
+/* 上一次响是什么时候。通用那声「嗒」靠它避开按钮自己的声音：
+   翻开日记簿、放回一张纸、记下来这些按钮的 onclick 里已经响过一下，
+   通用监听再叠一个 tap，读起来就是「嗒——嗒」两下（.todo-paper 从前一直这样）。 */
+let sfxHeard = 0;
+
 function sfx(name) {
   if (!sfxReady) return;
+  sfxHeard = performance.now();
   if (SFX_WAV[name]) {
     if (!sfxWavAudio[name]) {
       const a0 = new Audio(SFX_WAV[name]);
@@ -563,7 +561,11 @@ function ambKey() {
   if (!S) return "";
   // 开场引子：点掉「戴上耳机，点一下」之后一直放到屏幕通电。mode 已经是 card，所以这条要在前面
   if (openingTone) return "opening";
-  if (S.mode === "card" || S.mode === "wait" || S.mode === "end") return "";
+  // 关头卡与结局卡没有地点，也就没有地点声；底乐由 padStart 那一条管。
+  if (S.mode === "card" || S.mode === "end") return "";
+  // 「等一夜」的过场压着一张定格（`场景-过场-快餐店`／`场景-夜里后座厅`），人就在那儿。
+  // 从前它与 card 一起返回空：一张天亮前的图配一片静默，玩家会以为声音坏了（10-30）。
+  // 地点在 waitWeek 里显式给（S.wait.place），syncPlace 跟着它。
   const p = String(S.place || "");
   if (p === "mei") return "mei";
   if (p === "clinic-wait") return "clinic-wait";
@@ -715,9 +717,15 @@ document.addEventListener("click", (e) => {
   if (!b || b.disabled || b.matches(SFX_QUIET)) return;
   const mark = b.matches(".scene-act") && b.querySelector(".fork-mark");
   if (mark && mark.textContent === "去") return;
-  if (b.matches(".talk-next, .caption-go")) sfx("next");
-  else if (b.closest(".choices, .phone-choices, .sms-choices, .msg-choices, .face-choices")) sfx("pick");
-  else sfx("tap");
+  // 让一拍：先让按钮自己的 onclick 跑完。它要是已经响过（簿子翻开、纸收回去），
+  // 这一声「嗒」就不补了——两声叠在一起听着像点重了。
+  const at = performance.now();
+  setTimeout(() => {
+    if (sfxHeard > at) return;
+    if (b.matches(".talk-next, .caption-go")) sfx("next");
+    else if (b.closest(".choices, .phone-choices, .sms-choices, .msg-choices, .face-choices")) sfx("pick");
+    else sfx("tap");
+  }, 0);
 }, true);
 
 let keyLast = 0;

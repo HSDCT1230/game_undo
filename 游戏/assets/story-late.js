@@ -98,7 +98,7 @@ function leadFamily() {
       prompt: "相框有点歪。",
       choices: [
         { label: "翻过来看", then: [{ goto: () => keepThen(item("photo-back"), stepPast) }] },
-        { label: "挂回去", then: [
+        { label: "扶正，挂回去。", then: [
           line("", "你把它扶正，挂回去。他看了你一眼。"),
           line("罗启明", "你唔睇？", { zh: "你不看？" }),
           line("章慧琪", "唔睇。", { zh: "不看。" }),
@@ -223,7 +223,7 @@ HUBS.visit = {
   ],
   actions: () => [
     {
-      mark: "送", label: "送他走", primary: true,
+      mark: "送", label: "送他到门口", primary: true,
       show: () => !S.visit.left && noted("notsame") && noted("delay"),
       go: visitFarewell,
     },
@@ -239,7 +239,7 @@ function afterVisitListen() {
       prompt: "另一端听不清。",
       choices: [
         {
-          label: "走开。",
+          label: "退开两步，装作没听见。",
           note: ["phone-you", "周在储物室打电话。他说留不得。"],
           then: [
             line("", "你退开两步。后座还亮着灯，储物室还锁着。阿明刚问过年份，现在周在里面打电话。"),
@@ -343,7 +343,7 @@ function missChen() {
           ],
         },
         {
-          label: "不争。走。",
+          label: "不答，转身下楼。",
           then: [{ goto: () => { S.miss.chen = "quiet"; backToHub(); } }],
         },
       ],
@@ -714,7 +714,7 @@ HUBS.miss = {
       go: missAskFish,
     },
     {
-      mark: "给", label: "给他看",
+      mark: "给", label: "把邮件给他看",
       show: () => missDirtReady() && !flag("showedDirt") && !flag("hidDirt"),
       go: missShow,
     },
@@ -768,6 +768,11 @@ function missHome() {
     line("章慧琪", "哦……你肯定系佢？", { zh: "哦……你肯定是他？" }),
     line("周", "戴眼镜，斯斯文文，揽住个公事包。唔通我眼花？对面阿婆都见到。", { zh: "戴眼镜，斯斯文文，夹着个公文包。难道我眼花？对门阿婆也看见了。" }),
     line("周", "医生肯上门系好事。不过佢一个男人嚟，你一个女仔住……啲街坊会讲。", { zh: "医生肯上门是好事。不过他一个男的来，你一个女孩子住……街坊会说闲话。" }),
+    // 11 关楼梯口那一场，他自己把话递回来：她问过月历，他就提醒她「我冇周围讲」。
+    // 不解释、不威胁，只说一句他守口如瓶——听的人自己知道那是什么。
+    ...(flag("stairAsk")
+      ? [line("周", "你上个礼拜问我写咗你啲咩。写咗嘅，我唔会周围讲。", { zh: "你上个礼拜问我写了我什么。写下来的，我不会到处说。" })]
+      : []),
     { note: ["zhou-day", "周说他白天来过。他下午明明在诊所。"] },
     line("", "铁闸出门时是扣死的。回来差一格。门垫也略挪过，边缘没对齐。", { clue: pic(14, "示意-铁闸差一格") }),
     line("", "储物室门底缝下多一截干了的水印。中午出门前没有。像有人贴过耳。", { clue: pic(14, "示意-门底干水印") }),
@@ -926,7 +931,7 @@ function mingReturn() {
       prompt: "……",
       choices: [
         {
-          label: "留。",
+          label: "不要走。",
           flag: "keptMing",
           then: mingReturnRest(),
         },
@@ -978,7 +983,7 @@ function mingReturnRest() {
           ],
         },
         {
-          label: "不给。",
+          label: "钥匙不给。",
           flag: "keptRoofKey",
           then: [
             line("章慧琪", "我……自己收住。", { zh: "我……自己收着。" }),
@@ -1193,7 +1198,7 @@ function roofNight() {
       prompt: "风很大。",
       choices: [
         { label: "叫他的名字", flag: "calledName", then: [line("章慧琪", "阿明！我喺度！", { zh: "阿明！我在这儿！" })] },
-        { label: "冲过去", then: [
+        { label: "跑过去拉他。", then: [
           line("", "你跑了两步。他的鞋又往外挪了一点。你站住了。"),
           line("章慧琪", "……阿明！我喺度！", { zh: "……阿明！我在这儿！", flag: "calledName" }),
         ] },

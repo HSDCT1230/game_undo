@@ -566,24 +566,6 @@ function vhuYears() {
   return vhuSt().who === "chen" ? CHEN_YEARS : VHU_YEARS;
 }
 
-/* 换一台机器、换一个人：会话清掉，已读纪录留着（她读过就是读过）。 */
-function vhuReset() {
-  const st = vhuSt();
-  st.authed = false;
-  st.who = "";
-  st.id = "";
-  st.pw = "";
-  st.err = "";
-  st.need = false;
-  st.out = false;
-  st.mail = "";
-  st.notice = "";
-  st.book = "";
-  st.chal = "";
-  st.ans = "";
-  st.tries = 0;
-}
-
 function vhuUnread() {
   const st = vhuSt();
   return vhuMails().filter((m) => m.unread && !st.read[m.id]).length;

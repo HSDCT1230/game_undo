@@ -44,6 +44,16 @@ function markPlace(id) {
   if (id === "mei") S.known.mei = true;
 }
 
+/* 不出门的场次（网页、等待、日历这类）人到底在哪儿。
+   搬进去之后是后座厅；之前是美娟家那张沙发——第 1 关整关都坐在那里用她的电脑。
+   从前这两个分支回 "nowhere"，于是第 1 关**全程没有一个地点声**：开场那首钢琴一收，
+   剩下的一个小时除了点按音就再没有声音（10-30 玩家报「背景音乐没法播放」）。
+   第 2 关人在荣汇街那间屋里看楼（还没搬进去），不能也报成美娟家。 */
+function homePlace() {
+  if (livingIn()) return "rong-hall";
+  return S.level <= 1 ? "mei" : "rong-hall";
+}
+
 function syncPlace() {
   S.known = S.known || {};
   if (S.mode === "talk" && S.talk) {
@@ -59,7 +69,7 @@ function syncPlace() {
     if (loc.includes("前座")) return markPlace("rong-front");
     if (loc.includes("门口")) return markPlace("rong-door");
     if (loc.includes("楼梯") || loc.includes("走廊")) return markPlace("rong-stair");
-    if (loc.includes("讨论区")) return markPlace(livingIn() ? "rong-hall" : "nowhere");
+    if (loc.includes("讨论区")) return markPlace(homePlace());
     if (loc.includes("荣汇") || loc.includes("后座")) {
       const here = S.talk.herePlace || "";
       return markPlace(here.startsWith("rong-") && here !== "rong-listing" ? here : "rong-hall");
@@ -76,8 +86,10 @@ function syncPlace() {
   if (S.mode === "clinic") return markPlace(S.clinicWait ? "clinic-wait" : "clinic-room");
   if (S.mode === "night" || S.mode === "movein" || S.mode === "cal" || S.mode === "search") return markPlace("rong-hall");
   if (S.mode === "end") return markPlace("rong-roof");
-  if (S.mode === "wait") return markPlace(livingIn() ? "rong-hall" : "nowhere");
-  if (S.mode === "web") return markPlace(livingIn() ? "rong-hall" : "nowhere");
+  // 「等一夜」那类过场自己说了在哪儿（快餐店／后座厅）。没说的才按住哪儿算——
+  // 7 月 31 号那夜她坐在 24 小时快餐店，还没搬进荣汇街，报成后座厅就配错曲了。
+  if (S.mode === "wait") return markPlace((S.wait && S.wait.place) || homePlace());
+  if (S.mode === "web") return markPlace(homePlace());
 }
 
 function placeLine(id) {

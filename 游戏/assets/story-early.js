@@ -29,7 +29,7 @@ function fastFoodNight(next) {
     "今晚没地方睡。",
     "你坐到天亮。",
     next,
-    { plate: pic(1, "场景-过场-快餐店"), lum: 0.34 }
+    { plate: pic(1, "场景-过场-快餐店"), lum: 0.34, place: "rong-street" }
   );
 }
 
@@ -818,7 +818,9 @@ function doorTalk() {
           ],
         },
         {
-          label: "不追。先记下这一幕。",
+          // 不写「不追」：他已经在楼梯口，追不追本来就是空的——玩家会以为点了要跑下楼。
+          // 这一格真正发生的事是「她不出声，把刚才看见的收进心里」（10-30）。
+          label: "沉默，记下来。",
           then: [{ goto: afterTakeback }],
         },
       ],
@@ -1471,8 +1473,12 @@ function mailChatFooter(who) {
   if (!S.mailPack || who !== "mei") return null;
   const pack = S.mailPack;
   const box = (list) => el("div", { class: "inbox-send" }, list);
-  const one = (label, fn) => box([el("button", { type: "button", class: "inbox-send-btn", onclick: fn }, [label])]);
-  const pick = (list) => box(list.map(([label, fn]) => el("button", { type: "button", class: "inbox-send-btn", onclick: fn }, [label])));
+  /* 发出去有一下、收到也有一下：并进收件箱之后这两个音跟着 `chatIn`／`chatOut` 一起丢了，
+     敲完字按下去只剩通用的「嗒」，读起来不像「发出去了」。
+     用现成的短讯两个音（smsOut 送出的气声、smsIn 收到的滴水），不另生一套（10-30）。 */
+  const say = (snd, fn) => () => { if (snd) sfx(snd); fn(); };
+  const one = (label, fn, snd) => box([el("button", { type: "button", class: "inbox-send-btn", onclick: say(snd, fn) }, [label])]);
+  const pick = (list) => box(list.map(([label, fn, snd]) => el("button", { type: "button", class: "inbox-send-btn", onclick: say(snd || "smsOut", fn) }, [label])));
   const shut = () => { S.mailPack = ""; };
 
   if (pack === "0808") {
@@ -1495,7 +1501,7 @@ function mailChatFooter(who) {
       note("ming-name", "美娟又提阿明。家豪加班。");
       persistChat();
       draw();
-    });
+    }, "smsIn");
   }
 
   if (S.chatClosed) return one("合上", () => { persistChat(); shut(); leaveChat(); });
@@ -1508,7 +1514,7 @@ function mailChatFooter(who) {
         S.chatStep += 1;
         persistChat();
         draw();
-      });
+      }, "smsIn");
     }
     return pick(node.me.map((t) => [t, () => {
       S.chat.push(["me", t]);
@@ -1677,6 +1683,7 @@ function afterHowardSms() {
     "2014年8月15日 周五 11:24",
     "地址到了，明天赴约。",
     "",
-    () => backToHub()
+    () => backToHub(),
+    { place: "rong-hall" }
   );
 }

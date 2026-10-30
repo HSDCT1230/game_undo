@@ -56,7 +56,8 @@ const PROBE = `JSON.stringify((()=>{
 
 (async () => {
   fs.mkdirSync(OUT, { recursive: true });
-  const t = JSON.parse(await get("http://127.0.0.1:9222/json/new?about:blank", "PUT"));
+  const CDP = process.env.CDP || "http://127.0.0.1:9222";
+  const t = JSON.parse(await get(CDP + "/json/new?about:blank", "PUT"));
   const ws = new WebSocket(t.webSocketDebuggerUrl);
   let id = 0;
   const pend = {};
@@ -127,7 +128,7 @@ const PROBE = `JSON.stringify((()=>{
       "第" + r.lv + "关" + (r.key ? " 段" + r.key : " 关头") + " mode=" + r.mode + " " + JSON.stringify({ miss: r.miss, broken: r.broken, undef: r.undef, errs: r.errs })
     )
   );
-  await get("http://127.0.0.1:9222/json/close/" + t.id).catch(() => {});
+  await get(CDP + "/json/close/" + t.id).catch(() => {});
   process.exit(0);
 })().catch((e) => {
   console.error("ERR", e);

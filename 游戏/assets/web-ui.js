@@ -1905,7 +1905,7 @@ function sendPm() {
     "他夜间不在线。",
     "你坐到天亮。",
     reachMorning,
-    { plate: pic(1, "场景-过场-快餐店"), lum: 0.34 }
+    { plate: pic(1, "场景-过场-快餐店"), lum: 0.34, place: "rong-street" }
   );
 }
 
