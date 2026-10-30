@@ -22,6 +22,9 @@ const screens = [
   ["官网·VHU", `S.mode = "web"; goWeb("vhusite");`],
   ["日记簿", `openNotes();`],
   ["地图", `openMap();`],
+  // 收件箱＝原倾偈窗口：留言与实时那一段排在一起，两档文本要一致
+  ["网页·收件箱", `setTime("2014年8月8日 周五 21:06"); startChat("0808");`],
+  ["网页·收件箱·搜索", `S.mailQuery = "水"; draw();`],
 ];
 
 const SCAN = `(() => {

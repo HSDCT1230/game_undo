@@ -66,7 +66,6 @@ function syncPlace() {
     }
     return;
   }
-  if (S.mode === "chat") return;
   if (S.mode === "hub") {
     const p = hubPlace();
     return p && p.map ? markPlace(p.map) : undefined;

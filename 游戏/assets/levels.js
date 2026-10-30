@@ -150,7 +150,7 @@ const LEVELS = [
     goal: "这里怪怪的，说不清，也没人信，怎么办？",
     tasks: [
       { text: "出门，经过前座门口", after: "周问我脚湿不湿", need: true, done: () => ev("note-dry"), hint: "前座门口，我还没经过" },
-      { text: "倾偈表姐", need: true, done: () => !!(S.chatLogs && S.chatLogs.mei16 && S.chatLogs.mei16.closed), hint: "表姐一直在等我回" },
+      { text: "收件箱，回表姐", need: true, done: () => !!(S.chatLogs && S.chatLogs.mei16 && S.chatLogs.mei16.closed), hint: "表姐在收件箱等我回" },
       { text: "接陈家豪电话", need: true, show: () => !!(S.chatLogs && S.chatLogs.mei16 && S.chatLogs.mei16.closed), done: () => flag("howardCalled"), hint: "表姐说姐夫会打来" },
       { text: "拿到诊所地址", show: () => flag("howardCalled"), done: () => flag("clinicAddr"), hint: "地址他说会发到手机" },
       { text: "给玩具车和水龙头各拍一张", need: true, show: () => !!(S.chatLogs && S.chatLogs.mei16 && S.chatLogs.mei16.closed), count: () => [cnt(["photo-car-out", "photo-tap-out"], { "photo-car-out": ev("photo-car-out"), "photo-tap-out": ev("photo-tap-out") }), 2], done: () => ev("photo-car-out") && ev("photo-tap-out"), hint: "用自己的拍立得。车同水喉，各拍一张，夹进簿里" },
@@ -455,7 +455,7 @@ const SEGS = {
     { key: "b", name: "入夜", go: () => nightStart() },
   ],
   5: [
-    { key: "b", name: "倾偈表姐", go: () => { flag("knockedZhou", true); seedItems(["note-dry"]); S.hub = { id: "dawn", at: "hall" }; startChat("mei16"); } },
+    { key: "b", name: "收件箱回表姐", go: () => { flag("knockedZhou", true); seedItems(["note-dry"]); S.hub = { id: "dawn", at: "hall" }; startChat("mei16"); } },
     { key: "c", name: "陈家豪来电", go: () => { flag("knockedZhou", true); seedItems(["note-dry"]); S.chatLogs.mei16 = { lines: [["she", "……"]], step: 99, closed: true }; S.hub = { id: "dawn", at: "hall" }; howardCall(); } },
   ],
   6: [
@@ -652,10 +652,13 @@ function levelBlocks() {
   const ht = hintTask();
   const hint = ht ? hintSay(ht) : "";
   if (hint && !hintEchoes(hint, ht.text)) blocks.push(el("p", { class: "diary-note task-hint" }, [hint]));
-  // 要摆的纸：三张纸都不是「读一页」，是「做一件事」，所以每行右端带一句进度。
+  // 四条摊在这一页上（只在看楼那两章）：它是一张对照表，不是一件事，
+  // 所以不再挂到下面「要摆的纸」里让人点开一层（10-30）。
+  if (S.level <= 2 && typeof fourBlock === "function") blocks.push(...fourBlock());
+  // 要摆的纸：每一张都不是「读一页」，是「做一件事」，所以每行右端带一句进度。
+  // 一行就是一张，不再给它一个「要摆的纸」的类名当标题——那一行本身写着它是什么（10-30）。
   const papers = typeof todoPapers === "function" ? todoPapers() : [];
   if (papers.length) {
-    blocks.push(diarySubHead("要摆的纸"));
     blocks.push(el("div", { class: "todo-papers" }, papers.map((p) => el("button", {
       type: "button",
       class: "todo-paper",
@@ -693,20 +696,13 @@ function homeworkBlocks() {
   return out;
 }
 
-// 「To do」页底下那一小块：这一章还要摆弄的几张纸。
-// 三样都是「做到一半」的状态，所以每行带一句进度——裸链接每打开一次都要重新确认到哪了。
+// 「To do」页底下那一块：这一章还要动手摆的一张纸，一行。
+// 每行都带一句进度——裸链接每打开一次都要重新确认做到哪了。
+// 四条（level ≤ 2）不在这里：它是一张对照表，直接摊在页上（fourBlock）。
 // 「搬进来那晚」不在这里：它是八月一日夜里的记录，归时间线。
 // 「两个人」也不在这里：那是一页人名，归「我认识的人」（10-29）。
 function todoPapers() {
   const out = [];
-  // 「租房必需四条」只在看楼那两章有用：楼已经租下来了，这张纸再挂在簿子上
-  // 就是一本翻两页全是旧清单的簿子（从前 `|| Object.keys(S.four).length` 让它一直留着）。
-  // 进度说「划掉」不说「卡住」：找着的证据越多，划掉的越多——那是在往前走。
-  // 写「卡住 3 条」会读反，读成「还有三条没解决」（10-29）。
-  if (S.level <= 2) {
-    const n = FOUR.filter((f) => ((S.four && S.four[f.id]) || []).length).length;
-    out.push({ label: "租房必需四条", meta: n ? "划掉 " + n + " 条" : "一条都还没划", fn: openFour });
-  }
   if (S.level === 4 && nightOn()) {
     const n = pairCount();
     out.push({

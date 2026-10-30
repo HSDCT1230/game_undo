@@ -415,7 +415,7 @@ const CAL_DAYS = [
   ["08-05", "散工回来晚了。你在门口脱鞋，怕吵到前座。其实隔一幅墙。", "warm", "", true],
   ["08-06", "把衣服晾在天台。周生的竹竿靠在墙角最上头那格。", "warm", "", true],
   ["08-07", "他送来一碗糖水，说「太热」。白瓷碗放在茶几晒痕旁边。第二天他还来收——这只碗以后不再出现。", "warm", "示意-日历-0807-糖水", true],
-  ["08-08", "倾偈：陈美娟", "warm", "", true],
+  ["08-08", "收件箱：陈美娟", "warm", "", true],
   ["08-09", "无事。把带来的书立起来，靠着墙。这只箱以后就是书架。", "warm", "", true],
   ["08-10", "第二笔周租，现金。他数两遍，忽然问有没有陌生人打电话来问这栋楼。你说没有。他点头，写在日历上。", "warm", "示意-日历-0810-交租", true],
   ["08-11", "夜里回来，铁闸推到一半，那声「咔」比前几天多响了一下。你回头看了一眼，什么也没有。", "crack", "示意-日历-0811-铁闸", true],
@@ -1407,11 +1407,17 @@ function persistChat() {
   };
 }
 
+/* 收件箱里那两段「实时」：日子取它开场那一刻，时刻沿用当年倾偈窗口的起点往后排。
+   倾偈不再另开一个窗口——收件箱就是倾偈，同一个人说的话只在一处。 */
+const MAIL_PACKS = [
+  { id: "0808", who: "mei", at: ["08-08", "21:06"] },
+  { id: "mei16", who: "mei", at: ["08-15", "10:02"] },
+];
+
 function startChat(pack) {
   stopNightClock();
   closeModal();
   S.talk = null;
-  S.mode = "chat";
   S.chatPack = pack || "mei16";
   S.chatLogs = S.chatLogs || {};
   const saved = S.chatLogs[S.chatPack];
@@ -1425,11 +1431,15 @@ function startChat(pack) {
     S.chat = S.chatPack === "0808"
       ? [["she", "住得惯未。唔好又唔食饭。"]]
       : [["she", ((S.chatLogs["0808"] || {}).lines || []).some(([k]) => k === "me") ? "阿琪，你终于肯回我。八号你仲话周生好人。新屋点？" : "阿琪，你终于肯回我。新屋点？"]];
-  S.chatStep = 0;
+    S.chatStep = 0;
     S.chatClosed = false;
     persistChat();
   }
-  drawChat();
+  // 收件箱就是倾偈：直接翻到表姐那一栏，不再另开一个窗口
+  S.mailPack = S.chatClosed ? "" : S.chatPack;
+  S.wallMailWho = "mei";
+  S.mailQuery = "";
+  browseFromScene("wall-mail");
 }
 
 const CHAT_MEI16 = [
@@ -1455,38 +1465,78 @@ function chatPackLines(id) {
   return (saved && saved.lines) || [];
 }
 
-function chatArchive() {
-  const rows = [];
-  [
-    ["0808", "8月8日"],
-    ["mei16", "8月15日"],
-  ].forEach(([id, when]) => {
-    const lines = chatPackLines(id);
-    if (!lines.length) return;
-    lines.forEach(([k, t], i) => {
-      rows.push({
-        when,
-        clock: chatClock(i, id),
-        who: k === "me" ? "章慧琪" : "陈美娟",
-        text: t,
-      });
+/* 实时那一段的发送栏：表姐两次对话在这里推进，规矩与当年那个窗口一致。
+   收件箱的对话区由 web-ui.js 画，这里只管「下一步能发什么」。 */
+function mailChatFooter(who) {
+  if (!S.mailPack || who !== "mei") return null;
+  const pack = S.mailPack;
+  const box = (list) => el("div", { class: "inbox-send" }, list);
+  const one = (label, fn) => box([el("button", { type: "button", class: "inbox-send-btn", onclick: fn }, [label])]);
+  const pick = (list) => box(list.map(([label, fn]) => el("button", { type: "button", class: "inbox-send-btn", onclick: fn }, [label])));
+  const shut = () => { S.mailPack = ""; };
+
+  if (pack === "0808") {
+    if (S.chatClosed || S.chat.length >= 3) {
+      return one("回日历", () => { S.chatClosed = true; persistChat(); shut(); twoWeeks(); });
+    }
+    if (S.chatStep === 0) {
+      return pick([
+        ["周生好人。水龙头佢嚟修。", () => {
+          S.chat.push(["me", "周生好人。水龙头佢嚟修。"]);
+          S.chatStep = 1;
+          persistChat();
+          draw();
+        }],
+        ["已读。不回。", () => { S.chatClosed = true; persistChat(); shut(); twoWeeks(); }],
+      ]);
+    }
+    return one("继续", () => {
+      S.chat.push(["she", "你姐夫话旧楼小心火烛。佢又加班，又系阿明——差馆嗰啲。"]);
+      note("ming-name", "美娟又提阿明。家豪加班。");
+      persistChat();
+      draw();
     });
-  });
-  return rows;
+  }
+
+  if (S.chatClosed) return one("合上", () => { persistChat(); shut(); leaveChat(); });
+  const step = S.chatStep;
+  if (step < CHAT_MEI16.length) {
+    const node = CHAT_MEI16[step];
+    if (node.she) {
+      return one("继续", () => {
+        S.chat.push(["she", node.she]);
+        S.chatStep += 1;
+        persistChat();
+        draw();
+      });
+    }
+    return pick(node.me.map((t) => [t, () => {
+      S.chat.push(["me", t]);
+      S.chatStep += 1;
+      persistChat();
+      draw();
+    }]));
+  }
+  return pick([
+    ["我唔系病人。", () => endMei16("我唔系病人。")],
+    ["……问下得。", () => endMei16("……问下得。")],
+    ["家豪自己都怪怪地。", () => endMei16("家豪自己都怪怪地。")],
+  ]);
 }
 
-function closeChatWindow() {
-  S.chatHist = false;
-  persistChat();
-  if (S.chatPack === "0808") {
-    if (S.chat.length >= 3) {
-      S.chatClosed = true;
-      persistChat();
-    }
-    twoWeeks();
-    return;
+function endMei16(t) {
+  S.chat.push(["me", t]);
+  if (t === "我唔系病人。") flag("notPatient", true);
+  if (t === "家豪自己都怪怪地。") {
+    S.chat.push(["she", "佢对阿明好到像亲兄弟。人唔怪。我都嫌。"]);
+    flag("meiNoise", true);
+    note("brother", "美娟：佢对阿明好到像亲兄弟。人唔怪。我都嫌。");
   }
-  leaveChat();
+  S.chatClosed = true;
+  persistChat();
+  S.mailPack = "";
+  // 她放下鼠标，电话就来了：这一段一直是接着聊完打的
+  howardCall();
 }
 
 function leaveChat() {
@@ -1520,11 +1570,11 @@ HUBS.dawn = {
       line: () => (flag("clinicAddr")
         ? "8月16日。出门前。"
         : (S.chatLogs.mei16 && S.chatLogs.mei16.closed
-          ? "倾偈聊过了。屋里的车同水喉，我想先拍好。"
-          : "电脑开着。倾偈有新讯息。")),
+          ? "倾完。屋里的车同水喉，我想先拍好。"
+          : "电脑开着。收件箱有人等我回。")),
       spots: () => [
         {
-          title: "电脑：倾偈", sub: () => (S.chatLogs.mei16 && S.chatLogs.mei16.closed ? "已读。" : "陈美娟：阿琪，你终于肯回我。"), img: pic(5, "示意-电脑倾偈"),
+          title: "电脑：收件箱", sub: () => (S.chatLogs.mei16 && S.chatLogs.mei16.closed ? "已读。" : "陈美娟：阿琪，你终于肯回我。"), img: pic(5, "示意-电脑倾偈"),
           seen: () => !!(S.chatLogs.mei16 && S.chatLogs.mei16.closed),
           go: () => startChat("mei16"),
         },
@@ -1550,243 +1600,6 @@ HUBS.dawn = {
     },
   ],
 };
-
-function drawChatHist(host) {
-  const q = (S.chatQuery || "").trim();
-  const hits = chatArchive().filter((r) => !q || (r.when + r.who + r.text).includes(q));
-  host.replaceChildren();
-  if (!hits.length) {
-    host.append(el("p", { class: "chat-empty" }, ["没有符合的记录。"]));
-    return;
-  }
-  hits.forEach((r) => {
-    host.append(el("div", { class: "chat-hit" }, [
-      // 抬头三格：日子、时刻、谁说的。靠 flex 的 gap 分开，不在字符串里塞全角空格
-      el("div", { class: "bubble-meta" }, [
-        el("span", { class: "bm-day" }, [r.when]),
-        el("span", { class: "bm-time" }, [r.clock]),
-        el("span", { class: "bm-who" }, [r.who]),
-      ]),
-      el("div", { class: "bubble-text " + whoClass(r.who) }, [r.text]),
-    ]));
-  });
-}
-
-/* 窗口最下面那条状态：倾偈 ／ 网络：在线。
-   中间那根竖线是真的 1px，不再用「　│　」拿全角空格和制表符拼。 */
-function chatStatusBar() {
-  return el("div", { class: "chat-status" }, [
-    el("span", {}, ["倾偈"]),
-    el("span", { class: "chat-st-sep", "aria-hidden": "true" }),
-    el("span", {}, ["网络：在线"]),
-  ]);
-}
-
-let chatHeard = { pack: "", n: 0 };
-
-function drawChat() {
-  baseView("chat");
-  clearStage();
-  const box = el("div", { class: "desk im-desk" });
-  box.append(imgSlot("00-通用/场景-倾偈窗口", "talk-bg", "倾偈"));
-  const chat = el("div", { class: "chat" });
-  chat.append(el("div", { class: "chat-bar" }, [
-    el("span", { class: "chat-title" }, [
-      el("span", { class: "chat-app" }, ["倾偈"]),
-      el("span", { class: "chat-dash", "aria-hidden": "true" }, ["—"]),
-      el("span", {}, ["陈美娟"]),
-    ]),
-    el("button", {
-      type: "button",
-      class: "chat-close",
-      title: "关闭",
-      onclick: closeChatWindow,
-    }, ["×"]),
-  ]));
-  chat.append(el("div", { class: "chat-contact" }, [
-    imgSlot("00-通用/头像-陈美娟", "chat-ava", "陈美娟"),
-    el("div", {}, [
-      el("strong", { class: whoClass("陈美娟") }, ["陈美娟"]),
-      el("span", {}, [S.chatPack === "0808" ? "在线" : "离线"]),
-    ]),
-  ]));
-  const histBox = el("div", { class: "chat-hist" });
-  const find = el("input", { type: "search", value: S.chatQuery || "", placeholder: "查找记录" });
-  find.addEventListener("input", () => {
-    S.chatQuery = find.value;
-    drawChatHist(histBox);
-  });
-  chat.append(el("div", { class: "chat-tools" }, [
-    el("button", {
-      type: "button",
-      class: S.chatHist ? "on" : "",
-      onclick: () => {
-        S.chatHist = !S.chatHist;
-        drawChat();
-      },
-    }, ["聊天记录"]),
-  ]));
-  if (S.chatHist) {
-    drawChatHist(histBox);
-    chat.append(el("div", { class: "chat-find" }, [
-      find,
-      histBox,
-    ]));
-    chat.append(chatStatusBar());
-    box.append(chat);
-    stage.append(box);
-    find.focus();
-    renderPlaybar();
-    return;
-  }
-  if (S.chatPack !== chatHeard.pack) chatHeard = { pack: S.chatPack, n: 0 };
-  if (S.chat.length > chatHeard.n) sfx(S.chat[S.chat.length - 1][0] === "me" ? "chatOut" : "chatIn");
-  chatHeard.n = S.chat.length;
-  const bubbles = el("div", { class: "bubbles" });
-  S.chat.forEach(([k, t], i) => {
-    const mine = k === "me";
-    bubbles.append(el("div", { class: "bubble " + (mine ? "me" : "she") }, [
-      el("div", { class: "bubble-meta" }, [
-        el("span", { class: "bm-who" }, [mine ? "章慧琪" : "陈美娟"]),
-        el("span", { class: "bm-time" }, [chatClock(i)]),
-      ]),
-      el("div", { class: "bubble-text " + whoClass(mine ? "章慧琪" : "陈美娟") }, [t]),
-    ]));
-  });
-  chat.append(bubbles);
-  const pinLog = () => { bubbles.scrollTop = bubbles.scrollHeight; };
-
-  if (S.chatPack === "0808") {
-    if (S.chatClosed || S.chat.length >= 3) {
-      chat.append(el("button", {
-        class: "btn chat-continue",
-        type: "button",
-        onclick: () => {
-          S.chatClosed = true;
-          persistChat();
-          twoWeeks();
-        },
-      }, ["合上倾偈"]));
-    } else if (S.chatStep === 0) {
-      const ch = el("div", { class: "choices chat-choices" });
-      ch.append(el("button", {
-        type: "button",
-        onclick: () => {
-          S.chat.push(["me", "周生好人。水龙头佢嚟修。"]);
-          S.chatStep = 1;
-          persistChat();
-          drawChat();
-        },
-      }, ["周生好人。水龙头佢嚟修。"]));
-      ch.append(el("button", {
-        type: "button",
-        onclick: () => {
-          S.chatClosed = true;
-          persistChat();
-          twoWeeks();
-        },
-      }, ["已读。不回。"]));
-      chat.append(ch);
-    } else if (!S.chatClosed && S.chat.length < 3) {
-      chat.append(el("button", {
-        class: "btn chat-continue",
-        type: "button",
-        onclick: () => {
-          S.chat.push(["she", "你姐夫话旧楼小心火烛。佢又加班，又系阿明——差馆嗰啲。"]);
-          note("ming-name", "美娟又提阿明。家豪加班。");
-          persistChat();
-          drawChat();
-        },
-      }, ["继续"]));
-    } else {
-      chat.append(el("button", {
-        class: "btn chat-continue",
-        type: "button",
-        onclick: () => {
-          S.chatClosed = true;
-          persistChat();
-          twoWeeks();
-        },
-      }, ["合上倾偈"]));
-    }
-    chat.append(chatStatusBar());
-    box.append(chat);
-    stage.append(box);
-    pinLog();
-    renderPlaybar();
-    return;
-  }
-
-  const step = S.chatStep;
-  if (S.chatClosed) {
-    chat.append(el("button", {
-      class: "btn chat-continue",
-      type: "button",
-      onclick: () => leaveChat(),
-    }, ["合上倾偈"]));
-  } else if (step < CHAT_MEI16.length) {
-    const node = CHAT_MEI16[step];
-    if (node.she) {
-      chat.append(
-        el("button", {
-          class: "btn chat-continue",
-          type: "button",
-          onclick: () => {
-            S.chat.push(["she", node.she]);
-            S.chatStep += 1;
-            drawChat();
-          },
-        }, ["继续"])
-      );
-    } else {
-      const ch = el("div", { class: "choices chat-choices" });
-      node.me.forEach((t) => {
-        ch.append(
-          el("button", {
-            type: "button",
-            onclick: () => {
-              S.chat.push(["me", t]);
-              S.chatStep += 1;
-              drawChat();
-            },
-          }, [t])
-        );
-      });
-      chat.append(ch);
-    }
-  } else {
-    const ch = el("div", { class: "choices chat-choices" });
-    [
-      ["我唔系病人。", false],
-      ["……问下得。", false],
-      ["家豪自己都怪怪地。", true],
-    ].forEach(([t, noise]) => {
-      ch.append(
-        el("button", {
-          type: "button",
-          onclick: () => {
-            S.chat.push(["me", t]);
-            if (t === "我唔系病人。") flag("notPatient", true);
-            if (noise) S.chat.push(["she", "佢对阿明好到像亲兄弟。人唔怪。我都嫌。"]);
-            S.chatClosed = true;
-            persistChat();
-            if (noise) {
-              flag("meiNoise", true);
-              note("brother", "美娟：佢对阿明好到像亲兄弟。人唔怪。我都嫌。");
-            }
-            howardCall();
-          },
-        }, [t])
-      );
-    });
-    chat.append(ch);
-  }
-  chat.append(chatStatusBar());
-  box.append(chat);
-  stage.append(box);
-  pinLog();
-  renderPlaybar();
-}
 
 function howardCall() {
   flag("howardCalled", true);

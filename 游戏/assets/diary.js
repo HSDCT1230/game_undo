@@ -201,16 +201,20 @@ function fourRows() {
   });
 }
 
-function openFour() {
-  showDiaryTool({
-    kind: "租房必需四条",
-    build: (host) => {
-      host.append(el("ul", { class: "four-list" }, fourRows()));
-      if (S.known && S.known.rong) {
-        host.append(el("p", { class: "tool-note" }, ["荣汇街 28 号：四条都过。"]));
-      }
-    },
-  });
+/* 「租房必需四条」直接摊在 To do 那一页上，不再另开一层纸。
+   从前它在「要摆的纸」底下占一行，点进去才看得见哪一条被哪一间顶回来过——
+   一页上于是叠着四层标题（To do／（续）／要摆的纸／租房必需四条），为的只是四行字。
+   两列格子就放得下的东西，不该再让人翻一页（10-30）。
+   行还是 fourRows() 那一套：划掉的是「这条被顶回来过」，后面跟着是哪一间。 */
+function fourBlock() {
+  const rows = fourRows();
+  // 四条都过得去的那间屋有了名字，就补在格子末尾、横跨两列——
+  // 上面三行只写得出「哪一间被顶回来」，不写这一句，这一块就没有答案。
+  if (S.known && S.known.rong) rows.push(el("li", { class: "four-ok" }, ["荣汇街 28 号：四条都过。"]));
+  return [
+    diarySubHead("租房必需四条"),
+    el("ul", { class: "four-list four-cols" }, rows),
+  ];
 }
 
 /* ---------- 屋里的样子／今晚（搬进来那晚记下的，夜里拿来比） ---------- */
@@ -331,9 +335,11 @@ function openPairs(onClose) {
       // 那张也是今晚看见的，写着「摆齐了」再摆一张在下面会打架。
       if (full && !loose.length) cards.append(el("p", { class: "tool-note" }, ["今晚的都摆上了。"]));
       else if (empty) {
+        // 顶上的引导语已经说了「先去屋里找」，这里只报一句空、给一个门。
+        // 从前这里又写一遍「先合上日记簿，去屋里看看哪里跟搬进来那晚不一样」——
+        // 同一句话在同一屏说两遍，中间只隔三行（10-30）。
         cards.append(el("div", { class: "tool-empty" }, [
           el("p", { class: "tool-empty-lead" }, [found ? "找到的都摆上了，还差 " + need + " 处。" : "今晚看见的，这里还一张都没有。"]),
-          el("p", {}, ["先合上日记簿，去屋里看看哪里跟搬进来那晚不一样。看到了，会自己放到这里。"]),
           el("button", { type: "button", class: "tool-empty-go", onclick: leave }, ["先去屋里看看"]),
         ]));
       }
@@ -481,7 +487,6 @@ function handOver(n, onDone) {
   const ready = () => needN > 0 && given.length === needN && given.every((id) => rule.from.includes(id));
   showDiaryTool({
     kind: "把你搜集的东西给他看",
-    title: "把你搜集的东西给他看",
     lock: true,
     build: (host, redraw) => {
       const guide = el("div", { class: "tool-guide" });

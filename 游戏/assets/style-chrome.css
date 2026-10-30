@@ -75,31 +75,27 @@
 #stage,
 .talk,
 .desk.night-desk,
-.desk.caption-card,
-.im-desk .chat {
+.desk.caption-card {
   scrollbar-width: thin;
   scrollbar-color: var(--scroll-stage-thumb) var(--scroll-stage-track);
 }
 #stage::-webkit-scrollbar,
 .talk::-webkit-scrollbar,
 .desk.night-desk::-webkit-scrollbar,
-.desk.caption-card::-webkit-scrollbar,
-.im-desk .chat::-webkit-scrollbar {
+.desk.caption-card::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 #stage::-webkit-scrollbar-track,
 .talk::-webkit-scrollbar-track,
 .desk.night-desk::-webkit-scrollbar-track,
-.desk.caption-card::-webkit-scrollbar-track,
-.im-desk .chat::-webkit-scrollbar-track {
+.desk.caption-card::-webkit-scrollbar-track {
   background: var(--scroll-stage-track);
 }
 #stage::-webkit-scrollbar-thumb,
 .talk::-webkit-scrollbar-thumb,
 .desk.night-desk::-webkit-scrollbar-thumb,
-.desk.caption-card::-webkit-scrollbar-thumb,
-.im-desk .chat::-webkit-scrollbar-thumb {
+.desk.caption-card::-webkit-scrollbar-thumb {
   background: var(--scroll-stage-thumb);
   border-radius: 4px;
 }
@@ -383,8 +379,7 @@ a:hover {
   text-shadow: none;
 }
 
-.window-controls,
-.chat-window-controls {
+.window-controls {
   margin-left: auto;
   font-family: Arial, sans-serif;
   letter-spacing: .08em;
@@ -1548,33 +1543,6 @@ a:hover {
 .sms-bar strong.who-lin,
 .talk.msg .msg-from.who-lin,
 .talk.msg .talk-text.who-lin { color: var(--say-lin); }
-.sms-bubble.who-zhang,
-.bubble-text.who-zhang,
-.chat-contact strong.who-zhang { color: var(--ink-zhang); }
-.sms-bubble.who-zhou,
-.bubble-text.who-zhou,
-.chat-contact strong.who-zhou { color: var(--ink-zhou); }
-.sms-bubble.who-ming,
-.bubble-text.who-ming,
-.chat-contact strong.who-ming { color: var(--ink-ming); }
-.sms-bubble.who-hao,
-.bubble-text.who-hao,
-.chat-contact strong.who-hao { color: var(--ink-hao); }
-.sms-bubble.who-mei,
-.bubble-text.who-mei,
-.chat-contact strong.who-mei { color: var(--ink-mei); }
-.sms-bubble.who-lok,
-.bubble-text.who-lok,
-.chat-contact strong.who-lok { color: var(--ink-lok); }
-.sms-bubble.who-cop,
-.bubble-text.who-cop,
-.chat-contact strong.who-cop { color: var(--ink-cop); }
-.sms-bubble.who-lifen,
-.bubble-text.who-lifen,
-.chat-contact strong.who-lifen { color: var(--ink-lifen); }
-.sms-bubble.who-lin,
-.bubble-text.who-lin,
-.chat-contact strong.who-lin { color: var(--ink-lin); }
 .talk.face.narr .face-body {
   width: 100%;
   display: flex;
@@ -1700,8 +1668,7 @@ a:hover {
   overflow: hidden;
   background: #1b242e;
 }
-.talk.phone .talk-portrait img,
-.chat-ava img {
+.talk.phone .talk-portrait img {
   object-fit: cover;
   object-position: center 16%;
 }
@@ -2291,30 +2258,6 @@ button.mail-row:hover { background: #121a23; }
 }
 .phone-hang:hover { background: #d05548; }
 
-.im-desk {
-  height: 100%;
-  min-height: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  padding: 8px;
-}
-.im-desk .chat {
-  height: min(640px, 100%);
-  margin: 0;
-}
-.desk.im-desk {
-  position: relative;
-}
-.desk.im-desk > .talk-bg {
-  opacity: 1;
-  z-index: 0;
-}
-.desk.im-desk .chat {
-  position: relative;
-  z-index: 1;
-}
 .talk.phone .phone-frame {
   position: relative;
   z-index: 1;
@@ -3298,283 +3241,6 @@ button.mail-row:hover { background: #121a23; }
 .hot.seen:hover { border-color: #8a8274; background: #2a3138; color: #c9c2b4; }
 .hot.seen:hover .hot-img img { filter: grayscale(.3) brightness(.85); }
 
-/* 倾偈：早期桌面即时通讯，窗口高度固定，记录在中间滚。 */
-.chat {
-  width: min(680px, calc(100% - 24px));
-  height: min(680px, calc(100vh - 88px));
-  /* 手机浏览器的 100vh 是「隐掉地址栏」那个高度，比看得见的区域高，窗口底会被切掉 */
-  height: min(680px, calc(100dvh - 88px));
-  max-width: none;
-  min-height: 0;
-  margin: 8px auto;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  border: 1px solid #17477f;
-  background: #e9edf2;
-  box-shadow: 5px 7px 20px rgba(0,0,0,.35);
-}
-
-.chat-bar {
-  display: flex;
-  align-items: center;
-  min-height: 27px;
-  padding: 5px 8px;
-  background: linear-gradient(#5e98db, #2c66ae);
-  font-weight: 700;
-  text-shadow: 0 1px #17477f;
-}
-
-/* 标题栏：名、破折号、对方姓名各占一格。破折号压暗，
-   两侧的距离交给 gap，不在字符串里塞「　—　」。 */
-.chat-title {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 7px;
-}
-.chat-title > .chat-app { opacity: .82; font-weight: 400; }
-.chat-title > .chat-dash { opacity: .55; font-weight: 400; }
-
-.chat-close {
-  margin-left: auto;
-  width: 22px;
-  height: 18px;
-  padding: 0;
-  border: 1px solid #fff;
-  border-right-color: #163e72;
-  border-bottom-color: #163e72;
-  background: #d7d3cb;
-  color: #111;
-  font: 700 13px Arial, sans-serif;
-  line-height: 16px;
-  cursor: pointer;
-}
-
-.chat-close:hover {
-  background: #e81123;
-  color: #fff;
-  border-color: #e81123;
-}
-
-.chat-contact {
-  display: flex;
-  align-items: center;
-  min-height: 62px;
-  padding: 8px 10px;
-  border-bottom: 1px solid #aebdcc;
-  background: linear-gradient(#f8fbfd, #dce8f3);
-}
-
-.chat-contact strong,
-.chat-contact span {
-  display: block;
-}
-
-.chat-contact strong {
-  margin-bottom: 5px;
-  color: #1d4f84;
-  font-size: 13px;
-}
-
-.chat-contact span {
-  color: #748596;
-  font-size: 10px;
-}
-
-.chat-ava {
-  width: 42px;
-  height: 42px;
-  min-height: 0;
-  margin-right: 9px;
-  flex: 0 0 42px;
-  overflow: hidden;
-}
-
-.chat-ava img {
-  width: 42px;
-  height: 42px;
-  object-fit: cover;
-  object-position: center 12%;
-}
-
-.chat-tools {
-  display: flex;
-  gap: 0;
-  padding: 0 6px;
-  border-top: 1px solid #fff;
-  border-bottom: 1px solid #aab5bf;
-  background: linear-gradient(#f8f8f8, #dedede);
-}
-
-.chat-tools button {
-  padding: 5px 10px;
-  border: 0;
-  border-right: 1px solid #c4c9cd;
-  background: transparent;
-  color: #1d4f84;
-  font: inherit;
-  font-size: 11px;
-  cursor: pointer;
-}
-
-.chat-tools button.on,
-.chat-tools button:hover {
-  background: #fff;
-}
-
-.chat-find {
-  flex: 1 1 auto;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  background: #fff;
-}
-
-.chat-find input {
-  margin: 8px 10px 0;
-  padding: 4px 6px;
-  border: 1px solid #9aafc4;
-  font: inherit;
-  font-size: 12px;
-}
-
-.chat-hist {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow: auto;
-  padding: 4px 8px 8px;
-}
-
-.chat-hit {
-  padding: 7px 4px 8px;
-  border-bottom: 1px dotted #d0d0d0;
-}
-
-.chat-empty {
-  margin: 12px;
-  color: #6d7883;
-  font-size: 12px;
-}
-
-.bubbles {
-  display: block;
-  flex: 1 1 auto;
-  min-height: 0;
-  padding: 8px 12px;
-  overflow-x: hidden;
-  overflow-y: auto;
-  background: #fff;
-}
-
-.bubble {
-  max-width: 100%;
-  padding: 7px 5px 9px;
-  border-bottom: 1px dotted #d0d0d0;
-  border-radius: 0;
-  background: transparent !important;
-  font-size: var(--say-chat);
-  line-height: var(--lh-say-chat);
-}
-
-.bubble-meta {
-  display: flex;
-  align-items: baseline;
-  gap: 7px;
-  margin-bottom: 5px;
-  color: #527aa5;
-  font-size: var(--who-chat);
-  line-height: var(--lh-who-chat);
-  letter-spacing: 0.02em;
-}
-/* 抬头里的时刻压暗一点，跟名字分开：以前是「陈美娟　21:40」，
-   一个全角空格既当分隔又当留白，看着像机器排的。 */
-.bubble-meta > .bm-time {
-  color: #8b9daf;
-  font-size: 0.94em;
-  letter-spacing: 0.04em;
-}
-.bubble-meta > .bm-day { color: #7e93a8; }
-.bubble.me .bubble-meta > .bm-time,
-.bubble.me .bubble-meta > .bm-day { color: #85a285; }
-
-.bubble.me .bubble-meta {
-  color: #588358;
-}
-
-.bubble-text {
-  padding-left: 12px;
-  color: #222;
-  font-size: var(--say-chat);
-  line-height: var(--lh-say-chat);
-}
-
-.chat-choices {
-  display: grid;
-  flex-shrink: 0;
-  gap: 3px;
-  max-width: none;
-  max-height: 168px;
-  margin: 0;
-  padding: 9px 10px;
-  overflow-y: auto;
-  border-top: 1px solid #9fadb9;
-  background: #eef2f6;
-}
-
-.chat-choices::before {
-  content: "发送：";
-  margin-bottom: 3px;
-  color: #6d7883;
-  font-size: 10px;
-}
-
-.chat-choices button {
-  padding: 7px 9px;
-  border: 1px solid #b6c3cf;
-  background: #fff;
-  color: #214e7b;
-  font-size: 11px;
-}
-
-.chat-choices button:hover {
-  border-color: #6d91b5;
-  background: #fff9e7;
-}
-
-.chat-continue {
-  align-self: flex-end;
-  flex-shrink: 0;
-  margin: 9px 10px;
-  border-color: #6f89a3;
-  background: linear-gradient(#fff, #dbe5ee);
-  color: #274f77;
-  text-shadow: none;
-}
-
-.chat-bar,
-.chat-contact,
-.chat-tools,
-.chat-status {
-  flex-shrink: 0;
-}
-
-.chat-status {
-  display: flex;
-  align-items: center;
-  padding: 4px 8px;
-  border-top: 1px solid #b8c1ca;
-  background: linear-gradient(#f6f6f6, #dbdddf);
-  color: #707980;
-  font-size: 9px;
-}
-/* 状态栏里那根分隔：真的 1px 竖线，替代原来「　│　」的拼法 */
-.chat-status > .chat-st-sep {
-  display: inline-block;
-  width: 1px;
-  height: 8px;
-  margin: 0 6px;
-  background: #b0b9c0;
-}
 
 .clinic {
   background: #d9e0e6;
@@ -3973,8 +3639,9 @@ button.mail-row:hover { background: #121a23; }
   letter-spacing: 0.04em;
 }
 
-/* 「To do」页底下那一小块：这一章还要摆弄的几张纸（四条／摆在一起／对照纸）。
-   三样都是「做到一半」的状态，所以每行右端带一句进度——裸链接每打开一次都要重新确认到哪了。
+/* 「To do」页底下那一行纸：这一章还要动手摆的一张（第 4 关摆在一起、第 9 关对照纸）。
+   只此一行，所以不再给它「要摆的纸」这个类名标题——那一行自己写着名字和进度。
+   四条（看楼那两章）不在这里：它是张对照表，直接摊在页上（`.four-list.four-cols`）。
    从前这里是簿子顶上并排的一行文字链接，跟一个时间点、一个人挤在同一级（10-29）。 */
 .todo-papers { margin-top: 2px; }
 .todo-paper {
@@ -4649,19 +4316,6 @@ button.mail-row:hover { background: #121a23; }
     width: 100%;
   }
 
-  .chat {
-    width: 100%;
-    height: calc(100vh - 56px);
-    /* 同上：手机上按看得见的高度算，别按隐掉地址栏那个高度 */
-    height: calc(100dvh - 56px);
-    min-height: 0;
-    margin: 0;
-  }
-
-  .chat-tools button {
-    padding: 5px 6px;
-  }
-
 }
 
 .web-link { color: #1f4f96; cursor: pointer; }
@@ -5245,9 +4899,10 @@ body .wall-photo-sheet .img-slot.wall-photo-lg::after { content: none; }
   0%, 40% { background-color: #fff6cc; }
   100% { background-color: #fffdf3; }
 }
-/* 收件箱从「一条条 + 回应」换成左人右话（10-30）。旧的 .wall-mail / .wall-mail-meta
-   是那一版的列表样式，收件箱重写后没人再用，整块删掉——留着会让下一个人以为还有第二条渲染路径。 */
-.post.fresh, .post-reply.fresh, .wall-line.fresh .wall-bubble {
+/* 收件箱 10-30 与「倾偈」并成一处，样式在下面那一节（.inbox-*）。
+   上一版的 .wall-mail / .wall-msg-* / .wall-line 那一套已经没人用，整块删掉——
+   留着会让下一个人以为还有第二条渲染路径。 */
+.post.fresh, .post-reply.fresh {
   animation: wall-fresh-fade 6s ease-out forwards;
 }
 .post-new {
@@ -5323,18 +4978,43 @@ body .wall-photo-sheet .img-slot.wall-photo-lg::after { content: none; }
 }
 .wall-notice-time { margin-left: 8px; color: #98a197; }
 
-/* ---- 收件箱：左联系人、右对话。刻意不长成首页那样 ---- */
-.wall-mail-note { margin: -6px 0 12px; color: #7c867e; font-size: 11px; }
-.wall-mail-split {
+/* ---- 收件箱：墙簿站内的一页，不是桌面上再开一个窗 ----
+   上一版把「倾偈」那套窗壳整套搬了过来：绿渐变标题条＋×、一条工具条、最底一条状态条，
+   外面还套着 .wall-profile 的浅底——三层边线叠着，读起来是「大界面套小界面」。
+   现在只留一层，跟 .post 同一种画法：1px 细线、白底、无阴影，两栏之间一条竖线。
+   关掉它靠上面那条「« 返回 墙簿」，跟这一站别的内页一样——网页里没有第二个 ×。
+   前缀用 inbox 不用 mail：「站内留言」（廿八屋）与手机邮件（iOS 7 那个）已经占着
+   .mail-body / .mail-meta / .mail-status，重名不会报错，只会把别人那两处画坏。 */
+.mailbox {
   display: grid;
-  grid-template-columns: 178px minmax(0, 1fr);
+  grid-template-columns: 224px minmax(0, 1fr);
+  /* 这一页比两句话高：撑到跟页面差不多，别缩成一个浮在绿底上的小方块。
+     底下那一格按钮贴着栏底，中间空着——真实的对话页就长这样。 */
+  min-height: 400px;
   border: 1px solid #cbd6c8;
   background: #fff;
 }
-.wall-msg-list { border-right: 1px solid #cbd6c8; background: #f7f9f5; }
-.wall-msg-who {
+/* 左栏比右栏浅一格就够分开两栏，不再给这一栏加边——加了就是第二个框 */
+.inbox-who-list { border-right: 1px solid #dbe3d8; background: #f4f7f2; }
+/* 搜索框常住栏顶：有字就是在翻旧记录，清掉就回到这一栏。
+   早一版是「查找记录」按钮，点开才冒一条工具条＋一行输入框——二〇一四年的网页上没有那一层。 */
+.inbox-search { padding: 8px 8px 7px; border-bottom: 1px solid #e3e9e1; }
+.inbox-search input {
+  width: 100%;
+  box-sizing: border-box;
+  height: 24px;
+  padding: 0 6px;
+  border: 1px solid #c3cfc0;
+  background: #fff;
+  color: #222;
+  font: inherit;
+  font-size: 12px;
+}
+.inbox-search input:focus { outline: 0; border-color: #7d9d84; }
+.inbox-people { display: block; }
+.inbox-who {
   display: grid;
-  grid-template-columns: 30px minmax(0, 1fr) auto;
+  grid-template-columns: 30px minmax(0, 1fr) 8px;
   align-items: center;
   gap: 7px;
   width: 100%;
@@ -5346,89 +5026,203 @@ body .wall-photo-sheet .img-slot.wall-photo-lg::after { content: none; }
   font: inherit;
   cursor: pointer;
 }
+.inbox-who:last-child { border-bottom: 0; }
 /* 选中态不用 outline：那是浏览器画焦点框的东西，放在这一屏像「控件被选中」，
-   不是「人翻到这一栏」。用贴边实线 + 白底。 */
-.wall-msg-who.on { background: #fff; box-shadow: inset 3px 0 #4f7657; }
-.wall-msg-who:hover { background: #fff; }
-.wall-face {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+   不是「人翻到这一栏」。用贴边实线＋白底。 */
+.inbox-who.on { background: #fff; box-shadow: inset 3px 0 #4f7657; }
+.inbox-who:hover { background: #fff; }
+/* 头像：一块灰底的人形剪影，不取名字第一个字做方块。
+   二〇一四年这里就是这样一个默认头像；字母方块是后来那批邮箱的样子，
+   而且「同事阿诗」顶着个「同」、「全部记录」顶着个「全」，怎么读都不对。 */
+.inbox-face {
+  position: relative;
+  display: block;
   width: 30px;
   height: 30px;
-  border: 1px solid #bac7b7;
-  background: #edf2e9;
-  color: #55715a;
-  font: 700 13px "SimSun", serif;
+  border: 1px solid #c3cfc0;
+  background: #e9eee6;
+  overflow: hidden;
 }
-.wall-face.sm { flex: 0 0 auto; width: 24px; height: 24px; font-size: 11px; }
-.wall-msg-who-main { display: block; min-width: 0; }
-.wall-msg-who-name { display: block; color: #386b43; font-size: 12px; font-weight: 700; }
-.wall-msg-who-last {
-  display: block;
+.inbox-face::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 16%;
+  width: 32%;
+  height: 32%;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: #b6c3b3;
+}
+.inbox-face::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -12%;
+  width: 64%;
+  height: 50%;
+  transform: translateX(-50%);
+  border-radius: 50% 50% 0 0;
+  background: #b6c3b3;
+}
+/* 表姐那格是照片，不是剪影：.img-slot 自带 64 的最小高与深色底，这里压回小方块 */
+.inbox-ava {
+  flex: 0 0 30px;
+  width: 30px;
+  height: 30px;
+  min-height: 0;
+  border: 1px solid #c3cfc0;
+  background: #e6ebe4;
+  overflow: hidden;
+}
+.inbox-ava img { object-position: center 12%; }
+.inbox-who-main { display: block; min-width: 0; }
+.inbox-who-name { display: block; color: #386b43; font-size: 12px; font-weight: 700; }
+/* 名字独占一行；时刻与摘要挤在第二行，时间在前、摘要在后吃掉余宽 */
+.inbox-who-meta { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
+.inbox-who-time { flex: 0 0 auto; color: #a7b0a7; font-size: 10px; white-space: nowrap; }
+.inbox-who-last {
+  flex: 1 1 auto;
+  min-width: 0;
   overflow: hidden;
   color: #8d968e;
   font-size: 11px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.wall-msg-who-time { align-self: start; color: #a7b0a7; font-size: 10px; white-space: nowrap; }
-.wall-msg-pending {
+/* 待回的点贴在名字那一行：两行高的格子里居中会落到名字与摘要之间，看着像个句号 */
+.inbox-pending {
+  align-self: start;
   width: 7px;
   height: 7px;
+  margin-top: 8px;
   border-radius: 50%;
   background: #c9803a;
 }
-.wall-thread { min-width: 0; padding: 10px 12px 14px; }
-.wall-thread-head {
+.inbox-thread { display: flex; flex-direction: column; min-width: 0; }
+/* 对上那条抬头：名字＋此刻在不在。没有第二条底纹、没有工具条。 */
+.inbox-contact {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex-shrink: 0;
+  padding: 10px 16px 9px;
+  border-bottom: 1px solid #e3e9e1;
+}
+.inbox-contact .inbox-face,
+.inbox-contact .inbox-ava { flex: 0 0 34px; width: 34px; height: 34px; min-height: 0; }
+.inbox-contact-main { display: block; min-width: 0; }
+.inbox-contact-main strong { display: block; color: #2f5540; font-size: 13px; line-height: 1.4; }
+.inbox-contact-main span { display: block; color: #7b8c84; font-size: 10px; line-height: 1.5; }
+.inbox-stream {
+  flex: 1 1 auto;
+  min-height: 0;
+  min-height: 240px;
+  max-height: 52vh;
+  overflow: auto;
+  padding: 10px 16px 12px;
+}
+.inbox-row { padding: 8px 0 9px; border-bottom: 1px dotted #dde3da; }
+.inbox-row:last-child { border-bottom: 0; }
+.inbox-meta {
   display: flex;
   align-items: baseline;
   gap: 8px;
-  margin: 0 0 12px;
-  padding-bottom: 7px;
-  border-bottom: 1px dotted #ccd3ca;
+  margin-bottom: 5px;
+  color: #4c7a58;
+  font-size: 11px;
+  line-height: 1.4;
+  letter-spacing: .02em;
 }
-.wall-thread-head a { color: #386b43; font-size: 13px; font-weight: 700; }
-.wall-thread-sub { color: #8d968e; font-size: 11px; }
-.wall-line { display: flex; gap: 7px; align-items: flex-start; margin: 0 0 10px; }
-.wall-line.mine { flex-direction: row-reverse; }
-.wall-say { min-width: 0; max-width: 78%; }
-.wall-line.mine .wall-say { text-align: right; }
-.wall-bubble {
-  display: inline-block;
-  padding: 6px 9px;
-  border: 1px solid #d3dbd0;
-  background: #f2f5ef;
-  color: #333;
-  font-size: 12px;
-  line-height: 1.6;
-  text-align: left;
+.inbox-meta > .ix-who { color: #386b43; font-weight: 700; }
+/* 抬头里的时刻与日子压淡一点，跟名字分开：不改字号，只差颜色 */
+.inbox-meta > .ix-time,
+.inbox-meta > .ix-day { color: #9aa79a; font-size: .94em; letter-spacing: .04em; }
+.inbox-row.mine .inbox-meta { color: #6d8a6d; }
+.inbox-text {
+  padding-left: 12px;
+  color: #222;
+  font-size: 13px;
+  line-height: 1.75;
   overflow-wrap: anywhere;
 }
-.wall-line.mine .wall-bubble { border-color: #cbdcc9; background: #e7f0e3; }
-.wall-time { margin-top: 3px; color: #a7b0a7; font-size: 10px; }
-.wall-acts { margin: -4px 0 12px; }
-.wall-acts .post-actions { text-align: left; }
-/* 窄屏：联系人从竖列改成横条，点一下换人——一套结构两种排法，不用写第二套 DOM。 */
+/* 新到的那几句淡黄底慢慢褪；「新」字留在联系人栏，不在这行字上 */
+.inbox-row.fresh .inbox-text { animation: wall-fresh-fade 6s ease-out forwards; }
+.inbox-acts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0 2px 12px;
+}
+.inbox-acts-h { color: #8ba08f; font-size: 10px; letter-spacing: .1em; }
+.inbox-pick {
+  padding: 5px 10px;
+  border: 1px solid #b6c3cc;
+  border-radius: 2px;
+  background: #fbfdfb;
+  color: #214e7b;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.inbox-pick:hover { border-color: #4f7657; background: #f3f8ef; color: #2f5540; }
+.inbox-kept { color: #a59a7d; font-size: 11px; }
+/* 底下那一格：只有实时那一段有（留言是隔几天才看到，没有当场回的话）。
+   不写「发送：」这类抬头——二〇一四年的对话窗里，按钮本来就长在输入框的位置上。 */
+.inbox-send {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  padding: 9px 16px;
+  border-top: 1px solid #dbe3d8;
+  background: #fafbf8;
+}
+.inbox-send-btn {
+  padding: 6px 11px;
+  border: 1px solid #b6c3c9;
+  border-radius: 2px;
+  background: #fff;
+  color: #2f5540;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.inbox-send-btn:hover { border-color: #4f7657; background: #f6faf3; }
+/* 查找出来的每一句：不分人也不分日子，只按时间一条条排下来 */
+.inbox-find-list { display: block; }
+.inbox-hit { padding: 8px 0 9px; border-bottom: 1px dotted #dde3da; }
+.inbox-hit:last-child { border-bottom: 0; }
+.inbox-empty { margin: 14px 0; color: #6d7883; font-size: 12px; }
+/* 窄屏：人从竖列改成顶上一条横的，点一下换人——一套结构两种排法，不用写第二套 DOM。 */
 @media (max-width: 720px) {
-  .wall-mail-split { grid-template-columns: minmax(0, 1fr); }
-  .wall-msg-list {
-    display: flex;
-    overflow-x: auto;
-    border-right: 0;
-    border-bottom: 1px solid #cbd6c8;
-  }
-  .wall-msg-who {
+  .mailbox { grid-template-columns: minmax(0, 1fr); }
+  .inbox-who-list { border-right: 0; border-bottom: 1px solid #dbe3d8; }
+  .inbox-people { display: flex; overflow-x: auto; }
+  .inbox-who {
     flex: 0 0 auto;
     width: auto;
-    grid-template-columns: 26px auto;
+    /* 头像本身 30，列给 26 的话名字会压到头像边上 */
+    grid-template-columns: 30px auto;
     border-right: 1px solid #e3e9e1;
     border-bottom: 0;
-    /* 触屏判据 32：横向条不该比竖列矮 */
-    min-height: 40px;
+    /* 触屏判据 32：横条不该比竖列矮 */
+    min-height: 44px;
   }
-  .wall-msg-who-last, .wall-msg-who-time, .wall-msg-pending { display: none; }
-  .wall-say { max-width: 86%; }
+  .inbox-who-meta, .inbox-pending { display: none; }
+  /* 横条里再画左边那根竖线就成了「左边界」，换成脚下一道，看着像页签 */
+  .inbox-who.on { box-shadow: inset 0 -3px #4f7657; }
+  .inbox-stream { max-height: none; }
+  .inbox-text { font-size: 14px; }
+}
+/* 触屏：回应钮 26 高、发送钮 28 高，指头都按不准。竖着撑高，横着不动——
+   这一条里按钮旁边都是空白，撑高不会挤到别的字。 */
+@media (pointer: coarse) {
+  .inbox-pick,
+  .inbox-send-btn { min-height: 32px; display: inline-flex; align-items: center; padding: 0 12px; }
+  .inbox-search input { height: 32px; }
 }
 .wall-grid .wall-rail { align-content: start; }
 .side-friend {
@@ -5591,7 +5385,6 @@ body .wall-photo-sheet .img-slot.wall-photo-lg::after { content: none; }
    负外边距会把热区压到上面那一行回帖的名字上，点错就跳去别人的个人页。 */
 @media (pointer: coarse) {
   .wall-site .post-actions a,
-  .wall-thread-head a,
   .wall-draft-drop {
     display: inline-flex;
     align-items: center;
@@ -5600,7 +5393,6 @@ body .wall-photo-sheet .img-slot.wall-photo-lg::after { content: none; }
   /* 横着多给一点：只有竖着撑高，「回应」还是三十来像素宽。
      右边是空的，负外边距放得下，字不会真的往里缩。 */
   .wall-site .post-actions a { justify-content: flex-end; padding: 0 8px; margin-right: -8px; }
-  .wall-thread-head a { padding: 0 6px; margin-left: -6px; }
   .wall-draft-opt { min-height: 32px; padding: 6px 8px; }
   .wall-draft-send { min-height: 32px; padding: 6px 14px; }
   .wall-draft-input { min-height: 32px; }
@@ -5875,11 +5667,13 @@ body .wall-photo-sheet .img-slot.wall-photo-lg::after { content: none; }
   font-size: 18px;
   font-weight: 700;
 }
+/* 这一句是她自己在纸上写的一句，不是界面给的提示——
+   从前行头挂一个「提示」标，把她说的话读成了系统消息（10-30）。
+   靠斜体＋赭色跟上面的清单分开，不加标签。 */
 .diary-folio-page > .task-hint {
   margin-top: var(--diary-cell, 28px);
   font-size: 15px;
 }
-.diary-folio-page > .task-hint::before { content: "提示"; display: inline-block; margin-right: 0.85em; font-style: normal; font-weight: 700; }
 .diary-nav { display: flex; flex: 0 0 auto; align-items: center; gap: 4px; }
 .diary-btn.diary-flip {
   flex: 0 0 auto;
@@ -6251,6 +6045,22 @@ body .wall-photo-sheet .img-slot.wall-photo-lg::after { content: none; }
 .four-list li.empty { color: #9a9084; }
 .four-list small { display: block; color: #6f675c; font-size: var(--type-meta); line-height: 1.4; }
 .four-list .tonight { color: #2b5a7e; }
+/* 摊在 To do 页上的四条：两列。每格只有四五个字，一行一条白占四个格子高——
+   而这一页本来就容易翻页。窄屏仍并排：两列各十几个字，还装得下。 */
+.four-list.four-cols {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 14px;
+  margin-bottom: 2px;
+}
+/* 「哪一间四条都过」这一句横跨两列，跟着四行走，不单起一个段落 */
+.four-list.four-cols li.four-ok {
+  grid-column: 1 / -1;
+  margin-top: 2px;
+  color: #6f675c;
+  font-size: var(--type-meta);
+  line-height: 1.5;
+}
 .four-k { font-weight: 500; }
 /* 三栏：行头写这一行说的是哪件东西，后面才是「头两个礼拜／十五号之后」两格。
    行头是给她看「放哪里」的，不是答案——答案在卡片该落哪一边。 */
@@ -7976,12 +7786,11 @@ html.screen-on body::after {
   .chip { display: inline-block; padding: 6px 0; font-size: 13px; }
   .web-link { display: inline-block; padding: 4px 0; }
   .wall-nav-item { min-height: 32px; font-size: 13px; }
-  .chat-close { width: 34px; height: 30px; }
   .window-x { min-width: 34px; min-height: 28px; margin: -6px -4px -6px 4px; font-size: 16px; line-height: 28px; }
   #map-close { min-height: 32px; }
   .post-meta, .post-actions, .post-new, .post-reply-time, .rent small,
   .phone-status, .sms-status, .phone-fakekeys, .sms-time,
-  .chat-contact span, .chat-choices::before, .chat-status, .bubble-meta { font-size: 11px; }
+  .inbox-contact-main span, .ix-time, .ix-day { font-size: 11px; }
   .test-list a { display: inline-block; padding: 6px 0; }
 }
 /* 手机横过来：竖屏布局塞不下（通话框、日历、浏览器都会被裁），提示竖过来 */

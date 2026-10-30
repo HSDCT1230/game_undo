@@ -12,7 +12,6 @@
   --wall: #3b5a9a;
   --ok: #2f6f4e;
   --warn: #9a3b2f;
-  --chat: #2a8f6a;
   --type-title: 22px;
   --type-body: 18px;
   --type-speak: 16px;
@@ -33,10 +32,6 @@
   --who-msg: 14px;
   --lh-say-msg: 1.7;
   --lh-who-msg: 1.25;
-  --say-chat: 12px;
-  --who-chat: 10px;
-  --lh-say-chat: 1.7;
-  --lh-who-chat: 1.2;
   /* 旁白规格：屏幕上的叙述，不是台词，也不是纸上的字。
      场景旁白、章末字幕、章节开场、地点注、电话旁白五处一律取这几格——
      以前五处各写一套（13／15／18／20px，字距 0／.08／.1／.12／.14em），
@@ -364,7 +359,6 @@ html:not(.dev-pics) .img-slot.missing .img-mark { color: transparent; background
   margin: 0 auto 16px;
 }
 .day-img { margin: 0; }
-.chat-ava { width: 36px; height: 36px; margin-right: 8px; flex: 0 0 36px; }
 .talk { position: relative; }
 .talk-bg {
   position: absolute;
@@ -647,8 +641,8 @@ html:not(.dev-pics) .img-slot.missing .img-mark { color: transparent; background
   text-indent: 0.35em;
   line-height: 1;
 }
-.choices:not(.chat-choices) > button::before,
-.choices:not(.chat-choices) > button::after,
+.choices > button::before,
+.choices > button::after,
 .face-choices > button::before,
 .face-choices > button::after,
 .phone-choices > button::before,
@@ -809,20 +803,6 @@ html:not(.dev-pics) .img-slot.missing .img-mark { color: transparent; background
 }
 .hot:hover { border-color: #e2c48a; }
 .hot small { display: block; color: #9a9084; margin-top: 4px; }
-
-.chat {
-  max-width: 520px;
-  margin: 24px auto;
-  background: #ededed;
-  min-height: 560px;
-  display: flex;
-  flex-direction: column;
-}
-.chat-bar { background: var(--chat); color: #fff; padding: 10px 14px; display: flex; align-items: center; }
-.bubbles { flex: 1; padding: 14px; display: grid; gap: 8px; align-content: start; }
-.bubble { max-width: 80%; padding: 8px 10px; border-radius: 4px; font-size: 14px; line-height: 1.55; }
-.bubble.she { background: #fff; justify-self: start; }
-.bubble.me { background: #a9e5c4; justify-self: end; }
 
 .clinic {
   min-height: 100%;

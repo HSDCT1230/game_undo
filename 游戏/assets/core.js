@@ -58,7 +58,7 @@ const LANG_LABEL = { both: "普＋粤", yue: "粤语", zh: "普通话" };
 const SIZE_KEY = "undo-size";
 const SIZE_STEPS = [1, 1.15, 1.3];
 const SIZE_LABEL = ["字　中", "字　大", "字　特大"];
-const SIZE_VARS = { "--say-face": 18, "--say-choice": 16, "--say-phone": 15, "--say-msg": 17, "--say-chat": 12 };
+const SIZE_VARS = { "--say-face": 18, "--say-choice": 16, "--say-phone": 15, "--say-msg": 17 };
 
 let langMode = "yue";
 let sizeStep = 0;
@@ -374,8 +374,10 @@ const initial = () => ({
   wait: null,
   place: "nowhere",
   known: {},
-  chatHist: false,
-  chatQuery: "",
+  // 收件箱（＝倾偈）自己的两项：实时那一段是哪一场、搜索框里那串字。
+  // 早一版还有个「查找开着没有」的开关，那是工具条年代的；现在有字就是在查，删掉。
+  mailPack: "",
+  mailQuery: "",
   level: 0,
   levelMark: null,
   card: null,

@@ -1478,16 +1478,19 @@ function listFilterBar() {
 
 function districtBar() {
   return el("div", { class: "district-grid compact" }, HK_DISTRICTS.map((d) =>
-      el("button", {
-        type: "button",
+    el("button", {
+      type: "button",
       class: "dist" + (districtSelected(d) ? " dist-on" : ""),
-        onclick: () => {
-        S.query = d;
-        S.listFilter = "all";
+      onclick: () => {
+        // 地区与上面那排类型是「与」的关系，点地区不该动类型。
+        // 从前这一行写着 S.listFilter = "all"：先点「房东直租」再点地区，
+        // 类型就被悄悄清回「全部」，筛出来的盘也跟着变了——看着像页面自己跳回去。
+        // 同一个地区再点一次也不重写查询串：她已经打进去的字别丢。
+        if (!districtSelected(d)) S.query = d;
         flag("searched", true);
         markOwnSearch();
-          draw();
-        },
+        draw();
+      },
     }, [d])
   ));
 }
@@ -3088,9 +3091,39 @@ function lokOnline() {
   return webAgo(last ? last.t : webDate("07-31", "22:55"));
 }
 
-/* 收件箱跟首页刻意不同形：首页问「谁在哪天发了什么」（按时间、帖子流），
-   这里问「谁找过你、你们说过什么」（按人、对话）。两套形状不一样，
-   玩家就不会再问「这句为什么在这边」。 */
+/* 收件箱与「倾偈」并成一处的样子：窗口标题条、头像行、点线排下来的对话、底下一格发送。
+   墙簿里不再有第二种私信界面——同一个人说的话只在一个地方，玩家不用记住哪句在哪边。
+   首页问「谁在哪天发了什么」（按时间、帖子流），这里问「谁找过你、你们说过什么」（按人、对话）。 */
+
+/* 倾偈那两场（八月八日夜里、八月十五日早上）现在排在收件箱里，
+   由 story-early.js 的 MAIL_PACKS 登记；没开场之前一行都不出现。 */
+function mailPacks() {
+  const out = [];
+  if (typeof MAIL_PACKS === "undefined") return out;
+  MAIL_PACKS.forEach((p) => {
+    const lines = typeof chatPackLines === "function" ? chatPackLines(p.id) : [];
+    if (lines.length) out.push({ pack: p, lines });
+  });
+  return out;
+}
+
+function mailPackTime(pack, i) {
+  return new Date(webDate(pack.at[0], pack.at[1]).getTime() + (i || 0) * 60000);
+}
+
+// 最后说话那一刻：留言与实时那几段一起算，联系人栏才排得对
+function mailLastLine(who, items) {
+  let best = items.length
+    ? { t: items[items.length - 1].t, text: Ty(items[items.length - 1].e, "text") }
+    : null;
+  mailPacks().forEach(({ pack, lines }) => {
+    if (pack.who !== who || !lines.length) return;
+    const t = mailPackTime(pack, lines.length - 1);
+    if (!best || t > best.t) best = { t, text: lines[lines.length - 1][1] };
+  });
+  return best;
+}
+
 function wallMailThreads() {
   const by = {};
   const order = [];
@@ -3098,11 +3131,16 @@ function wallMailThreads() {
     if (!by[e.who]) { by[e.who] = []; order.push(e.who); }
     by[e.who].push({ e, t });
   });
+  // 只有实时那一段、还没有留言的人也要出现在栏里，不然开场第一句会没地方落
+  mailPacks().forEach(({ pack }) => {
+    if (!by[pack.who]) { by[pack.who] = []; order.push(pack.who); }
+  });
   return order.map((who) => {
     const items = by[who].sort((a, b) => a.t - b.t);
-    const last = items[items.length - 1];
-    return { who, name: last.e.name || WALL_NAMES[who] || who, items, last };
-  }).sort((a, b) => b.last.t - a.last.t);
+    const last = mailLastLine(who, items);
+    const name = (items.length && items[items.length - 1].e.name) || WALL_NAMES[who] || who;
+    return { who, name, items, last };
+  }).filter((th) => th.last).sort((a, b) => b.last.t - a.last.t);
 }
 
 function wallThreadKeys(th) {
@@ -3114,15 +3152,106 @@ function wallThreadKeys(th) {
   return keys;
 }
 
-// 一句话一个气泡：对方在左、我回的在右。名字只在左边露一个字，跟帖子头像同一个做法。
-function wallMsgRow(mine, name, body, time, isFresh) {
-  return el("div", { class: "wall-line" + (mine ? " mine" : "") + (isFresh ? " fresh" : "") }, [
-    mine ? "" : el("span", { class: "wall-face sm" }, [String(name || "?").slice(0, 1)]),
-    el("div", { class: "wall-say" }, [
-      el("div", { class: "wall-bubble" }, body),
-      el("div", { class: "wall-time" }, [time]),
+/* 头像：表姐有照片；其余人墙簿只给了个剪影。
+   早一版取名字第一个字做成方块，于是「同事阿诗」顶着个「同」、「全部记录」顶着个「全」——
+   字母方块是后来那批邮箱的样子，二〇一四年这里就是一块灰底的人形。 */
+function mailFace(who, name) {
+  if (who === "mei") return imgSlot("00-通用/头像-陈美娟", "inbox-ava", name);
+  return el("span", { class: "inbox-face", "aria-hidden": "true" });
+}
+
+/* 一行一句：抬头「谁　几点」，正文缩进一格，行间一条点线。
+   不分成左右两团——一屏里常常来回好几轮，左右翻会看丢上一句是谁说的。
+   名字带 inbox 前缀：story-late 里那个 mailRow 是校园邮箱的列表行，两个都叫 mailRow 会互相顶掉。 */
+function inboxRow(mine, name, body, time, isFresh) {
+  return el("div", { class: "inbox-row" + (mine ? " mine" : "") + (isFresh ? " fresh" : "") }, [
+    el("div", { class: "inbox-meta" }, [
+      el("span", { class: "ix-who" }, [name]),
+      el("span", { class: "ix-time" }, [time]),
     ]),
+    el("div", { class: "inbox-text" }, body),
   ]);
+}
+
+/* 回一句：点哪句发哪句。旧版是「先展开草稿、再按发送」两步，那是表单的做法；
+   窗口里没有那一步，倾偈也没有。 */
+function mailReply(e) {
+  if (wallMine(e)) return el("div", { class: "inbox-acts" }, [el("span", { class: "inbox-kept" }, ["已回复"])]);
+  if (e.mute) return el("div", { class: "inbox-acts" }, [webLink("回复", () => wallAnswer(e))]);
+  if (!e.answer || !e.answer.length) return null;
+  return el("div", { class: "inbox-acts" }, [
+    // 「回一句」不是「发送」：这是隔了几天才看到的留言，不是当场对着说话
+    el("span", { class: "inbox-acts-h" }, ["回一句"]),
+    ...e.answer.map((a) => el("button", {
+      type: "button",
+      class: "inbox-pick",
+      onclick: () => wallSendAnswer(e, a),
+    }, [a.text])),
+  ]);
+}
+
+function mailThreadNodes(th, fresh) {
+  const items = [];
+  th.items.forEach(({ e, t }) => {
+    items.push({
+      t,
+      node: inboxRow(false, e.name || WALL_NAMES[th.who] || th.who, wallNoteParts(Ty(e, "text"), e), webAgo(t), fresh.includes(e.id)),
+    });
+    let end = t.getTime();
+    wallReplies(e).forEach((x) => {
+      const mine = x.r.who === "me";
+      const body = x.r.zh != null ? [T(x.r.text, x.r.zh)] : [hkAd(x.r.text)];
+      items.push({ t: x.t, node: inboxRow(mine, x.r.name, body, webAgo(x.t), fresh.includes(x.key)) });
+      end = Math.max(end, x.t.getTime());
+    });
+    const act = mailReply(e);
+    if (act) items.push({ t: new Date(end + 1), node: act });
+  });
+  mailPacks().forEach(({ pack, lines }) => {
+    if (pack.who !== th.who) return;
+    lines.forEach(([k, t], i) => {
+      const mine = k === "me";
+      items.push({
+        t: mailPackTime(pack, i),
+        node: inboxRow(mine, mine ? "章慧琪" : th.name, [t], chatClock(i, pack.id), false),
+      });
+    });
+  });
+  return items.sort((a, b) => a.t - b.t).map((x) => x.node);
+}
+
+// 查找记录：翻的是所有人、所有日子，不只是这一栏。
+function mailArchive() {
+  const rows = [];
+  wallShown(WALL_MAIL).forEach(({ e, t }) => {
+    rows.push({ who: e.name || WALL_NAMES[e.who] || e.who, t, text: Ty(e, "text") });
+    wallReplies(e).forEach((x) => {
+      rows.push({ who: x.r.name, t: x.t, text: x.r.zh != null ? T(x.r.text, x.r.zh) : x.r.text });
+    });
+  });
+  mailPacks().forEach(({ pack, lines }) => {
+    lines.forEach(([k, text], i) => rows.push({
+      who: k === "me" ? "章慧琪" : (WALL_NAMES[pack.who] || pack.who),
+      t: mailPackTime(pack, i),
+      text,
+    }));
+  });
+  return rows.sort((a, b) => a.t - b.t);
+}
+
+function mailFindHits(q) {
+  return mailArchive().filter((r) => !q || ((r.who || "") + r.text).includes(q));
+}
+
+function mailFindList(hits) {
+  if (!hits.length) return el("p", { class: "inbox-empty" }, ["没有符合的记录。"]);
+  return el("div", { class: "inbox-find-list" }, hits.map((r) => el("div", { class: "inbox-hit" }, [
+    el("div", { class: "inbox-meta" }, [
+      el("span", { class: "ix-day" }, [webStamp(r.t)]),
+      el("span", { class: "ix-who" }, [r.who]),
+    ]),
+    el("div", { class: "inbox-text" }, [r.text]),
+  ])));
 }
 
 function viewWallMail() {
@@ -3135,55 +3264,102 @@ function viewWallMail() {
   if (!keep) S.wallMailWho = (threads.find((th) => freshN(th)) || threads[0]).who;
   const now = threads.find((th) => th.who === S.wallMailWho) || threads[0];
 
-  const list = el("div", { class: "wall-msg-list" }, threads.map((th) => {
+  // 搜索框常驻在左栏顶上，跟邮箱一样：有字就是在翻旧记录，清掉就回到这一栏。
+  // 早一版是个「查找记录」按钮，点开才冒出一条工具条＋一行输入框——那一层工具条
+  // 在二〇一四年的网页上没有对应的东西，看着像客户端。
+  const q = (S.mailQuery || "").trim();
+  const find = el("input", { type: "search", value: S.mailQuery || "", placeholder: "搜索消息", "aria-label": "搜索消息" });
+  // 每打一个字就重画整页，所以这一格是新造的。两件事要自己接：
+  // ① 焦点回到新格上（pin() 里做），② 光标停在末尾——不接的话它停在 0，
+  //    打「水声」出来是「声水」；③ 拼音还没上屏时别重画，重画会把输入法正在拼的那个词打断。
+  let composing = false;
+  find.addEventListener("compositionstart", () => { composing = true; });
+  find.addEventListener("compositionend", () => {
+    composing = false;
+    S.mailQuery = find.value;
+    draw();
+  });
+  find.addEventListener("input", () => {
+    S.mailQuery = find.value;
+    if (composing) return;
+    draw();
+  });
+
+  // 人包在 .inbox-people 里：窄屏要把这一栏横过来滚，搜索框得单独占一行，
+  // 不包一层就只能跟着一起滚。
+  const people = threads.map((th) => {
     const n = freshN(th);
     // 有人问了她还没回：列表上挂一个点，不用点进去也知道这栏有事
     const pending = th.items.some(({ e }) => e.answer && !wallMine(e));
     return el("button", {
       type: "button",
-      class: "wall-msg-who" + (th.who === now.who ? " on" : ""),
+      class: "inbox-who" + (!q && th.who === now.who ? " on" : ""),
       "aria-current": th.who === now.who ? "true" : "false",
-      onclick: () => { S.wallMailWho = th.who; draw(); },
+      onclick: () => { S.wallMailWho = th.who; S.mailQuery = ""; draw(); },
     }, [
-      el("span", { class: "wall-face" }, [th.name.slice(0, 1)]),
-      el("span", { class: "wall-msg-who-main" }, [
-        el("span", { class: "wall-msg-who-name" }, [th.name, n ? el("em", { class: "post-new" }, ["新"]) : ""]),
-        el("span", { class: "wall-msg-who-last" }, [Ty(th.last.e, "text")]),
+      mailFace(th.who, th.name),
+      // 名字独占一行，时刻与摘要挤在第二行：左栏只有两百来像素，
+      // 把时刻放在名字那一行的右边，名字与摘要就都只剩五六个字的宽度。
+      el("span", { class: "inbox-who-main" }, [
+        el("span", { class: "inbox-who-name" }, [th.name, n ? el("em", { class: "post-new" }, ["新"]) : ""]),
+        el("span", { class: "inbox-who-meta" }, [
+          el("span", { class: "inbox-who-time" }, [webAgo(th.last.t)]),
+          el("span", { class: "inbox-who-last" }, [th.last.text]),
+        ]),
       ]),
-      el("span", { class: "wall-msg-who-time" }, [webAgo(th.last.t)]),
-      pending ? el("i", { class: "wall-msg-pending", title: hkAd("还没回") }) : "",
+      pending ? el("i", { class: "inbox-pending", title: hkAd("还没回") }) : "",
     ]);
-  }));
-
-  const rows = [];
-  now.items.forEach(({ e, t }) => {
-    rows.push(wallMsgRow(false, e.name, wallNoteParts(Ty(e, "text"), e), webAgo(t), fresh.includes(e.id)));
-    wallReplies(e).forEach((x) => {
-      const mine = x.r.who === "me";
-      const body = x.r.zh != null ? [T(x.r.text, x.r.zh)] : [hkAd(x.r.text)];
-      rows.push(wallMsgRow(mine, x.r.name, body, webAgo(x.t), fresh.includes(x.key)));
-    });
-    const act = wallActions(e, hkAd("回复"));
-    if (act) rows.push(el("div", { class: "wall-acts" }, [act]));
   });
+
+  const list = el("div", { class: "inbox-who-list" }, [
+    el("div", { class: "inbox-search" }, [find]),
+    el("div", { class: "inbox-people" }, people),
+  ]);
+
+  const stream = el("div", { class: "inbox-stream" });
+  if (q) stream.append(mailFindList(mailFindHits(q)));
+  else stream.append(...mailThreadNodes(now, fresh));
+
+  // 实时那一段（表姐）的发送栏排在留言后面，由 story-early.js 按当年倾偈的规矩给。
+  // 搜索时不放——翻旧记录的时候不该摆一排「发送：」。
+  const send = !q && typeof mailChatFooter === "function" ? mailChatFooter(now.who) : null;
+
+  // 一页，不是桌面上再放一个窗：只有左右两栏和一条竖线，没有第二层标题条、没有 ×。
+  // 关掉它靠上面那条「返回墙簿」，跟这一站别的内页一样。
+  const win = el("div", { class: "mailbox" }, [
+    list,
+    el("div", { class: "inbox-thread" }, [
+      q ? "" : el("div", { class: "inbox-contact" }, [
+        mailFace(now.who, now.name),
+        el("span", { class: "inbox-contact-main" }, [
+          el("strong", {}, [now.name]),
+          el("span", {}, [wallStatus(now.who).text || "离线"]),
+        ]),
+      ]),
+      stream,
+      send || "",
+    ]),
+  ]);
 
   const wrap = el("div", { class: "hk-site wall-site" });
   wrap.append(wallHeader());
   wrap.append(el("div", { class: "wall-profile" }, [
     backLink("墙簿", wallGoHome),
-    el("h2", {}, [W("wallMail")]),
-    el("p", { class: "wall-mail-note" }, [W("wallOnlyUs")]),
-    el("div", { class: "wall-mail-split" }, [
-      list,
-      el("div", { class: "wall-thread" }, [
-        el("div", { class: "wall-thread-head" }, [
-          webLink(now.name, wallWhoGo(now.who)),
-          el("span", { class: "wall-thread-sub" }, [hkAd(wallStatus(now.who).text)]),
-        ]),
-        ...rows,
-      ]),
-    ]),
+    win,
   ]));
+
+  // 打开时停在最后一句：该看见最新的话，不是翻到几个月前。视图要等这一帧插进文档再滚。
+  // 搜索结果反过来停在第一条——翻旧账是从最早的看起。
+  const pin = (n) => requestAnimationFrame(() => {
+    if (!stream.isConnected && n < 6) { pin(n + 1); return; }
+    stream.scrollTop = q ? 0 : stream.scrollHeight;
+    if (q) {
+      find.focus();
+      // 焦点给回去还不够：新造的输入框光标默认在 0，接着打就是往前插。
+      try { find.setSelectionRange(find.value.length, find.value.length); } catch (_) { /* 不支持就算了 */ }
+    } else find.blur();
+  });
+  pin(0);
   return wrap;
 }
 

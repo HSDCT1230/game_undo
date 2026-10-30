@@ -271,14 +271,15 @@ function renderDiaryIndex() {
   const s = secs[cur];
   const pages = [];
   // 页签已经标出你在哪一页，页内再写一次同名大标题只是把内容往下推一格、还让页签看着像标签。
-  // 只有续页留一行「（续）」，否则翻过去不知道还是同一页的下一张。
-  const newPage = (cont) => {
-    const p = el("div", { class: "diary-folio-page" }, cont ? [el("h3", { class: "diary-sec" }, [s.tab + "（续）"])] : []);
+  // 续页从前在顶上写一行「To do（续）」——底下那排「1／2」已经说了这是第二张，
+  // 再写一次只是又占一行、又把纸读成两节（10-30）。
+  const newPage = () => {
+    const p = el("div", { class: "diary-folio-page" }, []);
     flow.append(p);
     pages.push(p);
     return p;
   };
-  let page = newPage(false);
+  let page = newPage();
   let sub = null;
   s.blocks.forEach((b) => {
     page.append(b);
@@ -290,7 +291,7 @@ function renderDiaryIndex() {
       const prev = b.previousElementSibling;
       if (!isSub && prev && prev.classList.contains("diary-sub") && page.children.length > 3) carry.unshift(prev);
       else if (!isSub && sub) carry.unshift(sub.cloneNode(true));
-      page = newPage(true);
+      page = newPage();
       page.append(...carry);
     }
     if (isSub) sub = b;

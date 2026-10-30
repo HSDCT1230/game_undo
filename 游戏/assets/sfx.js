@@ -215,15 +215,6 @@ const SFX = {
     sfxNoise(0, 0.24, { freq: 1000, to: 2200, q: 0.8, gain: 0.11, attack: 0.07 });
     sfxTone(900, 0.12, 0.08, { gain: 0.055 });
   },
-  // 倾偈：表姐来消息／自己发出
-  chatIn() {
-    sfxTone(540, 0, 0.16, { gain: 0.042 });
-    sfxTone(800, 0.09, 0.24, { gain: 0.035 });
-  },
-  chatOut() {
-    sfxTone(900, 0, 0.26, { gain: 0.035 });
-    sfxTone(1320, 0.08, 0.32, { gain: 0.021 });
-  },
   // 旧键盘一下
   key() {
     sfxNoise(0, 0.035, { freq: 1300 + Math.random() * 400, q: 1, gain: 0.07, attack: 0.012 });

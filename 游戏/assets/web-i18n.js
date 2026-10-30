@@ -88,7 +88,6 @@ const WEB_STR = {
   wallFriends: ["好友", "好友"],
   wallMail: ["收件箱", "收件箱"],
   wallNotice: ["通知", "通知"],
-  wallOnlyUs: ["只有你们两个睇得到。", "只有你们两个看得到。"],
   wallSet: ["设置", "设置"],
   needPost: ["有内容待发布。", "有内容待发布。"],
   needPostBody: ["请先发布，再浏览其他页面。", "请先发布，再浏览其他页面。"],

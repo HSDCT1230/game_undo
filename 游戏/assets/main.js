@@ -5,7 +5,6 @@ function draw() {
   if (S.mode === "cal") return drawCalendar();
   if (S.mode === "movein") return drawMoveIn();
   if (S.mode === "night") return drawNight();
-  if (S.mode === "chat") return drawChat();
   if (S.mode === "clinic") return drawClinic();
   if (S.mode === "search") return drawSearch();
   if (S.mode === "wait") return drawWait();
