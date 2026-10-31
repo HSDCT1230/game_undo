@@ -87,12 +87,12 @@ PEOPLE = [
         "sil": "头像-罗启明.jpg",
     },
     {
-        "n": "03", "file": "03-陳家豪-重製.jpg", "photo": "03-陳家豪.png",
-        "name_zh": "陳家豪", "name_en": "Howard Chan",
+        "n": "03", "file": "03-鄺家豪-重製.jpg", "photo": "03-鄺家豪.png",
+        "name_zh": "鄺家豪", "name_en": "Howard Kwong",
         "dept": "社會科學院　社會學",
         "sid": "01038472H", "issue": "二〇〇一年九月",
         "light": "flat", "seed": 33,
-        "sil": "头像-陈家豪.jpg",
+        "sil": "头像-邝家豪.jpg",
     },
     {
         "n": "04", "file": "04-林偉森-重製.jpg", "photo": "04-林偉森.png",

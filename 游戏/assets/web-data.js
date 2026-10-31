@@ -704,7 +704,7 @@ const WALL_FEED = [
   },
   { id: "lok-sig", who: "lok", name: "阿乐", react: () => flag("calledLok"), text: "更新了签名档：「唔好再打嚟。」", key: "唔好再打嚟", note: ["wall-loksig", "阿乐改了签名档：唔好再打嚟。"], mute: "你打了「对唔住」，又删掉。" },
   {
-    id: "howard-ot", who: "howard", name: "陈家豪", at: ["08-15", "13:05"], text: "又加班。",
+    id: "howard-ot", who: "howard", name: "邝家豪", at: ["08-15", "13:05"], text: "又加班。",
     photo: { id: pic(1, "墙簿/家豪-加班桌面"), cap: "未食饭" },
     replies: [{ who: "mei", name: "陈美娟", at: ["08-15", "13:20"], text: "又系阿明？" }],
     key: "又加班",
@@ -732,11 +732,11 @@ const WALL_FEED = [
   },
   { id: "lok-0828", who: "lok", name: "阿乐", at: ["08-28", "23:40"], after: () => flag("lokSoup"), text: "汤煲多咗。以后唔煲。", photo: { id: pic(1, "墙簿/阿乐-自己煲汤"), cap: "一个人" }, mute: "你打了「对唔住」，又删掉。" },
   {
-    id: "howard-0830", who: "howard", name: "陈家豪", at: ["08-30", "18:20"], text: "收工。去饮杯。",
+    id: "howard-0830", who: "howard", name: "邝家豪", at: ["08-30", "18:20"], text: "收工。去饮杯。",
     photo: { id: pic(1, "墙簿/家豪-大排档"), cap: "落楼下" },
     replies: [
       { who: "mei", name: "陈美娟", at: ["08-30", "18:31"], text: "同阿明？" },
-      { who: "howard", name: "陈家豪", at: ["08-30", "19:02"], text: "唔系。" },
+      { who: "howard", name: "邝家豪", at: ["08-30", "19:02"], text: "唔系。" },
     ],
   },
   { id: "house-0901", who: "house", name: "廿八屋转贴", at: ["09-01", "10:00"], text: "专页：深水埗旧楼近来多人问收购，业主留意来历不明嘅电话。", photo: { id: pic(1, "墙簿/廿八屋-旧楼外墙"), cap: "深水埗" } },
@@ -745,11 +745,11 @@ const WALL_FEED = [
     photo: { id: pic(1, "墙簿/表姐-做节"), cap: "做节" },
     answer: [{ text: "返。", back: "等你。" }, { text: "睇吓。" }],
   },
-  { id: "howard-0907", who: "howard", name: "陈家豪", at: ["09-07", "11:05"], text: "在　湾仔。", key: "湾仔", note: ["wall-howard-wc", "九月七日上午，姐夫在湾仔。"] },
+  { id: "howard-0907", who: "howard", name: "邝家豪", at: ["09-07", "11:05"], text: "在　湾仔。", key: "湾仔", note: ["wall-howard-wc", "九月七日上午，姐夫在湾仔。"] },
   // 掉了钱夹的人才会翻旧相。钱夹在她手里，他就不翻——这一张只在没捡钱夹的那条路上出现，
-  // 是那一趟唯一的学号来源：相角一行字，陈家豪 01038472H。
+  // 是那一趟唯一的学号来源：相角一行字，邝家豪 01038472H。
   {
-    id: "howard-grad", who: "howard", name: "陈家豪",
+    id: "howard-grad", who: "howard", name: "邝家豪",
     react: () => S.level >= 15 && !ev("chen-wallet") && !noted("wallet-chen"),
     // 「相角仲有…名同学号」改「当年写低嘅名」（10-31）：发一张旧相的人会讲相角有自己写的名，
     // 不会顺手把「学号」也报出来——那是替玩家把线索指出来。学号留给证据卡右下角那行。
@@ -757,7 +757,7 @@ const WALL_FEED = [
     textZh: "上传了 1 张照片到相簿「青春」。钱包不见了，一整晚睡不着，翻回旧相簿。相角还有我当年写下的名字。",
     photo: { id: pic(15, "示意-家豪毕业照"), cap: "维港大学社会科学院　二〇〇四届" },
     key: "名同学号",
-    note: ["vhu-chen-id", "家豪在墙簿上传的毕业照。右下角一行：陈家豪 01038472H。学校电邮就是学号，尾随一个 h。"],
+    note: ["vhu-chen-id", "家豪在墙簿上传的毕业照。右下角一行：邝家豪 01038472H。学校电邮就是学号，尾随一个 h。"],
   },
 ];
 
@@ -790,11 +790,11 @@ const WALL_NOTICE = [
   { id: "house-rent", at: ["08-01", "19:00"], after: () => S.level >= 3, text: "你收藏的「荣汇街 28 号 4 楼后座」已标记为已租。多谢使用廿八屋。", textZh: "你收藏的「荣汇街 28 号 4 楼后座」已标记为已租。多谢使用廿八屋。" },
 ];
 
-const WALL_NAMES = { mei: "陈美娟", lok: "阿乐", howard: "陈家豪", ping: "同事阿诗", house: "廿八屋转贴", me: "章慧琪" };
+const WALL_NAMES = { mei: "陈美娟", lok: "阿乐", howard: "邝家豪", ping: "同事阿诗", house: "廿八屋转贴", me: "章慧琪" };
 
 const WALL_FRIENDS = [
   { who: "mei", name: "陈美娟", rel: "表姐" },
-  { who: "howard", name: "陈家豪", rel: "姐夫" },
+  { who: "howard", name: "邝家豪", rel: "姐夫" },
   { who: "ping", name: "同事阿诗", rel: "同事" },
   { who: "lok", name: "阿乐", rel: "前度" },
 ];

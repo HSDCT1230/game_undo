@@ -151,7 +151,7 @@ const LEVELS = [
     tasks: [
       { text: "出门，经过前座门口", after: "周问我脚湿不湿", need: true, done: () => ev("note-dry"), hint: "前座门口，我还没经过" },
       { text: "收件箱，回表姐", need: true, done: () => !!(S.chatLogs && S.chatLogs.mei16 && S.chatLogs.mei16.closed), hint: "表姐在收件箱等我回" },
-      { text: "接陈家豪电话", need: true, show: () => !!(S.chatLogs && S.chatLogs.mei16 && S.chatLogs.mei16.closed), done: () => flag("howardCalled"), hint: "表姐说姐夫会打来" },
+      { text: "接邝家豪电话", need: true, show: () => !!(S.chatLogs && S.chatLogs.mei16 && S.chatLogs.mei16.closed), done: () => flag("howardCalled"), hint: "表姐说姐夫会打来" },
       { text: "拿到诊所地址", show: () => flag("howardCalled"), done: () => flag("clinicAddr"), hint: "地址他说会发到手机" },
       { text: "给玩具车和水龙头各拍一张", need: true, show: () => !!(S.chatLogs && S.chatLogs.mei16 && S.chatLogs.mei16.closed), count: () => [cnt(["photo-car-out", "photo-tap-out"], { "photo-car-out": ev("photo-car-out"), "photo-tap-out": ev("photo-tap-out") }), 2], done: () => ev("photo-car-out") && ev("photo-tap-out"), hint: "用自己的拍立得。车同水喉，各拍一张，夹进簿里" },
       { text: "电话里，追问姐夫一句", after: "问陈「不太好」是什么意思", show: () => flag("howardCalled"), done: () => flag("askedWorry") },
@@ -340,7 +340,7 @@ const LEVELS = [
     goal: "去拿他说整理好的笔记。",
     tasks: [
       { text: "看一眼他的工作台", after: "他去倒水时，看工作台", need: true, done: () => noted("stolen"), hint: "桌上的东西，我还没看清" },
-      { text: "去走廊", after: "走廊碰到陈家豪", need: true, show: () => noted("stolen"), done: () => !!(S.miss && S.miss.chen), hint: "走廊那边，我还没去" },
+      { text: "去走廊", after: "走廊碰到邝家豪", need: true, show: () => noted("stolen"), done: () => !!(S.miss && S.miss.chen), hint: "走廊那边，我还没去" },
       { text: "手机响了，看完", show: () => !!(S.miss && S.miss.chen), after: "打开邮件，两个附件都看", need: true, count: () => (S.miss && (S.miss.att1 || S.miss.att2) ? [cnt(["att1", "att2"], S.miss), 2] : null), done: () => typeof missDirtReady === "function" ? missDirtReady() : ev("mail-dirt"), hint: "" },
       { text: "把那封信给他看", after: "给他看", show: () => typeof missDirtReady === "function" ? missDirtReady() : ev("mail-dirt"), done: () => flag("showedDirt") },
       // 可选：簿子里写出了「这两个人」那页，才有这一行。软钥匙——写了有回报，不写照样过关。
@@ -480,7 +480,7 @@ const SEGS = {
   ],
   5: [
     { key: "b", name: "收件箱回表姐", go: () => { flag("knockedZhou", true); seedItems(["note-dry"]); S.hub = { id: "dawn", at: "hall" }; startChat("mei16"); } },
-    { key: "c", name: "陈家豪来电", go: () => { flag("knockedZhou", true); seedItems(["note-dry"]); S.chatLogs.mei16 = { lines: [["she", "……"]], step: 99, closed: true }; S.hub = { id: "dawn", at: "hall" }; howardCall(); } },
+    { key: "c", name: "邝家豪来电", go: () => { flag("knockedZhou", true); seedItems(["note-dry"]); S.chatLogs.mei16 = { lines: [["she", "……"]], step: 99, closed: true }; S.hub = { id: "dawn", at: "hall" }; howardCall(); } },
   ],
   6: [
     { key: "b", name: "出门撞见周（收回）", go: () => startTakeback() },

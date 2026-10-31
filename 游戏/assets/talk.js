@@ -292,7 +292,7 @@ function whoClass(name) {
     周锦荣: "zhou",
     罗启明: "ming",
     阿明: "ming",
-    陈家豪: "hao",
+    邝家豪: "hao",
     Howard: "hao",
     陈美娟: "mei",
     美娟: "mei",

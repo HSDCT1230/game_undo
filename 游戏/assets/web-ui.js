@@ -2828,7 +2828,7 @@ function wallFestival() {
 // 不是好友、但墙簿觉得你认识的人；罗启明要等见过他之后才出现
 function wallMaybe() {
   const out = [{ who: "kelvin", name: "Kelvin 刘", via: "共同好友：同事阿诗" }];
-  if (S.level >= 7) out.unshift({ who: "ming", name: "罗启明", via: "共同好友：陈家豪" });
+  if (S.level >= 7) out.unshift({ who: "ming", name: "罗启明", via: "共同好友：邝家豪" });
   return out;
 }
 
@@ -3450,19 +3450,19 @@ function viewWallUser() {
     // 和学生证并排挂在同一个相簿里。学号在动态里已经给了，这里不多也不少——
     // 只是把这句「他也是维港大学的」落成一张看得见的卡。
     const youth = wallShown(WALL_FEED).some((x) => x.e.id === "howard-grad");
-    return wallProfile("陈家豪", [
+    return wallProfile("邝家豪", [
       "姐夫。督察。已婚。",
       "妻子：陈美娟",
       youth ? wallAlbum("相册「青春」（2 张）", [
         { id: pic(15, "示意-家豪毕业照"), cap: "维港大学社会科学院　二〇〇四届" },
-        { id: pic(14, "证据-陈家豪学生证"), cap: "维港大学学生证" },
+        { id: pic(14, "证据-邝家豪学生证"), cap: "维港大学学生证" },
       ]) : "",
       wallAlbum("相册「旅行」（2 张）", [
-        { id: pic(1, "墙簿/陈家豪-渡轮"), cap: "渡轮" },
-        { id: pic(1, "墙簿/陈家豪-沙滩"), cap: "沙滩" },
+        { id: pic(1, "墙簿/邝家豪-渡轮"), cap: "渡轮" },
+        { id: pic(1, "墙簿/邝家豪-沙滩"), cap: "沙滩" },
       ]),
       wallAlbum("相册「生日」（1 张）", [
-        { id: pic(1, "墙簿/陈家豪-生日"), cap: "生日" },
+        { id: pic(1, "墙簿/邝家豪-生日"), cap: "生日" },
       ]),
       // 他在墙簿上发过的两张，也挂在自己的相簿里。两条动态各有各的出现时机
       // （出差、收工），所以张数按实际收到几张算，不写死。
@@ -3485,7 +3485,7 @@ function viewWallUser() {
   }
   if (S.wallWho === "ming") {
     return wallProfile("罗启明", [
-      "共同好友：陈家豪",
+      "共同好友：邝家豪",
       "资料不公开。只有好友看得到他的动态。",
     ]);
   }
